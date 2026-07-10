@@ -43,3 +43,9 @@ next-env.d.ts
 
 # local Pi runtime state
 .atl/
+
+# supabase CLI temp cache
+supabase/.temp/
+
+# internal screenshot used only for local logo crop
+src/styles/screenshot-2026-07-09_22-53-49.png
