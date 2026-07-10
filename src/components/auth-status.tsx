@@ -13,7 +13,9 @@ export function AuthStatus({ email }: AuthStatusProps) {
 			<p className="mt-2 text-sm leading-6 text-emerald-50/90">
 				Conectado como
 			</p>
-			<p className="mt-1 break-all text-sm font-medium text-white">{email ?? "Usuario desconocido"}</p>
+			<p className="mt-1 break-all text-sm font-medium text-white">
+				{email ?? "Usuario desconocido"}
+			</p>
 			<form action={signOutAction} className="mt-4">
 				<button
 					type="submit"

@@ -8,6 +8,7 @@ import type { AppRole } from "@/types/auth";
 
 const navigation = [
 	{ href: "/admin", label: "Panel" },
+	{ href: "/admin/clients", label: "Clientes" },
 	{ href: "/admin/documents", label: "Descargables" },
 	{ href: "/admin/quotations", label: "Cotizaciones" },
 	{ href: "/admin/visits", label: "Visitas técnicas" },
@@ -76,8 +77,12 @@ export function AppShell({
 							>
 								<div className="absolute inset-y-0 left-0 w-1 rounded-full bg-emerald-300/85 opacity-60 transition group-hover:opacity-100" />
 								<div className="flex items-center justify-between gap-3">
-									<span className="text-sm font-medium text-white">{item.label}</span>
-									<span className="text-[11px] text-emerald-100/70">0{index + 1}</span>
+									<span className="text-sm font-medium text-white">
+										{item.label}
+									</span>
+									<span className="text-[11px] text-emerald-100/70">
+										0{index + 1}
+									</span>
 								</div>
 							</Link>
 						))}
@@ -88,25 +93,16 @@ export function AppShell({
 
 				<main className="rounded-[32px] border border-[var(--border-soft)] bg-[rgba(255,255,255,0.82)] shadow-[var(--shadow)] backdrop-blur-sm">
 					<div className="border-b border-[var(--border-soft)] px-5 py-5 sm:px-8 sm:py-7">
-						<div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-							<div className="max-w-3xl">
-								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-									EcoTienda interno
-								</p>
-								<h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)] sm:text-4xl">
-									{title}
-								</h2>
-								<p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)] sm:text-base">
-									{description}
-								</p>
-							</div>
-
-							<div className="rounded-[24px] border border-emerald-100 bg-[var(--surface-strong)] px-4 py-3 text-sm text-[var(--brand-deep)] shadow-sm">
-								<p className="font-medium">Base de operación lista</p>
-								<p className="mt-1 text-[13px] text-[var(--muted)]">
-									Autenticación, permisos y estructura principal conectados.
-								</p>
-							</div>
+						<div className="max-w-3xl">
+							<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
+								EcoTienda interno
+							</p>
+							<h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)] sm:text-4xl">
+								{title}
+							</h2>
+							<p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)] sm:text-base">
+								{description}
+							</p>
 						</div>
 					</div>
 

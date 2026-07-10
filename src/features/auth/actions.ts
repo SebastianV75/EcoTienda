@@ -30,7 +30,7 @@ export async function signInAction(
 
 	if (error) {
 		return {
-			error: error.message,
+			error: "No se pudo iniciar sesión. Verifica tu correo y contraseña.",
 		};
 	}
 

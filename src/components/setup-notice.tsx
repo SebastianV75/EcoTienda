@@ -12,7 +12,13 @@ export function SetupNotice() {
 						Conecta Supabase antes de habilitar los accesos protegidos
 					</h2>
 					<p className="mt-3 text-sm leading-7 text-[var(--muted)] sm:text-base">
-						Agrega las claves del proyecto en <code className="rounded bg-white px-1.5 py-0.5 text-[var(--brand-deep)]">.env.local</code> y configura los usuarios iniciales en Supabase Auth. En cuanto el entorno esté completo, la validación del servidor protegerá la sesión automáticamente.
+						Agrega las claves del proyecto en{" "}
+						<code className="rounded bg-white px-1.5 py-0.5 text-[var(--brand-deep)]">
+							.env.local
+						</code>{" "}
+						y configura los usuarios iniciales en Supabase Auth. En cuanto el
+						entorno esté completo, la validación del servidor protegerá la
+						sesión automáticamente.
 					</p>
 				</div>
 
