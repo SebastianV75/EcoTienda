@@ -2,12 +2,13 @@ import type { AppRole, RoleConfig } from "@/types/auth";
 
 export const roleConfig: Record<AppRole, RoleConfig> = {
 	admin: {
-		label: "Admin",
+		label: "Administrador",
 		description:
-			"Full access to administration, documents, quotations, and settings.",
+			"Acceso completo a administración, descargables, cotizaciones y configuración.",
 	},
 	technician: {
-		label: "Technician",
-		description: "Mobile-first access to assigned visits and field operations.",
+		label: "Técnico",
+		description:
+			"Acceso mobile first a visitas asignadas y operaciones de campo.",
 	},
 };

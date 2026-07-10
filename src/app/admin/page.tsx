@@ -4,9 +4,9 @@ import { getCurrentUser, requireRole } from "@/features/auth/session";
 import { hasSupabaseEnv } from "@/lib/env";
 
 const adminHighlights = [
-	"Authentication and role-aware route foundations are ready for integration.",
-	"Downloadable documents stays the first module to ship after Phase 0.",
-	"Quotations and technical visits already have placeholder routes to preserve structure.",
+	"La autenticación y la protección por roles ya están listas para integrarse con los módulos reales.",
+	"Descargables se mantiene como el primer módulo a liberar después de la Fase 0.",
+	"Cotizaciones y visitas técnicas ya cuentan con rutas base para conservar la estructura del sistema.",
 ];
 
 export default async function AdminPage() {
@@ -17,8 +17,8 @@ export default async function AdminPage() {
 	return (
 		<AppShell
 			role="admin"
-			title="Admin foundation"
-			description="Shared shell for documents, quotations, visits, and settings."
+			title="Base de administración"
+			description="Estructura compartida para descargables, cotizaciones, visitas y configuración."
 			email={user?.email}
 		>
 			{!hasSupabaseEnv() ? <SetupNotice /> : null}

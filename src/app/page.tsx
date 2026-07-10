@@ -2,22 +2,22 @@ import Link from "next/link";
 
 const modules = [
 	{
-		title: "Downloadable documents",
-		priority: "Priority 1",
+		title: "Descargables",
+		priority: "Prioridad 1",
 		description:
-			"Internal document templates, autofill flows, and PDF generation for the admin team.",
+			"Plantillas internas, flujos de autollenado y generación de PDF para el equipo administrativo.",
 	},
 	{
-		title: "Quotations",
-		priority: "Priority 2",
+		title: "Cotizaciones",
+		priority: "Prioridad 2",
 		description:
-			"Product catalog, price calculations, and professional quotation exports.",
+			"Catálogo de productos, cálculos de precios y exportación profesional de cotizaciones.",
 	},
 	{
-		title: "Technical visits",
-		priority: "Priority 3",
+		title: "Visitas técnicas",
+		priority: "Prioridad 3",
 		description:
-			"Mobile-first visit assignment, field forms, geolocation capture, and PDF reports.",
+			"Asignación de visitas, formularios móviles, captura de geolocalización y reportes PDF.",
 	},
 ];
 
@@ -27,15 +27,15 @@ export default function HomePage() {
 			<section className="mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
 				<div className="max-w-3xl space-y-5">
 					<p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
-						EcoTienda · Phase 0
+						EcoTienda · Fase 0
 					</p>
 					<h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-						Internal operations platform foundation
+						Base de la plataforma interna de operaciones
 					</h1>
 					<p className="text-base leading-8 text-slate-300 sm:text-lg">
-						This bootstrap delivers the shared base for authentication,
-						role-aware access, and the mobile-first shell that later modules
-						will build on.
+						Este arranque deja lista la base compartida para autenticación,
+						acceso por roles y la estructura mobile first sobre la que se
+						construirán los módulos siguientes.
 					</p>
 				</div>
 
@@ -44,13 +44,13 @@ export default function HomePage() {
 						href="/admin"
 						className="rounded-full bg-emerald-400 px-5 py-3 font-medium text-slate-950 transition hover:bg-emerald-300"
 					>
-						Open admin scaffold
+						Abrir base de administración
 					</Link>
 					<Link
 						href="/auth/sign-in"
 						className="rounded-full border border-white/15 px-5 py-3 font-medium text-white transition hover:border-white/40"
 					>
-						Review auth scaffold
+						Ir al acceso
 					</Link>
 				</div>
 

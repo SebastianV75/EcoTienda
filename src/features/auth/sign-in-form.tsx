@@ -18,7 +18,7 @@ export function SignInForm() {
 		<form action={formAction} className="mt-6 space-y-4">
 			<div className="space-y-2">
 				<label htmlFor="email" className="text-sm font-medium text-slate-200">
-					Email
+					Correo electrónico
 				</label>
 				<input
 					id="email"
@@ -36,7 +36,7 @@ export function SignInForm() {
 					htmlFor="password"
 					className="text-sm font-medium text-slate-200"
 				>
-					Password
+					Contraseña
 				</label>
 				<input
 					id="password"
@@ -60,7 +60,7 @@ export function SignInForm() {
 				disabled={isPending}
 				className="w-full rounded-full bg-emerald-400 px-5 py-3 font-medium text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
 			>
-				{isPending ? "Signing in..." : "Sign in"}
+				{isPending ? "Ingresando..." : "Entrar"}
 			</button>
 		</form>
 	);

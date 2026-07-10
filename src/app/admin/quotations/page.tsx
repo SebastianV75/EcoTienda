@@ -10,12 +10,12 @@ export default async function QuotationsPage() {
 	return (
 		<AppShell
 			role="admin"
-			title="Quotations"
-			description="Phase 2 will implement catalog browsing, calculations, and quotation exports here."
+			title="Cotizaciones"
+			description="La Fase 2 implementará aquí la navegación del catálogo, los cálculos y la exportación de cotizaciones."
 		>
 			<section className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 text-sm leading-7 text-slate-300">
-				This placeholder keeps Darian&apos;s future module inside the shared
-				Phase 0 shell.
+				Este espacio reservado mantiene el futuro módulo de Darian dentro de la
+				estructura compartida de la Fase 0.
 			</section>
 		</AppShell>
 	);

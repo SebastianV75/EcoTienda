@@ -18,7 +18,7 @@ export async function signInAction(
 
 	if (!email || !password) {
 		return {
-			error: "Email and password are required.",
+			error: "Correo y contraseña son obligatorios.",
 		};
 	}
 

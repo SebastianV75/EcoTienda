@@ -10,12 +10,12 @@ export default async function DocumentsPage() {
 	return (
 		<AppShell
 			role="admin"
-			title="Downloadable documents"
-			description="Phase 1 will implement the internal template flows and PDF generation here."
+			title="Descargables"
+			description="La Fase 1 implementará aquí los flujos de plantillas internas y generación de PDF."
 		>
 			<section className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 text-sm leading-7 text-slate-300">
-				The route is live and protected by the same role guard foundation used
-				by the admin area.
+				Esta ruta ya está activa y protegida con la misma base de permisos del
+				área administrativa.
 			</section>
 		</AppShell>
 	);

@@ -6,11 +6,11 @@ import { roleConfig } from "@/features/auth/roles";
 import type { AppRole } from "@/types/auth";
 
 const navigation = [
-	{ href: "/admin", label: "Dashboard" },
-	{ href: "/admin/documents", label: "Documents" },
-	{ href: "/admin/quotations", label: "Quotations" },
-	{ href: "/admin/visits", label: "Technical visits" },
-	{ href: "/admin/settings", label: "Settings" },
+	{ href: "/admin", label: "Panel" },
+	{ href: "/admin/documents", label: "Descargables" },
+	{ href: "/admin/quotations", label: "Cotizaciones" },
+	{ href: "/admin/visits", label: "Visitas técnicas" },
+	{ href: "/admin/settings", label: "Configuración" },
 ];
 
 type AppShellProps = {
@@ -36,7 +36,7 @@ export function AppShell({
 						<p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">
 							EcoTienda
 						</p>
-						<h1 className="text-2xl font-semibold">Operations platform</h1>
+						<h1 className="text-2xl font-semibold">Plataforma operativa</h1>
 						<p className="text-sm text-slate-300">
 							{roleConfig[role].description}
 						</p>
@@ -60,7 +60,7 @@ export function AppShell({
 				<main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
 					<header className="mb-8 space-y-2">
 						<p className="text-sm font-medium text-emerald-300">
-							{roleConfig[role].label} area
+							{roleConfig[role].label}
 						</p>
 						<h2 className="text-3xl font-semibold tracking-tight text-white">
 							{title}
