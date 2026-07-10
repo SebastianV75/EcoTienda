@@ -1,0 +1,45 @@
+"use server";
+
+import { redirect } from "next/navigation";
+
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getDefaultRouteForRole, getUserRole } from "@/features/auth/session";
+
+export type AuthActionState = {
+	error: string | null;
+};
+
+export async function signInAction(
+	_previousState: AuthActionState,
+	formData: FormData,
+): Promise<AuthActionState> {
+	const email = formData.get("email")?.toString().trim();
+	const password = formData.get("password")?.toString();
+
+	if (!email || !password) {
+		return {
+			error: "Email and password are required.",
+		};
+	}
+
+	const supabase = await createSupabaseServerClient();
+	const { error, data } = await supabase.auth.signInWithPassword({
+		email,
+		password,
+	});
+
+	if (error) {
+		return {
+			error: error.message,
+		};
+	}
+
+	const role = getUserRole(data.user);
+	redirect(getDefaultRouteForRole(role));
+}
+
+export async function signOutAction() {
+	const supabase = await createSupabaseServerClient();
+	await supabase.auth.signOut();
+	redirect("/auth/sign-in");
+}
