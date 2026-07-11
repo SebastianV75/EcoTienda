@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import {
 	createClientAction,
@@ -13,15 +13,133 @@ type ClientFormProps = {
 	mode: "create" | "edit";
 	clientId?: string;
 	defaultValues?: Partial<ClientFormValues>;
+	googleMapsApiKey?: string | null;
+};
+
+type LocationMessage = {
+	tone: "success" | "error" | "info";
+	text: string;
 };
 
 const initialState: ClientActionState = {
 	error: null,
 };
 
-export function ClientForm({ mode, clientId, defaultValues }: ClientFormProps) {
+async function reverseGeocode(
+	latitude: string,
+	longitude: string,
+	apiKey: string,
+): Promise<string | null> {
+	try {
+		const params = new URLSearchParams({
+			latlng: `${latitude},${longitude}`,
+			key: apiKey,
+		});
+
+		const response = await fetch(
+			`https://maps.googleapis.com/maps/api/geocode/json?${params.toString()}`,
+		);
+
+		if (!response.ok) return null;
+
+		const payload = (await response.json()) as {
+			results?: Array<{ formatted_address?: string }>;
+		};
+
+		return payload.results?.[0]?.formatted_address ?? null;
+	} catch {
+		return null;
+	}
+}
+
+export function ClientForm({
+	mode,
+	clientId,
+	defaultValues,
+	googleMapsApiKey,
+}: ClientFormProps) {
 	const action = mode === "create" ? createClientAction : updateClientAction;
 	const [state, formAction, isPending] = useActionState(action, initialState);
+
+	const [address, setAddress] = useState<string>(defaultValues?.address ?? "");
+	const [latitude, setLatitude] = useState<string>(
+		defaultValues?.latitude ?? "",
+	);
+	const [longitude, setLongitude] = useState<string>(
+		defaultValues?.longitude ?? "",
+	);
+	const [isLocating, setIsLocating] = useState<boolean>(false);
+	const [locationMessage, setLocationMessage] =
+		useState<LocationMessage | null>(null);
+
+	function handleUseMyLocation() {
+		setLocationMessage(null);
+
+		if (typeof window === "undefined" || !("geolocation" in navigator)) {
+			setLocationMessage({
+				tone: "error",
+				text: "Tu navegador no permite obtener la ubicación. Puedes ingresar los datos manualmente.",
+			});
+			return;
+		}
+
+		setIsLocating(true);
+
+		navigator.geolocation.getCurrentPosition(
+			async (position) => {
+				const nextLatitude = String(position.coords.latitude);
+				const nextLongitude = String(position.coords.longitude);
+
+				setLatitude(nextLatitude);
+				setLongitude(nextLongitude);
+
+				if (!googleMapsApiKey) {
+					setLocationMessage({
+						tone: "info",
+						text: "Coordenadas capturadas. Ingresa la dirección manualmente.",
+					});
+					setIsLocating(false);
+					return;
+				}
+
+				const formattedAddress = await reverseGeocode(
+					nextLatitude,
+					nextLongitude,
+					googleMapsApiKey,
+				);
+
+				if (formattedAddress) {
+					setAddress(formattedAddress);
+					setLocationMessage({
+						tone: "success",
+						text: "Ubicación y dirección capturadas. Puedes ajustar los datos antes de guardar.",
+					});
+				} else {
+					setLocationMessage({
+						tone: "info",
+						text: "Coordenadas capturadas, pero no se pudo determinar la dirección automáticamente.",
+					});
+				}
+
+				setIsLocating(false);
+			},
+			(error) => {
+				if (error.code === error.PERMISSION_DENIED) {
+					setLocationMessage({
+						tone: "error",
+						text: "Permiso de ubicación denegado. Puedes ingresar la dirección manualmente.",
+					});
+				} else {
+					setLocationMessage({
+						tone: "error",
+						text: "No se pudo obtener tu ubicación. Intenta de nuevo o captura los datos manualmente.",
+					});
+				}
+				setIsLocating(false);
+			},
+			{ timeout: 5000 },
+		);
+	}
 
 	return (
 		<form action={formAction} className="space-y-5">
@@ -125,7 +243,8 @@ export function ClientForm({ mode, clientId, defaultValues }: ClientFormProps) {
 					<textarea
 						id="address"
 						name="address"
-						defaultValue={defaultValues?.address ?? ""}
+						value={address}
+						onChange={(event) => setAddress(event.target.value)}
 						required
 						rows={4}
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
@@ -145,7 +264,8 @@ export function ClientForm({ mode, clientId, defaultValues }: ClientFormProps) {
 						name="latitude"
 						type="number"
 						step="any"
-						defaultValue={defaultValues?.latitude ?? ""}
+						value={latitude}
+						onChange={(event) => setLatitude(event.target.value)}
 						required
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						placeholder="Ej. 20.6736"
@@ -164,7 +284,8 @@ export function ClientForm({ mode, clientId, defaultValues }: ClientFormProps) {
 						name="longitude"
 						type="number"
 						step="any"
-						defaultValue={defaultValues?.longitude ?? ""}
+						value={longitude}
+						onChange={(event) => setLongitude(event.target.value)}
 						required
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						placeholder="Ej. -103.344"
@@ -172,11 +293,36 @@ export function ClientForm({ mode, clientId, defaultValues }: ClientFormProps) {
 				</div>
 			</div>
 
-			<p className="rounded-[18px] border border-emerald-100 bg-[var(--surface-strong)] px-4 py-3 text-sm leading-6 text-[var(--muted)]">
-				Por ahora la ubicación se captura con dirección y coordenadas manuales.
-				La integración visual con Google Maps puede entrar después sin romper
-				este registro.
-			</p>
+			<div className="space-y-2.5">
+				<button
+					type="button"
+					onClick={handleUseMyLocation}
+					disabled={isLocating}
+					className="w-full rounded-full border border-emerald-200 bg-white px-5 py-3 text-sm font-medium text-[var(--brand-deep)] shadow-sm transition duration-200 ease-out hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+				>
+					{isLocating ? "Obteniendo ubicación..." : "Usar mi ubicación"}
+				</button>
+				<p className="text-xs leading-5 text-[var(--muted)]">
+					Toca el botón para capturar coordenadas con el GPS del dispositivo. Si
+					el permiso falla o no hay señal, puedes seguir capturando los datos
+					manualmente.
+				</p>
+			</div>
+
+			{locationMessage ? (
+				<p
+					role="status"
+					className={
+						locationMessage.tone === "error"
+							? "rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+							: locationMessage.tone === "success"
+								? "rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+								: "rounded-[18px] border border-emerald-100 bg-[var(--surface-strong)] px-4 py-3 text-sm leading-6 text-[var(--muted)]"
+					}
+				>
+					{locationMessage.text}
+				</p>
+			) : null}
 
 			{state.error ? (
 				<p className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">

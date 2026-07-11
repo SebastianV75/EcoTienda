@@ -1,0 +1,60 @@
+project:
+  name: EcoTienda
+  root: /home/sebas/Projects/EcoTienda
+  description: Internal web platform for EcoTienda operations.
+
+artifact_store:
+  mode: openspec
+  backend: filesystem
+  root: openspec
+
+sdd:
+  enabled: true
+  strict_tdd: false
+  phase_order:
+    - proposal
+    - spec
+    - design
+    - tasks
+    - apply
+    - verify
+    - archive
+  phase_rules:
+    proposal: Capture the business problem, target users, scope, non-goals, constraints, and tradeoffs.
+    spec: Translate the approved proposal into functional requirements and acceptance criteria.
+    design: Define the architecture and technical decisions that satisfy the spec.
+    tasks: Break the spec and design into small reviewable implementation steps.
+    apply: Implement tasks in small batches and preserve progress between batches.
+    verify: Validate implementation against the spec, tasks, and acceptance criteria.
+    archive: Record the final outcome and close the change.
+
+testing:
+  test_runner: none
+  validation_commands:
+    - npm run lint
+    - npm run build
+  notes: No dedicated test script is configured yet. Use lint and build as the current safety net.
+
+stack:
+  framework: Next.js
+  language: TypeScript
+  ui: Tailwind CSS
+  backend: Supabase
+  auth: Supabase Auth
+  database: Supabase Postgres
+  storage: Supabase Storage
+  maps: Google Maps API
+
+sources_of_truth:
+  - README.md
+  - docs/development-plan.md
+  - docs/phase-0-bootstrap.md
+
+current_context:
+  phase: 0 bootstrap
+  focus: foundation
+  priorities:
+    - downloadable documents
+    - quotations
+    - technical visits
+  next_feature: client location (Ubicación cliente)
