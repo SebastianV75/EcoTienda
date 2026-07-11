@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AuthStatus } from "@/components/auth-status";
+import { MobileBottomNavigation } from "@/components/mobile-bottom-navigation";
+import { MobileSignOut } from "@/components/mobile-sign-out";
 import { roleConfig } from "@/features/auth/roles";
 import type { AppRole } from "@/types/auth";
 
@@ -31,9 +33,9 @@ export function AppShell({
 	email,
 }: AppShellProps) {
 	return (
-		<div className="min-h-screen px-3 py-3 text-[var(--foreground)] sm:px-5 sm:py-5">
-			<div className="mx-auto grid min-h-[calc(100vh-24px)] w-full max-w-7xl gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
-				<aside className="overflow-hidden rounded-[28px] border border-[var(--border-soft)] bg-[rgba(13,79,46,0.95)] text-white shadow-[var(--shadow)]">
+		<div className="min-h-screen px-3 pb-[calc(88px+env(safe-area-inset-bottom))] pt-3 text-[var(--foreground)] sm:px-5 sm:pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-5 print:min-h-0 print:p-0">
+			<div className="mx-auto grid min-h-[calc(100vh-24px)] w-full max-w-7xl gap-4 lg:grid-cols-[300px_minmax(0,1fr)] print:grid-cols-1 print:gap-0 print:min-h-0">
+				<aside className="hidden overflow-hidden rounded-[28px] border border-[var(--border-soft)] bg-[rgba(13,79,46,0.95)] text-white shadow-[var(--shadow)] lg:block print:hidden">
 					<div className="border-b border-white/10 bg-gradient-to-br from-[rgba(47,179,20,0.28)] via-transparent to-transparent p-5 sm:p-6">
 						<div className="flex items-center gap-3">
 							<div className="rounded-2xl bg-white p-2 shadow-lg shadow-black/15">
@@ -91,8 +93,14 @@ export function AppShell({
 					{email ? <AuthStatus email={email} /> : null}
 				</aside>
 
-				<main className="rounded-[32px] border border-[var(--border-soft)] bg-[rgba(255,255,255,0.82)] shadow-[var(--shadow)] backdrop-blur-sm">
-					<div className="border-b border-[var(--border-soft)] px-5 py-5 sm:px-8 sm:py-7">
+				<main className="rounded-[32px] border border-[var(--border-soft)] bg-[rgba(255,255,255,0.82)] shadow-[var(--shadow)] backdrop-blur-sm print:rounded-none print:border-0 print:bg-white print:shadow-none print:backdrop-blur-none">
+					<div className="border-b border-[var(--border-soft)] px-4 py-4 lg:hidden print:hidden">
+						<h2 className="text-xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
+							{title}
+						</h2>
+					</div>
+
+					<div className="hidden border-b border-[var(--border-soft)] px-5 py-5 sm:px-8 sm:py-7 lg:block print:hidden">
 						<div className="max-w-3xl">
 							<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
 								EcoTienda interno
@@ -106,9 +114,13 @@ export function AppShell({
 						</div>
 					</div>
 
-					<div className="px-5 py-6 sm:px-8 sm:py-8">{children}</div>
+					<div className="px-4 py-4 sm:px-5 sm:py-6 lg:px-8 lg:py-8 print:p-0">
+						{children}
+					</div>
 				</main>
 			</div>
+
+			<MobileBottomNavigation signOutSlot={<MobileSignOut email={email} />} />
 		</div>
 	);
 }
