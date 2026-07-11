@@ -20,6 +20,13 @@ const templates = [
 		status: "Activo",
 	},
 	{
+		title: "Diagrama unifilar",
+		description:
+			"Panel de datos del cliente y del equipo de generación solar. La vista previa actual muestra los datos que acompañarán al diagrama eléctrico.",
+		href: "/admin/documents/diagrama-unifilar",
+		status: "Activo",
+	},
+	{
 		title: "Formato CFE",
 		description:
 			"Se integrará después con campos adicionales del trámite para replicar el formato lo más fiel posible.",

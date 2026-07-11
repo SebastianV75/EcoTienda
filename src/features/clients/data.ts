@@ -8,7 +8,7 @@ function normalizeClient(row: ClientRecord) {
 }
 
 const clientSelect =
-	"id, full_name, phone, address, neighborhood, rfc, rpu, latitude, longitude, created_at, updated_at";
+	"id, full_name, phone, address, neighborhood, rfc, rpu, latitude, longitude, panel_count, panel_power, inverter, installed_capacity, estimated_monthly_generation, created_at, updated_at";
 
 export const getClients = cache(async (query?: string) => {
 	const supabase = await createSupabaseServerClient();

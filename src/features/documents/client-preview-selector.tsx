@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useTransition, type ChangeEvent } from "react";
 
-type DocumentTemplateSlug = "carta-poder" | "ubicacion-cliente";
+type DocumentTemplateSlug =
+	| "carta-poder"
+	| "ubicacion-cliente"
+	| "diagrama-unifilar";
 
 type ClientPreviewSelectorClient = {
 	id: string;
