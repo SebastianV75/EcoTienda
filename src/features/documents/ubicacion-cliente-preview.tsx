@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -82,17 +83,35 @@ function buildGoogleMapsLink(latitude: number, longitude: number) {
 	return `https://www.google.com/maps/search/?${params.toString()}`;
 }
 
+function SectionCard({
+	title,
+	children,
+}: {
+	title: string;
+	children: React.ReactNode;
+}) {
+	return (
+		<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7 print:break-inside-avoid print:rounded-none print:border print:border-neutral-300 print:p-4 print:shadow-none">
+			<p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)] print:text-neutral-700">
+				{title}
+			</p>
+			<div className="mt-4 print:mt-3">{children}</div>
+		</section>
+	);
+}
+
 export function UbicacionClientePreview({
 	client,
 	mapApiKey,
 }: UbicacionClientePreviewProps) {
 	const [mapFailed, setMapFailed] = useState(false);
 	const identityFields: IdentityField[] = [
-		{ label: "Nombre completo", value: formatField(client.full_name) },
+		{ label: "Nombre del titular", value: formatField(client.full_name) },
+		{ label: "Número de servicio", value: formatField(client.rpu) },
+		{ label: "RFC", value: formatField(client.rfc) },
+		{ label: "Teléfono", value: formatField(client.phone) },
 		{ label: "Dirección", value: formatField(client.address) },
 		{ label: "Colonia", value: formatField(client.neighborhood) },
-		{ label: "RPU", value: formatField(client.rpu) },
-		{ label: "RFC", value: formatField(client.rfc) },
 	];
 
 	const latitude = toFiniteNumber(client.latitude);
@@ -113,88 +132,108 @@ export function UbicacionClientePreview({
 	const showStaticMap = Boolean(staticMapUrl) && !mapFailed;
 
 	return (
-		<article className="space-y-4">
-			<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
-				<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-					Datos del cliente
-				</p>
-				<dl className="mt-5 grid gap-4 sm:grid-cols-2">
-					{identityFields.map((field) => (
-						<div key={field.label}>
-							<dt className="text-sm font-medium text-[var(--brand-deep)]">
-								{field.label}
-							</dt>
-							<dd className="mt-1 text-sm leading-7 text-[var(--muted)]">
-								{field.value}
-							</dd>
-						</div>
-					))}
-				</dl>
-			</section>
-
-			<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
-				<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-					Coordenadas guardadas
-				</p>
-				<div className="mt-5 grid gap-4 sm:grid-cols-2">
-					<div>
-						<p className="text-sm font-medium text-[var(--brand-deep)]">
-							Latitud
-						</p>
-						<p className="mt-1 text-sm leading-7 text-[var(--muted)]">
-							{latitude !== null ? latitude : "Sin dato"}
-						</p>
+		<article className="mx-auto w-full max-w-[940px] space-y-4 text-black print:max-w-none print:space-y-3">
+			<section className="rounded-[30px] border border-emerald-100 bg-white p-6 shadow-[0_22px_55px_rgba(13,79,46,0.08)] sm:p-8 print:rounded-none print:border print:border-neutral-300 print:p-5 print:shadow-none">
+				<div className="flex items-center gap-4 border-b border-neutral-200 pb-5 print:pb-4">
+					<div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-emerald-100 bg-white print:h-14 print:w-14 print:rounded-xl">
+						<Image
+							src="/ecotienda-logo-temp.png"
+							alt="EcoTienda"
+							width={64}
+							height={64}
+							className="h-full w-full object-contain"
+							priority
+						/>
 					</div>
-					<div>
-						<p className="text-sm font-medium text-[var(--brand-deep)]">
-							Longitud
+					<div className="min-w-0">
+						<p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--brand-strong)] print:text-neutral-700">
+							EcoTienda
 						</p>
-						<p className="mt-1 text-sm leading-7 text-[var(--muted)]">
-							{longitude !== null ? longitude : "Sin dato"}
-						</p>
+						<h1 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)] print:text-[24px] print:text-black">
+							Ubicación del cliente
+						</h1>
 					</div>
 				</div>
-			</section>
 
-			<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
-				<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-					Mapa
-				</p>
-				<div className="mt-5 overflow-hidden rounded-[24px] border border-emerald-100 bg-[var(--surface-strong)]">
-					{showStaticMap ? (
-						<img
-							src={staticMapUrl ?? undefined}
-							alt={`Mapa centrado en las coordenadas de ${client.full_name}`}
-							className="block h-auto w-full"
-							loading="lazy"
-							onError={() => setMapFailed(true)}
-						/>
-					) : (
-						<div className="flex min-h-[220px] w-full flex-col items-center justify-center gap-4 p-6 text-center text-sm leading-6 text-[var(--muted)]">
-							<p>
-								{coordinatesAvailable
-									? "La vista previa del mapa no está disponible por ahora."
-									: "Sin coordenadas guardadas para mostrar el mapa."}
-							</p>
-							{googleMapsLink ? (
-								<Link
-									href={googleMapsLink}
-									target="_blank"
-									rel="noreferrer"
-									className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:bg-emerald-50"
+				<div className="mt-5 grid gap-4 lg:grid-cols-[0.95fr_1.05fr] print:mt-4 print:grid-cols-[0.9fr_1.1fr] print:gap-4">
+					<SectionCard title="Datos del servicio">
+						<dl className="grid gap-3 sm:grid-cols-2 print:gap-x-4 print:gap-y-3">
+							{identityFields.map((field) => (
+								<div
+									key={field.label}
+									className={field.label === "Dirección" ? "sm:col-span-2" : ""}
 								>
-									Abrir en Google Maps
-								</Link>
+									<dt className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 print:text-neutral-600">
+										{field.label}
+									</dt>
+									<dd className="mt-1 text-sm leading-6 text-[var(--brand-deep)] print:text-black">
+										{field.value}
+									</dd>
+								</div>
+							))}
+						</dl>
+					</SectionCard>
+
+					<SectionCard title="Coordenadas y mapa">
+						<div className="grid gap-4 print:gap-3">
+							<div className="grid gap-3 sm:grid-cols-2 print:gap-x-4 print:gap-y-3">
+								<div>
+									<p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 print:text-neutral-600">
+										Coordenada X
+									</p>
+									<p className="mt-1 text-sm leading-6 text-[var(--brand-deep)] print:text-black">
+										{latitude !== null ? latitude : "Sin dato"}
+									</p>
+								</div>
+								<div>
+									<p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 print:text-neutral-600">
+										Coordenada Y
+									</p>
+									<p className="mt-1 text-sm leading-6 text-[var(--brand-deep)] print:text-black">
+										{longitude !== null ? longitude : "Sin dato"}
+									</p>
+								</div>
+							</div>
+
+							<div className="overflow-hidden rounded-[24px] border border-emerald-100 bg-[var(--surface-strong)] print:rounded-xl print:border-neutral-300 print:bg-white">
+								{showStaticMap ? (
+									<img
+										src={staticMapUrl ?? undefined}
+										alt={`Mapa centrado en las coordenadas de ${client.full_name}`}
+										className="block h-auto max-h-[420px] w-full object-cover print:max-h-[300px]"
+										loading="eager"
+										onError={() => setMapFailed(true)}
+									/>
+								) : (
+									<div className="flex min-h-[220px] w-full flex-col items-center justify-center gap-4 p-6 text-center text-sm leading-6 text-[var(--muted)] print:min-h-[170px] print:gap-2 print:p-4 print:text-black">
+										<p>
+											{coordinatesAvailable
+												? "La vista previa del mapa no está disponible por ahora."
+												: "Sin coordenadas guardadas para mostrar el mapa."}
+										</p>
+										{googleMapsLink ? (
+											<Link
+												href={googleMapsLink}
+												target="_blank"
+												rel="noreferrer"
+												className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:bg-emerald-50 print:hidden"
+											>
+												Abrir en Google Maps
+											</Link>
+										) : null}
+									</div>
+								)}
+							</div>
+
+							{googleMapsLink ? (
+								<p className="text-sm leading-6 text-[var(--muted)] print:hidden">
+									Si el mapa no carga dentro del sistema, puedes abrir la
+									ubicación directamente en Google Maps.
+								</p>
 							) : null}
 						</div>
-					)}
+					</SectionCard>
 				</div>
-				{googleMapsLink ? (
-					<p className="mt-4 text-sm leading-6 text-[var(--muted)]">
-						Si el mapa no carga dentro del sistema, puedes abrir la ubicación
-						directamente en Google Maps.
-					</p>
-				) : null}
 			</section>
 		</article>
 	);

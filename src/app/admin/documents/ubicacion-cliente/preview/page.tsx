@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
 import { getClientById } from "@/features/clients/data";
+import { PrintButton } from "@/features/documents/print-button";
 import { UbicacionClientePreview } from "@/features/documents/ubicacion-cliente-preview";
 
 export default async function UbicacionClientePreviewPage({
@@ -89,7 +90,7 @@ export default async function UbicacionClientePreviewPage({
 			email={user.email}
 		>
 			<div className="space-y-4">
-				<div className="flex flex-wrap gap-3">
+				<div className="flex flex-wrap gap-3 print:hidden">
 					<Link
 						href={`/admin/documents/ubicacion-cliente?clientId=${client.id}`}
 						className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
@@ -102,6 +103,7 @@ export default async function UbicacionClientePreviewPage({
 					>
 						Volver a descargables
 					</Link>
+					<PrintButton />
 				</div>
 
 				<UbicacionClientePreview client={client} mapApiKey={mapApiKey} />
