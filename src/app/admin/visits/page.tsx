@@ -10,12 +10,12 @@ export default async function VisitsPage() {
 	return (
 		<AppShell
 			role="admin"
-			title="Technical visits"
-			description="Phase 3 will implement scheduling, field forms, and visit reporting here."
+			title="Visitas técnicas"
+			description="La Fase 3 implementará aquí la agenda, los formularios de campo y los reportes de visita."
 		>
 			<section className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 text-sm leading-7 text-slate-300">
-				The route exists now so the future module lands inside the correct
-				protected structure.
+				Esta ruta ya existe para que el módulo futuro caiga dentro de la
+				estructura protegida correcta.
 			</section>
 		</AppShell>
 	);

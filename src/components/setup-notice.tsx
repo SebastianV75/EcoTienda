@@ -2,33 +2,40 @@ import Link from "next/link";
 
 export function SetupNotice() {
 	return (
-		<section className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-50 shadow-lg shadow-amber-950/20">
-			<p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">
-				Setup required
-			</p>
-			<h2 className="mt-2 text-2xl font-semibold text-white">
-				Connect Supabase before enabling protected flows
-			</h2>
-			<p className="mt-3 max-w-2xl leading-7 text-amber-50/90">
-				Add the project keys in{" "}
-				<code className="rounded bg-black/30 px-1.5 py-0.5">.env.local</code>{" "}
-				and then configure the initial users in Supabase Auth. Once the
-				environment is present, the server-side guard helpers will start
-				enforcing session checks.
-			</p>
-			<div className="mt-4 flex flex-wrap gap-3">
-				<Link
-					href="/auth/sign-in"
-					className="rounded-full bg-white px-4 py-2 font-medium text-slate-950 transition hover:bg-amber-100"
-				>
-					Review sign-in scaffold
-				</Link>
-				<Link
-					href="/"
-					className="rounded-full border border-white/15 px-4 py-2 font-medium text-white transition hover:border-white/40"
-				>
-					Back to home
-				</Link>
+		<section className="overflow-hidden rounded-[28px] border border-amber-200 bg-[linear-gradient(135deg,rgba(255,247,221,0.95),rgba(255,255,255,0.98))] p-6 text-[var(--foreground)] shadow-[0_20px_60px_rgba(120,74,0,0.08)]">
+			<div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+				<div className="max-w-2xl">
+					<p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-700">
+						Configuración pendiente
+					</p>
+					<h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
+						Conecta Supabase antes de habilitar los accesos protegidos
+					</h2>
+					<p className="mt-3 text-sm leading-7 text-[var(--muted)] sm:text-base">
+						Agrega las claves del proyecto en{" "}
+						<code className="rounded bg-white px-1.5 py-0.5 text-[var(--brand-deep)]">
+							.env.local
+						</code>{" "}
+						y configura los usuarios iniciales en Supabase Auth. En cuanto el
+						entorno esté completo, la validación del servidor protegerá la
+						sesión automáticamente.
+					</p>
+				</div>
+
+				<div className="flex flex-wrap gap-3">
+					<Link
+						href="/auth/sign-in"
+						className="rounded-full bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white shadow-[0_16px_30px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
+					>
+						Ir al acceso
+					</Link>
+					<Link
+						href="/"
+						className="rounded-full border border-amber-200 bg-white px-4 py-2.5 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-amber-300"
+					>
+						Volver al inicio
+					</Link>
+				</div>
 			</div>
 		</section>
 	);

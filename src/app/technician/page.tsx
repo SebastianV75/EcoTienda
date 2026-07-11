@@ -10,13 +10,13 @@ export default async function TechnicianPage() {
 	return (
 		<AppShell
 			role="technician"
-			title="Technician mobile area"
-			description="This Phase 0 placeholder marks the protected mobile-first area for assigned field work."
+			title="Área móvil del técnico"
+			description="Este espacio base de la Fase 0 marca la zona protegida para el trabajo de campo desde celular."
 			email={user?.email}
 		>
 			<section className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 text-sm leading-7 text-slate-300">
-				Later phases will connect this area to assigned visits, geolocation
-				capture, and field report generation.
+				En las siguientes fases esta área se conectará con visitas asignadas,
+				captura de geolocalización y reportes de trabajo.
 			</section>
 		</AppShell>
 	);

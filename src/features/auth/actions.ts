@@ -18,7 +18,7 @@ export async function signInAction(
 
 	if (!email || !password) {
 		return {
-			error: "Email and password are required.",
+			error: "Correo y contraseña son obligatorios.",
 		};
 	}
 
@@ -30,7 +30,7 @@ export async function signInAction(
 
 	if (error) {
 		return {
-			error: error.message,
+			error: "No se pudo iniciar sesión. Verifica tu correo y contraseña.",
 		};
 	}
 

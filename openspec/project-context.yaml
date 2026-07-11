@@ -1,0 +1,34 @@
+project: EcoTienda
+repository: /home/sebas/Projects/EcoTienda
+purpose: Initialize SDD/OpenSpec so the team can manage work through formal artifacts.
+artifact_store: openspec
+current_status:
+  phase: 0 bootstrap
+  state: in progress
+  focus: foundation
+stack:
+  framework: Next.js
+  language: TypeScript
+  ui: Tailwind CSS
+  backend: Supabase
+  auth: Supabase Auth
+  database: Supabase Postgres
+  storage: Supabase Storage
+  maps: Google Maps API
+business_context:
+  product: Internal web platform for EcoTienda operations
+  priorities:
+    - downloadable documents
+    - quotations
+    - technical visits
+  target_next_feature: client location (Ubicación cliente)
+operational_notes:
+  test_validation:
+    - npm run lint
+    - npm run build
+  strict_tdd: false
+  notes: No dedicated test runner is configured yet.
+references:
+  - README.md
+  - docs/development-plan.md
+  - docs/phase-0-bootstrap.md
