@@ -1,0 +1,57 @@
+import { Text, View } from "@react-pdf/renderer";
+
+import { styles } from "./pdf-styles";
+import type { QuotationItem } from "@/types/quotation";
+
+type PDFProductsTableProps = {
+	items: QuotationItem[];
+};
+
+export function PDFProductsTable({ items }: PDFProductsTableProps) {
+	return (
+		<View style={styles.productsTable}>
+			<View style={styles.productsTableHeader}>
+				<View style={{ flex: 1 }}>
+					<Text style={styles.productsTableHeaderText}>CANTIDAD</Text>
+				</View>
+				<View style={{ flex: 3 }}>
+					<Text style={styles.productsTableHeaderText}>DESCRIPCIÓN</Text>
+				</View>
+				<View style={{ flex: 1.2 }}>
+					<Text style={styles.productsTableHeaderText}>PRECIO UNITARIO</Text>
+				</View>
+				<View style={{ flex: 1 }}>
+					<Text style={styles.productsTableHeaderText}>IMPUESTOS</Text>
+				</View>
+				<View style={{ flex: 1.2 }}>
+					<Text style={styles.productsTableHeaderText}>MONTO</Text>
+				</View>
+			</View>
+			{items.map((item, index) => (
+				<View key={index} style={styles.productsTableRow}>
+					<View style={{ flex: 1 }}>
+						<Text style={styles.productsTableCell}>
+							{item.quantity} {item.unit}
+						</Text>
+					</View>
+					<View style={{ flex: 3 }}>
+						<Text style={styles.productsTableCell}>{item.product_name}</Text>
+					</View>
+					<View style={{ flex: 1.2 }}>
+						<Text style={styles.productsTableCell}>
+							$ {item.unit_price.toFixed(2)}
+						</Text>
+					</View>
+					<View style={{ flex: 1 }}>
+						<Text style={styles.productsTableCell}>{item.tax_rate}%</Text>
+					</View>
+					<View style={{ flex: 1.2 }}>
+						<Text style={styles.productsTableCell}>
+							$ {item.amount.toFixed(2)}
+						</Text>
+					</View>
+				</View>
+			))}
+		</View>
+	);
+}
