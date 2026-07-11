@@ -50,3 +50,40 @@ export const getClientById = cache(async (id: string) => {
 
 	return normalizeClient(data);
 });
+
+export type ClientActivitySummary = {
+	totalClients: number;
+	recentClients: number;
+};
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+export const getClientActivitySummary = cache(
+	async (): Promise<ClientActivitySummary> => {
+		const supabase = await createSupabaseServerClient();
+		const recentBoundaryIso = new Date(
+			Date.now() - SEVEN_DAYS_MS,
+		).toISOString();
+
+		const [totalResult, recentResult] = await Promise.all([
+			supabase.from("clients").select("id", { count: "exact", head: true }),
+			supabase
+				.from("clients")
+				.select("id", { count: "exact", head: true })
+				.gte("created_at", recentBoundaryIso),
+		]);
+
+		if (totalResult.error) {
+			throw new Error("No se pudo cargar el total de clientes.");
+		}
+
+		if (recentResult.error) {
+			throw new Error("No se pudieron cargar los clientes recientes.");
+		}
+
+		return {
+			totalClients: totalResult.count ?? 0,
+			recentClients: recentResult.count ?? 0,
+		};
+	},
+);

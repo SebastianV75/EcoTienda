@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { SetupNotice } from "@/components/setup-notice";
 import { getCurrentUser, requireRole } from "@/features/auth/session";
+import { getClientActivitySummary } from "@/features/clients/data";
 import { hasSupabaseEnv } from "@/lib/env";
 
 const quickActions = [
@@ -49,10 +50,16 @@ const supportCards = [
 	},
 ];
 
+const emptyActivitySummary = { totalClients: 0, recentClients: 0 };
+
 export default async function AdminPage() {
 	const user = hasSupabaseEnv()
 		? await requireRole(["admin"])
 		: await getCurrentUser();
+
+	const activitySummary = hasSupabaseEnv()
+		? await getClientActivitySummary()
+		: emptyActivitySummary;
 
 	return (
 		<AppShell
@@ -64,7 +71,32 @@ export default async function AdminPage() {
 			<div className="space-y-4">
 				{!hasSupabaseEnv() ? <SetupNotice /> : null}
 
-				<section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+				<section
+					aria-label="Resumen de actividad"
+					className="grid gap-4 rounded-[24px] border border-[var(--border-soft)] bg-white p-4 shadow-sm sm:grid-cols-2 sm:p-5"
+				>
+					<div className="flex flex-col gap-1">
+						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
+							Total de clientes
+						</p>
+						<p className="text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)] sm:text-3xl">
+							{activitySummary.totalClients}
+						</p>
+					</div>
+					<div className="flex flex-col gap-1">
+						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
+							Clientes recientes
+						</p>
+						<p className="text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)] sm:text-3xl">
+							{activitySummary.recentClients}
+						</p>
+						<p className="text-xs leading-5 text-[var(--muted)]">
+							Últimos 7 días
+						</p>
+					</div>
+				</section>
+
+				<section className="hidden gap-4 md:grid xl:grid-cols-[1.15fr_0.85fr]">
 					<div className="rounded-[28px] bg-[linear-gradient(135deg,#0d4f2e,#2fb314)] p-6 text-white shadow-[0_24px_60px_rgba(13,79,46,0.22)] sm:p-7">
 						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100/80">
 							Vista principal
@@ -95,24 +127,24 @@ export default async function AdminPage() {
 					</div>
 				</section>
 
-				<section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+				<section className="grid gap-4 grid-cols-2 xl:grid-cols-4">
 					{quickActions.map((item) => (
 						<article
 							key={item.title}
-							className="rounded-[26px] border border-[var(--border-soft)] bg-white p-6 shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(13,79,46,0.09)]"
+							className="flex h-full flex-col rounded-[22px] border border-[var(--border-soft)] bg-white p-4 shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(13,79,46,0.09)] sm:rounded-[26px] sm:p-6"
 						>
 							<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
 								Módulo
 							</p>
-							<h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
+							<h3 className="mt-3 text-lg font-semibold tracking-[-0.04em] text-[var(--brand-deep)] sm:mt-4 sm:text-2xl">
 								{item.title}
 							</h3>
-							<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+							<p className="mt-2 hidden text-sm leading-7 text-[var(--muted)] sm:mt-3 sm:block">
 								{item.description}
 							</p>
 							<Link
 								href={item.href}
-								className="mt-5 inline-flex rounded-full bg-[var(--surface-strong)] px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:bg-emerald-100"
+								className="mt-3 inline-flex min-h-[44px] items-center rounded-full bg-[var(--surface-strong)] px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:bg-emerald-100 sm:mt-5"
 							>
 								{item.cta}
 							</Link>
