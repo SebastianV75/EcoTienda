@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import type { ClientRecord } from "@/types/client";
 
 type CartaPoderPreviewProps = {
@@ -8,9 +10,17 @@ const POWER_ACCEPTOR = "ANA VICTORIA SALCIDO MARQUEZ";
 const WITNESS_ONE = "GUILLERMO ORPINEL AGUIRRE";
 const WITNESS_TWO = "RICARDO LOPEZ BEALL";
 
-function InlineField({ value, widthClass = "min-w-[180px]" }: { value: string; widthClass?: string }) {
+function InlineField({
+	value,
+	widthClass = "min-w-[180px]",
+}: {
+	value: string;
+	widthClass?: string;
+}) {
 	return (
-		<span className={`inline-flex border-b border-black px-2 pb-0.5 font-medium uppercase tracking-[0.02em] ${widthClass}`}>
+		<span
+			className={`inline-flex border-b border-black px-2 pb-0.5 font-medium uppercase tracking-[0.02em] ${widthClass}`}
+		>
 			{value}
 		</span>
 	);
@@ -19,12 +29,23 @@ function InlineField({ value, widthClass = "min-w-[180px]" }: { value: string; w
 export function CartaPoderPreview({ client }: CartaPoderPreviewProps) {
 	return (
 		<article className="mx-auto w-full max-w-[900px] rounded-[18px] border border-neutral-300 bg-white p-6 text-[15px] leading-8 text-black shadow-sm sm:p-10 print:rounded-none print:border-0 print:p-0 print:shadow-none">
-			<div className="flex items-start justify-between gap-6">
+			<div className="flex items-start justify-between gap-6 border-b border-neutral-200 pb-6 print:pb-5">
 				<div className="space-y-2">
-					<p className="text-sm font-semibold uppercase tracking-[0.32em]">EcoTienda</p>
+					<p className="text-sm font-semibold uppercase tracking-[0.32em]">
+						EcoTienda
+					</p>
 					<h1 className="text-4xl font-bold tracking-[0.08em]">CARTA PODER</h1>
 				</div>
-				<div className="h-16 w-40 bg-[linear-gradient(135deg,#d9d9d9_0%,#f3f3f3_55%,#a7a7a7_100%)]" />
+				<div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-emerald-100 bg-white print:h-16 print:w-16 print:rounded-xl print:border-neutral-200">
+					<Image
+						src="/ecotienda-logo-temp.png"
+						alt="EcoTienda"
+						width={80}
+						height={80}
+						className="h-full w-full object-contain"
+						priority
+					/>
+				</div>
 			</div>
 
 			<div className="mt-10 space-y-6">
@@ -34,13 +55,17 @@ export function CartaPoderPreview({ client }: CartaPoderPreviewProps) {
 				<p className="font-semibold uppercase">Presente</p>
 
 				<p>
-					POR LA PRESENTE OTORGO AL SR(A) <InlineField value={POWER_ACCEPTOR} widthClass="min-w-[260px]" /> PODER
-					AMPLIO, CUMPLIDO Y BASTANTE PARA QUE A MI NOMBRE Y REPRESENTACIÓN,
-					BAJO MI AUTORIZACIÓN PLENA Y CONSCIENTE DEL TRÁMITE A CAMBIO DE
-					MEDIDOR BIDIRECCIONAL ANTE LA COMISIÓN FEDERAL DE ELECTRICIDAD (CFE),
-					DE MI DOMICILIO: <InlineField value={client.address} widthClass="min-w-[420px]" />
-					COLONIA <InlineField value={client.neighborhood} widthClass="min-w-[220px]" />, CON EL
-					NÚMERO DE SERVICIO (RPU) <InlineField value={client.rpu} widthClass="min-w-[220px]" />, SIENDO
+					POR LA PRESENTE OTORGO AL SR(A){" "}
+					<InlineField value={POWER_ACCEPTOR} widthClass="min-w-[260px]" />{" "}
+					PODER AMPLIO, CUMPLIDO Y BASTANTE PARA QUE A MI NOMBRE Y
+					REPRESENTACIÓN, BAJO MI AUTORIZACIÓN PLENA Y CONSCIENTE DEL TRÁMITE A
+					CAMBIO DE MEDIDOR BIDIRECCIONAL ANTE LA COMISIÓN FEDERAL DE
+					ELECTRICIDAD (CFE), DE MI DOMICILIO:{" "}
+					<InlineField value={client.address} widthClass="min-w-[420px]" />
+					COLONIA{" "}
+					<InlineField value={client.neighborhood} widthClass="min-w-[220px]" />
+					, CON EL NÚMERO DE SERVICIO (RPU){" "}
+					<InlineField value={client.rpu} widthClass="min-w-[220px]" />, SIENDO
 					MI RFC <InlineField value={client.rfc} widthClass="min-w-[220px]" />
 				</p>
 			</div>
@@ -48,12 +73,16 @@ export function CartaPoderPreview({ client }: CartaPoderPreviewProps) {
 			<div className="mt-24 grid gap-16 sm:grid-cols-2">
 				<div className="text-center">
 					<div className="mx-auto h-px w-full max-w-[260px] bg-black" />
-					<p className="mt-3 text-lg uppercase tracking-[0.04em]">OTORGO EL PODER</p>
+					<p className="mt-3 text-lg uppercase tracking-[0.04em]">
+						OTORGO EL PODER
+					</p>
 					<p className="mt-12 text-lg uppercase">{client.full_name}</p>
 				</div>
 				<div className="text-center">
 					<div className="mx-auto h-px w-full max-w-[260px] bg-black" />
-					<p className="mt-3 text-lg uppercase tracking-[0.04em]">ACEPTO EL PODER</p>
+					<p className="mt-3 text-lg uppercase tracking-[0.04em]">
+						ACEPTO EL PODER
+					</p>
 					<p className="mt-12 text-lg uppercase">{POWER_ACCEPTOR}</p>
 				</div>
 			</div>
