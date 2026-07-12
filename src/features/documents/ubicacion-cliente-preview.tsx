@@ -197,6 +197,7 @@ export function UbicacionClientePreview({
 
 							<div className="overflow-hidden rounded-[24px] border border-emerald-100 bg-[var(--surface-strong)] print:rounded-xl print:border-neutral-300 print:bg-white">
 								{showStaticMap ? (
+									// eslint-disable-next-line @next/next/no-img-element -- Google Static Maps URL is dynamic and this printable preview intentionally uses the direct image response.
 									<img
 										src={staticMapUrl ?? undefined}
 										alt={`Mapa centrado en las coordenadas de ${client.full_name}`}
