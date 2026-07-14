@@ -1,0 +1,82 @@
+project:
+  name: EcoTienda
+  root: /home/sebas/Projects/EcoTienda
+  description: Internal web platform for EcoTienda operations.
+
+artifact_store:
+  mode: openspec
+  backend: filesystem
+  root: openspec
+
+sdd:
+  enabled: true
+  strict_tdd: false
+  phase_order:
+    - proposal
+    - spec
+    - design
+    - tasks
+    - apply
+    - verify
+    - archive
+  phase_rules:
+    proposal: Capture the business problem, target users, scope, non-goals, constraints, and tradeoffs.
+    spec: Translate the approved proposal into functional requirements and acceptance criteria.
+    design: Define the architecture and technical decisions that satisfy the spec.
+    tasks: Break the spec and design into small reviewable implementation steps.
+    apply: Implement tasks in small batches and preserve progress between batches.
+    verify: Validate implementation against the spec, tasks, and acceptance criteria.
+    archive: Record the final outcome and close the change.
+
+testing:
+  test_runner: none
+  validation_commands:
+    - npm run lint
+    - npm run build
+  notes: No dedicated test script is configured yet. Use lint and build as the current safety net.
+
+stack:
+  framework: Next.js
+  language: TypeScript
+  ui: Tailwind CSS
+  backend: Supabase
+  auth: Supabase Auth
+  database: Supabase Postgres
+  storage: Supabase Storage
+  maps: Google Maps API
+
+sources_of_truth:
+  - README.md
+  - docs/development-plan.md
+  - docs/phase-0-bootstrap.md
+
+current_context:
+  phase: archive
+  focus: preserve the verified redesign slices truthfully and continue with the next prioritized change after closing Agenda v1
+  priorities:
+    - decide lifecycle closure for prelogin-auth-redesign
+    - decide lifecycle closure for internal-panel-foundation-redesign
+    - advance formato-cfe from proposal to spec when ready
+  next_feature: advance formato-cfe from proposal to spec when ready
+  active_changes:
+    - name: prelogin-auth-redesign
+      status: verified_pending_lifecycle
+      next: handle review authority / archive truthfully
+      blocker: UI verification is complete, but lifecycle closure still depends on review authority handling
+    - name: internal-panel-foundation-redesign
+      status: verified_pending_lifecycle
+      next: decide whether to archive this slice or continue with a new panel change
+      blocker: implementation and manual verification are complete, but lifecycle closure has not been recorded yet
+    - name: formato-cfe
+      status: planning_only
+      next: spec
+      blocker: missing specs, design, and tasks artifacts
+  archived_changes:
+    - 2026-07-10-ubicacion-cliente
+    - 2026-07-10-geolocalizacion-cliente
+    - 2026-07-11-diagrama-unifilar-datos
+    - 2026-07-12-selector-cliente-directo
+    - 2026-07-12-pdf-ubicacion-cliente
+    - 2026-07-12-home-mobile-polish
+    - 2026-07-12-mobile-shell-polish
+    - 2026-07-13-agenda-v1

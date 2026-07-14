@@ -77,3 +77,18 @@ button:active {
   background: rgba(47, 179, 20, 0.18);
   color: var(--brand-deep);
 }
+
+@media print {
+  @page {
+    size: auto;
+    margin: 12mm;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  body::before {
+    display: none !important;
+  }
+}

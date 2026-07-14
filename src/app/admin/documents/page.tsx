@@ -15,9 +15,16 @@ const templates = [
 	{
 		title: "Ubicación del cliente",
 		description:
-			"Plantilla pendiente de integración con captura de mapa y coordenadas del servicio.",
-		href: "#",
-		status: "Pendiente",
+			"Vista previa con datos del cliente y mapa centrado en las coordenadas guardadas. Pendiente de integrar impresión y descarga.",
+		href: "/admin/documents/ubicacion-cliente",
+		status: "Activo",
+	},
+	{
+		title: "Diagrama unifilar",
+		description:
+			"Panel de datos del cliente y del equipo de generación solar. La vista previa actual muestra los datos que acompañarán al diagrama eléctrico.",
+		href: "/admin/documents/diagrama-unifilar",
+		status: "Activo",
 	},
 	{
 		title: "Formato CFE",
@@ -49,7 +56,9 @@ export default async function DocumentsPage() {
 							Genera documentos con datos reales del cliente
 						</h2>
 						<p className="mt-4 max-w-2xl text-sm leading-7 text-emerald-50/90 sm:text-base">
-							El flujo arranca con Carta Poder. Después se integrarán ubicación del cliente y el formato CFE con más campos específicos.
+							Ya puedes trabajar Carta Poder y Ubicación del cliente con datos
+							reales. El siguiente paso será sumar impresión, descarga y el
+							formato CFE con más campos específicos.
 						</p>
 					</div>
 
@@ -61,7 +70,8 @@ export default async function DocumentsPage() {
 							{clients.length}
 						</p>
 						<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-							Cada plantilla usa los datos del cliente como base para el autollenado.
+							Cada plantilla usa los datos del cliente como base para el
+							autollenado.
 						</p>
 						<Link
 							href="/admin/clients/new"

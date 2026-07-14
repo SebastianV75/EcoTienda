@@ -6,6 +6,7 @@ import { ClientForm } from "@/features/clients/client-form";
 
 export default async function NewClientPage() {
 	const user = await requireRole(["admin"]);
+	const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? null;
 
 	return (
 		<AppShell
@@ -23,7 +24,7 @@ export default async function NewClientPage() {
 				</Link>
 
 				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
-					<ClientForm mode="create" />
+					<ClientForm mode="create" googleMapsApiKey={googleMapsApiKey} />
 				</section>
 			</div>
 		</AppShell>

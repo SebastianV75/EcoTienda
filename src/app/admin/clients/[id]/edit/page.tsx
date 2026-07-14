@@ -13,6 +13,7 @@ export default async function EditClientPage({
 	const user = await requireRole(["admin"]);
 	const { id } = await params;
 	const client = await getClientById(id);
+	const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? null;
 
 	return (
 		<AppShell
@@ -33,6 +34,7 @@ export default async function EditClientPage({
 					<ClientForm
 						mode="edit"
 						clientId={client.id}
+						googleMapsApiKey={googleMapsApiKey}
 						defaultValues={{
 							full_name: client.full_name,
 							phone: client.phone,

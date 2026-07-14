@@ -44,6 +44,9 @@ next-env.d.ts
 # local Pi runtime state
 .atl/
 
+# local code graph index
+.codegraph/
+
 # supabase CLI temp cache
 supabase/.temp/
 
