@@ -9,12 +9,14 @@ import { roleConfig } from "@/features/auth/roles";
 import type { AppRole } from "@/types/auth";
 
 const navigation = [
-	{ href: "/admin", label: "Panel" },
-	{ href: "/admin/clients", label: "Clientes" },
-	{ href: "/admin/documents", label: "Descargables" },
-	{ href: "/admin/quotations", label: "Cotizaciones" },
-	{ href: "/admin/visits", label: "Visitas técnicas" },
-	{ href: "/admin/settings", label: "Configuración" },
+	{ href: "/admin", label: "Panel", roles: ["admin"] as AppRole[] },
+	{ href: "/agenda", label: "Agenda", roles: ["admin", "technician"] as AppRole[] },
+	{ href: "/admin/clients", label: "Clientes", roles: ["admin"] as AppRole[] },
+	{ href: "/admin/documents", label: "Descargables", roles: ["admin"] as AppRole[] },
+	{ href: "/admin/quotations", label: "Cotizaciones", roles: ["admin"] as AppRole[] },
+	{ href: "/admin/visits", label: "Visitas técnicas", roles: ["admin"] as AppRole[] },
+	{ href: "/admin/settings", label: "Configuración", roles: ["admin"] as AppRole[] },
+	{ href: "/technician", label: "Área técnica", roles: ["technician"] as AppRole[] },
 ];
 
 type AppShellProps = {
@@ -32,6 +34,8 @@ export function AppShell({
 	description,
 	email,
 }: AppShellProps) {
+	const visibleNavigation = navigation.filter((item) => item.roles.includes(role));
+
 	return (
 		<div className="min-h-screen bg-[linear-gradient(180deg,rgba(247,249,246,0.98),rgba(240,245,240,0.94))] px-3 pb-[calc(88px+env(safe-area-inset-bottom))] pt-3 text-[var(--foreground)] sm:px-5 sm:pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-5 print:min-h-0 print:bg-white print:p-0">
 			<div className="mx-auto grid min-h-[calc(100vh-24px)] w-full max-w-7xl gap-4 lg:grid-cols-[312px_minmax(0,1fr)] print:min-h-0 print:grid-cols-1 print:gap-0">
@@ -78,7 +82,7 @@ export function AppShell({
 						</div>
 
 						<nav className="flex flex-col gap-2.5">
-							{navigation.map((item) => (
+							{visibleNavigation.map((item) => (
 								<Link
 									key={item.href}
 									href={item.href}
@@ -130,7 +134,7 @@ export function AppShell({
 				</main>
 			</div>
 
-			<MobileBottomNavigation signOutSlot={<MobileSignOut email={email} />} />
+			<MobileBottomNavigation role={role} signOutSlot={<MobileSignOut email={email} />} />
 		</div>
 	);
 }
