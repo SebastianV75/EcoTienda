@@ -49,6 +49,12 @@ on public.agenda_items
 for select
 using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
 
+drop policy if exists "admins can insert agenda items" on public.agenda_items;
+create policy "admins can insert agenda items"
+on public.agenda_items
+for insert
+with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
 drop policy if exists "admins can update agenda items" on public.agenda_items;
 create policy "admins can update agenda items"
 on public.agenda_items

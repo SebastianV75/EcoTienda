@@ -77,6 +77,36 @@ function validateAgendaItemInput(formData: FormData) {
 	};
 }
 
+export async function createAgendaItemAction(
+	_previousState: AgendaActionState,
+	formData: FormData,
+): Promise<AgendaActionState> {
+	if (hasSupabaseEnv()) {
+		await requireRole(["admin"]);
+	}
+
+	const { error, values } = validateAgendaItemInput(formData);
+
+	if (error || !values) {
+		return { error };
+	}
+
+	const supabase = await createSupabaseServerClient();
+	const { data, error: insertError } = await supabase
+		.from("agenda_items")
+		.insert(values)
+		.select("id")
+		.single();
+
+	if (insertError || !data) {
+		return { error: "No se pudo crear el elemento de agenda." };
+	}
+
+	revalidatePath("/agenda");
+	revalidatePath("/admin/visits");
+	redirect(`/agenda/${data.id}`);
+}
+
 export async function updateAgendaItemAction(
 	_previousState: AgendaActionState,
 	formData: FormData,

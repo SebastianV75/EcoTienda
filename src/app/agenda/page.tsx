@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { AppShell } from "@/components/app-shell";
 import { AgendaCalendar } from "@/features/agenda/agenda-calendar";
 import { AgendaMonthControls } from "@/features/agenda/agenda-month-controls";
@@ -54,6 +56,16 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
 			email={user?.email}
 		>
 			<div className="space-y-6">
+				{user?.role === "admin" ? (
+					<div className="flex justify-end">
+						<Link
+							href="/agenda/new"
+							className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
+						>
+							Nuevo elemento
+						</Link>
+					</div>
+				) : null}
 				{monthNotice ? (
 					<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
 						{monthNotice}
