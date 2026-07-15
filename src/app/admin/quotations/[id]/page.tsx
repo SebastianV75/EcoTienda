@@ -154,7 +154,7 @@ export default async function QuotationDetailPage({
 								Productos
 							</p>
 						</div>
-						<div className="overflow-x-auto">
+						<div className="hidden overflow-x-auto sm:block">
 							<table className="w-full">
 								<thead>
 									<tr className="border-b border-[var(--border-soft)] bg-[var(--surface-strong)]">
@@ -201,11 +201,30 @@ export default async function QuotationDetailPage({
 								</tbody>
 							</table>
 						</div>
+
+						<div className="divide-y divide-[var(--border-soft)] sm:hidden">
+							{itemsData.map((item) => (
+								<div key={item.id} className="px-4 py-3">
+									<div className="flex items-start justify-between gap-3">
+										<div className="min-w-0 flex-1">
+											<p className="text-sm font-medium text-[var(--foreground)]">{item.product_name}</p>
+											<p className="mt-1 text-xs text-[var(--muted)]">
+												{item.quantity} {item.unit} &times; $ {item.unit_price.toFixed(2)}
+											</p>
+										</div>
+										<div className="text-right">
+											<p className="text-sm font-semibold text-[var(--brand-deep)]">$ {item.amount.toFixed(2)}</p>
+											<p className="text-[11px] text-[var(--muted)]">IVA {item.tax_rate}%</p>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
 					</section>
 				)}
 
 				<section className="flex justify-end">
-					<div className="w-full max-w-sm space-y-4 rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+					<div className="w-full space-y-4 rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:max-w-sm">
 						<div className="flex items-center justify-between">
 							<span className="text-sm text-[var(--muted)]">Subtotal</span>
 							<span className="text-lg font-medium text-[var(--brand-deep)]">

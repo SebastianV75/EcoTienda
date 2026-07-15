@@ -52,7 +52,7 @@ export default async function VisitsPage() {
 				) : null}
 
 				{visitItems.length > 0 ? (
-					<section className="grid gap-4 xl:grid-cols-2">
+					<section className="grid gap-4 lg:grid-cols-2">
 						{visitItems.map((item) => (
 							<AgendaItemCard key={item.id} item={item} href={`/agenda/${item.id}`} />
 						))}

@@ -207,8 +207,8 @@ function SupplierModal({ onClose }: { onClose: () => void }) {
 	}
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-			<div className="w-full max-w-lg rounded-[28px] bg-white p-6 shadow-xl sm:p-8">
+		<div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+			<div className="w-full max-h-[90vh] overflow-y-auto rounded-t-[28px] bg-white p-6 shadow-xl sm:max-w-lg sm:rounded-[28px] sm:max-h-none sm:overflow-y-visible sm:p-8">
 				<div className="flex items-center justify-between">
 					<h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
 						Nuevo proveedor

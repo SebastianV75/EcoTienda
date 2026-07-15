@@ -56,7 +56,7 @@ export default function HomePage() {
 						</div>
 					</section>
 
-					<aside className="relative min-h-[22rem] overflow-hidden rounded-[36px] border border-[var(--border-soft)] bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(247,240,227,0.92))] p-6 shadow-[0_28px_78px_rgba(10,44,21,0.08)] sm:p-7 lg:min-h-[38rem] lg:p-8">
+					<aside className="relative min-h-[14rem] overflow-hidden rounded-[36px] border border-[var(--border-soft)] bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(247,240,227,0.92))] p-6 shadow-[0_28px_78px_rgba(10,44,21,0.08)] sm:min-h-[18rem] sm:p-7 lg:min-h-[38rem] lg:p-8">
 						<div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(13,79,46,0.16),transparent)]" />
 						<div className="pointer-events-none absolute inset-y-8 right-8 hidden w-px bg-[linear-gradient(180deg,transparent,rgba(13,79,46,0.12),transparent)] lg:block" />
 

@@ -22,8 +22,8 @@ export function QuotationFooter({ subtotal, total }: QuotationFooterProps) {
 				/>
 			</div>
 
-			<div className="flex items-end justify-end">
-				<div className="w-full max-w-sm space-y-4 rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm">
+			<div className="flex items-end lg:justify-end">
+				<div className="w-full space-y-4 rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm lg:max-w-sm">
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-[var(--muted)]">Subtotal</span>
 						<span className="text-lg font-medium text-[var(--brand-deep)]">
