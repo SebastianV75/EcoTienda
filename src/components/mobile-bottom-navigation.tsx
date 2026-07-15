@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useState, type ReactNode } from "react";
 
+import type { AppRole } from "@/types/auth";
+
 type PrimaryItem = {
 	href: string;
 	label: string;
@@ -113,6 +115,28 @@ function MoreIcon({ className }: { className?: string }) {
 	);
 }
 
+function AgendaIcon({ className }: { className?: string }) {
+	return (
+		<svg
+			aria-hidden="true"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="1.8"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			className={className}
+		>
+			<path d="M7 3v3" />
+			<path d="M17 3v3" />
+			<path d="M4 9h16" />
+			<rect x="4" y="5" width="16" height="15" rx="2" />
+			<path d="M8 13h3" />
+			<path d="M8 16h5" />
+		</svg>
+	);
+}
+
 function VisitsIcon({ className }: { className?: string }) {
 	return (
 		<svg
@@ -167,17 +191,27 @@ function CloseIcon({ className }: { className?: string }) {
 	);
 }
 
-const primaryMobileNavigation: PrimaryItem[] = [
-	{ href: "/admin", label: "Inicio", icon: HomeIcon, exact: true },
-	{ href: "/admin/clients", label: "Clientes", icon: UsersIcon },
-	{ href: "/admin/documents", label: "Descargables", icon: DownloadIcon },
-	{ href: "/admin/quotations", label: "Cotizaciones", icon: QuoteIcon },
-];
+const primaryMobileNavigationByRole: Record<AppRole, PrimaryItem[]> = {
+	admin: [
+		{ href: "/admin", label: "Inicio", icon: HomeIcon, exact: true },
+		{ href: "/agenda", label: "Agenda", icon: AgendaIcon },
+		{ href: "/admin/clients", label: "Clientes", icon: UsersIcon },
+		{ href: "/admin/documents", label: "Docs", icon: DownloadIcon },
+	],
+	technician: [
+		{ href: "/technician", label: "Inicio", icon: HomeIcon, exact: true },
+		{ href: "/agenda", label: "Agenda", icon: AgendaIcon },
+	],
+};
 
-const secondaryMobileNavigation: SecondaryItem[] = [
-	{ href: "/admin/visits", label: "Visitas técnicas", icon: VisitsIcon },
-	{ href: "/admin/settings", label: "Configuración", icon: SettingsIcon },
-];
+const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
+	admin: [
+		{ href: "/admin/quotations", label: "Cotizaciones", icon: QuoteIcon },
+		{ href: "/admin/visits", label: "Visitas técnicas", icon: VisitsIcon },
+		{ href: "/admin/settings", label: "Configuración", icon: SettingsIcon },
+	],
+	technician: [],
+};
 
 function isActive(pathname: string, item: PrimaryItem) {
 	if (item.exact) {
@@ -187,12 +221,16 @@ function isActive(pathname: string, item: PrimaryItem) {
 }
 
 type MobileBottomNavigationProps = {
+	role: AppRole;
 	signOutSlot: ReactNode;
 };
 
 export function MobileBottomNavigation({
+	role,
 	signOutSlot,
 }: MobileBottomNavigationProps) {
+	const primaryMobileNavigation = primaryMobileNavigationByRole[role];
+	const secondaryMobileNavigation = secondaryMobileNavigationByRole[role];
 	const pathname = usePathname() ?? "";
 	const [isMoreOpen, setIsMoreOpen] = useState(false);
 	const sheetTitleId = useId();
@@ -238,7 +276,7 @@ export function MobileBottomNavigation({
 					className="pb-[env(safe-area-inset-bottom)]"
 					style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0px)" }}
 				>
-					<div className="grid h-16 grid-cols-5">
+					<div className="grid h-16" style={{ gridTemplateColumns: `repeat(${primaryMobileNavigation.length + 1}, minmax(0, 1fr))` }}>
 						{primaryMobileNavigation.map((item) => {
 							const Icon = item.icon;
 							const active = isActive(pathname, item);

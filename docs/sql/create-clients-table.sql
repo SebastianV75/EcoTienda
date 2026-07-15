@@ -16,6 +16,11 @@ create table if not exists public.clients (
 
 alter table public.clients add column if not exists neighborhood text not null default '';
 alter table public.clients add column if not exists rfc text not null default '';
+alter table public.clients add column if not exists panel_count text;
+alter table public.clients add column if not exists panel_power text;
+alter table public.clients add column if not exists inverter text;
+alter table public.clients add column if not exists installed_capacity text;
+alter table public.clients add column if not exists estimated_monthly_generation text;
 
 create index if not exists clients_full_name_idx on public.clients (full_name);
 create index if not exists clients_rpu_idx on public.clients (rpu);

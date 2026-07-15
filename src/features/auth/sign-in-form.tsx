@@ -15,11 +15,11 @@ export function SignInForm() {
 	);
 
 	return (
-		<form action={formAction} className="mt-6 space-y-4 sm:mt-8 sm:space-y-5">
-			<div className="space-y-2.5">
+		<form action={formAction} className="space-y-5 sm:space-y-6">
+			<div className="space-y-2">
 				<label
 					htmlFor="email"
-					className="text-sm font-medium text-[var(--brand-deep)]"
+					className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-strong)]"
 				>
 					Correo electrónico
 				</label>
@@ -29,15 +29,15 @@ export function SignInForm() {
 					type="email"
 					required
 					autoComplete="email"
-					className="w-full rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out placeholder:text-[var(--muted)]/70 focus:border-emerald-300 focus:bg-white sm:rounded-[20px] sm:py-3.5"
+					className="w-full rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3.5 text-[var(--foreground)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition duration-200 ease-out placeholder:text-[var(--muted)]/70 focus:border-emerald-300 focus:bg-white focus-visible:ring-4 focus-visible:ring-emerald-100 sm:py-4"
 					placeholder="tu-correo@ecotienda.com"
 				/>
 			</div>
 
-			<div className="space-y-2.5">
+			<div className="space-y-2">
 				<label
 					htmlFor="password"
-					className="text-sm font-medium text-[var(--brand-deep)]"
+					className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-strong)]"
 				>
 					Contraseña
 				</label>
@@ -47,13 +47,17 @@ export function SignInForm() {
 					type="password"
 					required
 					autoComplete="current-password"
-					className="w-full rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out placeholder:text-[var(--muted)]/70 focus:border-emerald-300 focus:bg-white sm:rounded-[20px] sm:py-3.5"
+					className="w-full rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3.5 text-[var(--foreground)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition duration-200 ease-out placeholder:text-[var(--muted)]/70 focus:border-emerald-300 focus:bg-white focus-visible:ring-4 focus-visible:ring-emerald-100 sm:py-4"
 					placeholder="Ingresa tu contraseña"
 				/>
 			</div>
 
 			{state.error ? (
-				<p className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 sm:rounded-[20px]">
+				<p
+					className="rounded-[20px] border border-rose-200 bg-rose-50/95 px-4 py-3.5 text-sm leading-6 text-rose-800"
+					role="alert"
+					aria-live="polite"
+				>
 					{state.error}
 				</p>
 			) : null}
@@ -61,7 +65,7 @@ export function SignInForm() {
 			<button
 				type="submit"
 				disabled={isPending}
-				className="w-full rounded-full bg-[var(--brand)] px-5 py-3.5 font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70"
+				className="w-full rounded-full bg-[linear-gradient(180deg,var(--brand),var(--brand-strong))] px-5 py-3.5 font-semibold text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
 			>
 				{isPending ? "Ingresando..." : "Entrar al sistema"}
 			</button>

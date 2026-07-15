@@ -1,11 +1,11 @@
 project: EcoTienda
 repository: /home/sebas/Projects/EcoTienda
-purpose: Initialize SDD/OpenSpec so the team can manage work through formal artifacts.
+purpose: Internal web platform for EcoTienda operations, tracked through OpenSpec artifacts.
 artifact_store: openspec
 current_status:
-  phase: 0 bootstrap
-  state: in progress
-  focus: foundation
+  phase: archive
+  state: agenda-v1 is archived after manual acceptance; prelogin-auth-redesign and internal-panel-foundation-redesign still remain verified at the UI level with lifecycle closure pending truthful review/archive handling
+  focus: preserve the verified redesign slices and continue with the next prioritized change after closing Agenda v1
 stack:
   framework: Next.js
   language: TypeScript
@@ -21,7 +21,34 @@ business_context:
     - downloadable documents
     - quotations
     - technical visits
-  target_next_feature: client location (Ubicación cliente)
+  target_next_feature: advance formato-cfe from proposal into spec/design/tasks when prioritized
+  openspec_status:
+    active_changes:
+      - name: prelogin-auth-redesign
+        stage: verified_pending_lifecycle
+        next: handle review authority / archive truthfully
+        blocker: UI verification is complete, but lifecycle closure still depends on review authority handling
+      - name: internal-panel-foundation-redesign
+        stage: verified_pending_lifecycle
+        next: decide whether to archive this slice or continue with a new panel change
+        blocker: implementation and manual verification are complete, but lifecycle closure has not been recorded yet
+      - name: formato-cfe
+        stage: proposal_only
+        next: spec
+        blocker: missing specs, design, and tasks artifacts
+    archive_ready_changes: []
+    archived_changes:
+      - 2026-07-10-ubicacion-cliente
+      - 2026-07-10-geolocalizacion-cliente
+      - 2026-07-11-diagrama-unifilar-datos
+      - 2026-07-12-selector-cliente-directo
+      - 2026-07-12-pdf-ubicacion-cliente
+      - 2026-07-12-home-mobile-polish
+      - 2026-07-12-mobile-shell-polish
+      - 2026-07-13-agenda-v1
+    notes:
+      - Historical implemented changes that lacked valid native review authority were reconciled by syncing their verified behavior into canonical specs and archiving them with explicit exception notes rather than fabricated review receipts.
+      - Agenda v1 was archived after explicit manual product acceptance; future automated tests remain hardening work, not blockers for the archived v1 baseline.
 operational_notes:
   test_validation:
     - npm run lint
@@ -32,3 +59,8 @@ references:
   - README.md
   - docs/development-plan.md
   - docs/phase-0-bootstrap.md
+  - openspec/config.yaml
+  - openspec/specs/documents/spec.md
+  - openspec/specs/clients/spec.md
+  - openspec/specs/ubicacion-cliente/spec.md
+  - openspec/specs/diagrama-unifilar/spec.md

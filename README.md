@@ -93,3 +93,8 @@ npm run start
 ## Next step
 
 Create the first authenticated admin user in Supabase and start the Phase 1 documents module.
+
+
+## Proyect ARCH
+Next.js 16 con React 19 + TypeScript + Tailwind CSS 4, usando Supabase como backend (Auth + Postgres + Storage). Corre con Turbopack en desarrollo. 
+
