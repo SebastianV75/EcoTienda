@@ -80,16 +80,16 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
   const statusConfig = getStatusConfig(quotation.status);
   const createdDate = formatDate(quotation.created_at);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownButtonRef = useRef<HTMLButtonElement>(null);
 
-  const [, deleteAction, isDeletingAction] = useActionState(
+  const [deleteState, deleteAction, isDeletingAction] = useActionState(
     deleteQuotationAction,
     { error: null, success: false },
   );
+
+  const isDeleted = deleteState.success;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -127,7 +127,7 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 
   return (
     <AnimatePresence mode="wait">
-      {!isDeleting && (
+      {!isDeleted && (
         <motion.article
           key={quotation.id}
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -137,47 +137,6 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
           className="relative"
         >
           <article className="relative rounded-[26px] border border-[var(--border-soft)] bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(13,79,46,0.09)] relative">
-            <div className="absolute top-4 right-4 z-10">
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  ref={dropdownButtonRef}
-                  type="button"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="rounded-full bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--muted)] transition hover:bg-emerald-100"
-                  aria-label="Opciones de cotización"
-                  aria-expanded={isDropdownOpen}
-                >
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                  </svg>
-                </button>
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-40 rounded-[14px] border border-[var(--border-soft)] bg-white shadow-lg py-1 z-50 animate-fade-in">
-                    <Link
-                      href={"/admin/quotations/" + quotation.id + "/edit"}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--brand-deep)] hover:bg-emerald-50"
-                      onClick={() => setIsDropdownOpen(false)}
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5l3.5 3.5m-2-5a2.5 2.5 0 113.5 3.5L6.5 21H3v-3.5L16 3.7z" />
-                      </svg>
-                      Editar
-                    </Link>
-                    <hr className="border-[var(--border-soft)] my-1" />
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
-                    >
-                      <DeleteIcon />
-                      Eliminar
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
@@ -187,9 +146,45 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
                   {quotation.quotation_number ?? "Sin n\u00famero"}
                 </h3>
               </div>
-              <span className={"inline-flex rounded-full px-2.5 py-1 text-xs font-medium " + statusConfig.className}>
-                {statusConfig.label}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={"inline-flex rounded-full px-2.5 py-1 text-xs font-medium " + statusConfig.className}>
+                  {statusConfig.label}
+                </span>
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    ref={dropdownButtonRef}
+                    type="button"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="rounded-full bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--muted)] transition hover:bg-emerald-100"
+                    aria-label="Opciones de cotización"
+                    aria-expanded={isDropdownOpen}
+                  >
+                    <DotsIcon />
+                  </button>
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-40 rounded-[14px] border border-[var(--border-soft)] bg-white shadow-lg py-1 z-50 animate-fade-in">
+                      <Link
+                        href={"/admin/quotations/" + quotation.id + "/edit"}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--brand-deep)] hover:bg-emerald-50"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <EditIcon />
+                        Editar
+                      </Link>
+                      <hr className="border-[var(--border-soft)] my-1" />
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        disabled={isDeletingAction}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
+                      >
+                        <DeleteIcon />
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <dl className="mt-4 space-y-3 text-sm text-[var(--muted)]">

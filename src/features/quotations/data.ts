@@ -18,6 +18,7 @@ export type QuotationListItem = {
 export type QuotationItem = {
 	id: string;
 	quotation_id: string;
+	type: "product" | "section" | "note";
 	product_name: string;
 	quantity: number;
 	unit: string;
@@ -33,6 +34,8 @@ export type QuotationDetail = {
 	supplier_name: string;
 	project: string | null;
 	terms_and_conditions: string | null;
+	order_deadline: string | null;
+	expected_delivery: string | null;
 	subtotal: number;
 	total: number;
 	status: string;

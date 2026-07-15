@@ -12,6 +12,7 @@ export type Supplier = {
 export type QuotationItem = {
 	id?: string;
 	quotation_id?: string;
+	type?: "product" | "section" | "note";
 	product_name: string;
 	quantity: number;
 	unit: string;

@@ -23,41 +23,50 @@ export function QuotationTable({
 	return (
 		<section className="rounded-[28px] border border-[var(--border-soft)] bg-white shadow-sm">
 			<div className="overflow-x-auto">
-				<table className="w-full">
+				<table className="w-full table-fixed">
+					<colgroup>
+						<col className="w-[42%]" />
+						<col className="w-[8%]" />
+						<col className="w-[8%]" />
+						<col className="w-[13%]" />
+						<col className="w-[11%]" />
+						<col className="w-[12%]" />
+						<col className="w-[6%]" />
+					</colgroup>
 					<thead>
 						<tr className="border-b border-[var(--border-soft)] bg-[var(--surface-strong)]">
-							<th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
+							<th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
 								Producto
 							</th>
-							<th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
-								Cantidad
+							<th className="px-2 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
+								Cant.
 							</th>
-							<th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
+							<th className="px-2 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
 								UdM
 							</th>
-							<th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
-								Precio unitario
+							<th className="px-2 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
+								Precio
 							</th>
-							<th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
-								Impuestos
+							<th className="px-2 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
+								Imp.
 							</th>
-							<th className="px-4 py-4 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
+							<th className="px-2 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
 								Importe
 							</th>
-							<th className="px-4 py-4" />
+							<th className="px-2 py-3" />
 						</tr>
 					</thead>
 					<tbody>
-						{items.length > 0 ? (
-							items.map((item, index) => (
-								<ProductRow
-									key={index}
-									item={item}
-									index={index}
-									onChange={onItemChange}
-									onRemove={onItemRemove}
-								/>
-							))
+					{items.length > 0 ? (
+						items.map((item, index) => (
+							<ProductRow
+								key={item.id || index}
+								item={item}
+								index={index}
+								onChange={onItemChange}
+								onRemove={onItemRemove}
+							/>
+						))
 						) : (
 							<tr>
 								<td

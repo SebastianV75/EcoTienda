@@ -51,6 +51,8 @@ export async function createQuotationAction(
 ): Promise<QuotationActionState> {
 	const project = getString(formData, "project");
 	const termsAndConditions = getString(formData, "terms_and_conditions");
+	const orderDeadline = getString(formData, "order_deadline");
+	const expectedDelivery = getString(formData, "expected_delivery");
 
 	if (!project) {
 		return { error: "El cliente es obligatorio." };
@@ -83,6 +85,8 @@ export async function createQuotationAction(
 			quotation_number: quotationNumber,
 			project: project || null,
 			terms_and_conditions: termsAndConditions || null,
+			order_deadline: orderDeadline || null,
+			expected_delivery: expectedDelivery || null,
 			subtotal,
 			total,
 			status: "draft",
@@ -97,6 +101,7 @@ export async function createQuotationAction(
 	if (items.length > 0) {
 		const itemsWithQuotationId = items.map((item, index) => ({
 			quotation_id: quotation.id,
+			type: item.type || "product",
 			product_name: item.product_name,
 			quantity: item.quantity,
 			unit: item.unit,
@@ -140,6 +145,8 @@ export async function updateQuotationAction(
 	const project = getString(formData, "project");
 	const status = getString(formData, "status");
 	const termsAndConditions = getString(formData, "terms_and_conditions");
+	const orderDeadline = getString(formData, "order_deadline");
+	const expectedDelivery = getString(formData, "expected_delivery");
 
 	if (!project) {
 		return { error: "El cliente es obligatorio." };
@@ -176,6 +183,8 @@ export async function updateQuotationAction(
 			project: project || null,
 			status: status || null,
 			terms_and_conditions: termsAndConditions || null,
+			order_deadline: orderDeadline || null,
+			expected_delivery: expectedDelivery || null,
 			subtotal,
 			total,
 		})
@@ -201,6 +210,7 @@ export async function updateQuotationAction(
 	if (items.length > 0) {
 		const itemsWithQuotationId = items.map((item, index) => ({
 			quotation_id: quotation.id,
+			type: item.type || "product",
 			product_name: item.product_name,
 			quantity: item.quantity,
 			unit: item.unit,

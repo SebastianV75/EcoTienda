@@ -6,6 +6,8 @@ type QuotationHeaderProps = {
 	clients: ClientRecord[];
 	quotationNumber?: string | null;
 	status?: string | null;
+	orderDeadline?: string | null;
+	expectedDelivery?: string | null;
 	isEditing?: boolean;
 };
 
@@ -13,6 +15,8 @@ export function QuotationHeader({
 	clients,
 	quotationNumber,
 	status,
+	orderDeadline,
+	expectedDelivery,
 	isEditing,
 }: QuotationHeaderProps) {
 	return (
@@ -60,6 +64,39 @@ export function QuotationHeader({
 							<option value="accepted">Aceptada</option>
 							<option value="rejected">Rechazada</option>
 						</select>
+					</div>
+
+					<div className="grid gap-4 sm:grid-cols-2">
+						<div className="space-y-2.5">
+							<label
+								htmlFor="order_deadline"
+								className="text-sm font-medium text-[var(--brand-deep)]"
+							>
+								Cotización válida hasta
+							</label>
+							<input
+								id="order_deadline"
+								name="order_deadline"
+								type="date"
+								defaultValue={orderDeadline ?? ""}
+								className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+							/>
+						</div>
+						<div className="space-y-2.5">
+							<label
+								htmlFor="expected_delivery"
+								className="text-sm font-medium text-[var(--brand-deep)]"
+							>
+								Fecha de entrega
+							</label>
+							<input
+								id="expected_delivery"
+								name="expected_delivery"
+								type="date"
+								defaultValue={expectedDelivery ?? ""}
+								className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+							/>
+						</div>
 					</div>
 
 					{isEditing && quotationNumber && (

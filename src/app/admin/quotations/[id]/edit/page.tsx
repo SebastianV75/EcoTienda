@@ -23,6 +23,8 @@ export default async function EditQuotationPage({
 		project: quotation.project,
 		status: quotation.status,
 		terms_and_conditions: quotation.terms_and_conditions,
+		order_deadline: quotation.order_deadline,
+		expected_delivery: quotation.expected_delivery,
 		items: quotation.items,
 	};
 

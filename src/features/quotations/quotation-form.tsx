@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useActionState } from "react";
 
-import { updateQuotationAction, type QuotationActionState } from "@/features/quotations/actions";
+import { createQuotationAction, updateQuotationAction, type QuotationActionState } from "@/features/quotations/actions";
 import { QuotationHeader } from "@/features/quotations/quotation-header";
 import { QuotationTabs } from "@/features/quotations/quotation-tabs";
 import { QuotationTable } from "@/features/quotations/quotation-table";
@@ -20,6 +20,8 @@ type EditQuotationFormProps = {
 		project: string | null;
 		terms_and_conditions: string | null;
 		status: string | null;
+		order_deadline: string | null;
+		expected_delivery: string | null;
 		items: QuotationItem[];
 	};
 };
@@ -40,16 +42,16 @@ function createEmptyItem(sortOrder: number): QuotationItem {
 	};
 }
 
-export function EditQuotationForm({ clients, initialData = { quotation_number: null, supplier_name: "", project: null, status: null, terms_and_conditions: null, items: [] } }: EditQuotationFormProps) {
+export function EditQuotationForm({ clients, initialData = { quotation_number: null, supplier_name: "", project: null, status: null, terms_and_conditions: null, order_deadline: null, expected_delivery: null, items: [] } }: EditQuotationFormProps) {
+	const isEditing = !!initialData.quotation_number;
+
 	const [state, formAction, isPending] = useActionState(
-		updateQuotationAction,
+		isEditing ? updateQuotationAction : createQuotationAction,
 		initialState,
 	);
 	const [activeTab, setActiveTab] = useState<"products" | "other">("products");
 	const [items, setItems] = useState<QuotationItem[]>(initialData.items);
 	const [showSupplierModal, setShowSupplierModal] = useState(false);
-
-	const isEditing = !!initialData.quotation_number;
 
 	function handleItemChange(index: number, item: QuotationItem) {
 		const updated = [...items];
@@ -70,7 +72,8 @@ export function EditQuotationForm({ clients, initialData = { quotation_number: n
 			...items,
 			{
 				...createEmptyItem(items.length),
-				product_name: "— Sección —",
+				type: "section",
+				product_name: "",
 				unit: "",
 			},
 		]);
@@ -81,7 +84,8 @@ export function EditQuotationForm({ clients, initialData = { quotation_number: n
 			...items,
 			{
 				...createEmptyItem(items.length),
-				product_name: "Nota: ",
+				type: "note",
+				product_name: "",
 				unit: "",
 				quantity: 0,
 				unit_price: 0,
@@ -112,7 +116,7 @@ export function EditQuotationForm({ clients, initialData = { quotation_number: n
 							>
 								<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
 							</svg>
-							Editar
+							{isEditing ? "Editar" : "Nueva cotización"}
 						</h2>
 					</div>
 				</div>
@@ -121,6 +125,8 @@ export function EditQuotationForm({ clients, initialData = { quotation_number: n
 					clients={clients}
 					quotationNumber={initialData.quotation_number}
 					status={initialData.status}
+					orderDeadline={initialData.order_deadline}
+					expectedDelivery={initialData.expected_delivery}
 					isEditing={isEditing}
 				/>
 
@@ -162,7 +168,7 @@ export function EditQuotationForm({ clients, initialData = { quotation_number: n
 						disabled={isPending}
 						className="rounded-full bg-[var(--brand)] px-6 py-3.5 font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70"
 					>
-						{isPending ? "Guardando..." : "Guardar cambios"}
+						{isPending ? "Guardando..." : isEditing ? "Guardar cambios" : "Crear cotización"}
 					</button>
 				</div>
 			</form>

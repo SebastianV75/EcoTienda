@@ -119,6 +119,9 @@ CREATE POLICY "Authenticated users can insert quotations"
 CREATE POLICY "Authenticated users can update quotations"
   ON quotations FOR UPDATE TO authenticated USING (true);
 
+CREATE POLICY "Authenticated users can delete quotations"
+  ON quotations FOR DELETE TO authenticated USING (true);
+
 CREATE POLICY "Authenticated users can view quotation_items"
   ON quotation_items FOR SELECT TO authenticated USING (true);
 

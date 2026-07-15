@@ -15,7 +15,7 @@ export const COLORS = {
 
 export const styles = StyleSheet.create({
 	page: {
-		padding: 40,
+		padding: 30,
 		backgroundColor: COLORS.background,
 		fontFamily: "Helvetica",
 		fontSize: 10,
@@ -24,7 +24,7 @@ export const styles = StyleSheet.create({
 	header: {
 		flexDirection: "row",
 		justifyContent: "space-between",
-		marginBottom: 30,
+		marginBottom: 20,
 	},
 	headerLeft: {
 		flex: 1,
@@ -65,8 +65,8 @@ export const styles = StyleSheet.create({
 	clientSection: {
 		flexDirection: "row",
 		justifyContent: "space-between",
-		marginBottom: 20,
-		paddingBottom: 20,
+		marginBottom: 12,
+		paddingBottom: 12,
 		borderBottomWidth: 1,
 		borderBottomColor: COLORS.borderSoft,
 		borderBottomStyle: "solid",
@@ -90,8 +90,8 @@ export const styles = StyleSheet.create({
 		lineHeight: 1.5,
 	},
 	notesSection: {
-		marginBottom: 20,
-		padding: 12,
+		marginBottom: 12,
+		padding: 10,
 		backgroundColor: COLORS.surfaceStrong,
 		borderRadius: 4,
 	},
@@ -101,7 +101,7 @@ export const styles = StyleSheet.create({
 		lineHeight: 1.5,
 	},
 	commercialTable: {
-		marginBottom: 20,
+		marginBottom: 12,
 	},
 	commercialTableHeader: {
 		flexDirection: "row",
@@ -129,7 +129,7 @@ export const styles = StyleSheet.create({
 		textAlign: "center",
 	},
 	productsTable: {
-		marginBottom: 20,
+		marginBottom: 12,
 	},
 	productsTableHeader: {
 		flexDirection: "row",
@@ -160,10 +160,43 @@ export const styles = StyleSheet.create({
 		fontSize: 9,
 		color: COLORS.foreground,
 	},
+	sectionRow: {
+		flexDirection: "row",
+		paddingVertical: 10,
+		paddingHorizontal: 8,
+		backgroundColor: COLORS.surfaceStrong,
+		borderLeftWidth: 1,
+		borderRightWidth: 1,
+		borderBottomWidth: 1,
+		borderColor: COLORS.border,
+		borderStyle: "solid",
+	},
+	sectionCell: {
+		fontSize: 9,
+		fontWeight: "bold",
+		color: COLORS.brandDeep,
+		textTransform: "uppercase",
+	},
+	noteRow: {
+		flexDirection: "row",
+		paddingVertical: 8,
+		paddingHorizontal: 8,
+		backgroundColor: "#fff8e1",
+		borderLeftWidth: 1,
+		borderRightWidth: 1,
+		borderBottomWidth: 1,
+		borderColor: COLORS.border,
+		borderStyle: "solid",
+	},
+	noteCell: {
+		fontSize: 9,
+		fontStyle: "italic",
+		color: COLORS.muted,
+	},
 	totalsSection: {
 		flexDirection: "row",
 		justifyContent: "flex-end",
-		marginBottom: 30,
+		marginBottom: 10,
 	},
 	totalsTable: {
 		width: "40%",
@@ -205,8 +238,8 @@ export const styles = StyleSheet.create({
 		textAlign: "right",
 	},
 	footer: {
-		marginTop: 30,
-		paddingTop: 20,
+		marginTop: 15,
+		paddingTop: 12,
 		borderTopWidth: 1,
 		borderTopColor: COLORS.borderSoft,
 		borderTopStyle: "solid",
@@ -216,7 +249,7 @@ export const styles = StyleSheet.create({
 		fontSize: 9,
 		color: COLORS.muted,
 		lineHeight: 1.5,
-		marginBottom: 12,
+		marginBottom: 8,
 	},
 	footerThanks: {
 		fontSize: 12,
