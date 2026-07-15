@@ -24,14 +24,14 @@ function getDayContainerClass(day: CalendarDay, variant: AgendaCalendarDayCardPr
 		: "border-[rgba(13,79,46,0.06)] bg-[rgba(247,249,246,0.7)]";
 	const sizeClass =
 		variant === "mobile"
-			? "min-h-[72px] rounded-[16px] px-1.5 py-2"
-			: "min-h-[132px] rounded-[22px] p-3 md:min-h-[160px] lg:min-h-[180px] xl:min-h-[210px]";
+			? "min-h-[72px] rounded-[16px] px-1.5 py-2 sm:min-h-[90px] sm:rounded-[18px] sm:px-2 sm:py-2.5"
+			: "min-h-[132px] rounded-[22px] p-3 lg:min-h-[180px] xl:min-h-[210px]";
 
 	return `border ${baseSurface} ${sizeClass}`;
 }
 
 function getDayNumberClass(day: CalendarDay, variant: AgendaCalendarDayCardProps["variant"]) {
-	const sizeClass = variant === "mobile" ? "h-7 w-7 text-xs" : "h-8 w-8 text-sm";
+	const sizeClass = variant === "mobile" ? "h-7 w-7 text-xs sm:h-8 sm:w-8 sm:text-sm" : "h-8 w-8 text-sm";
 	const toneClass = day.isToday
 		? "bg-[var(--brand-deep)] text-white"
 		: day.inCurrentMonth
@@ -91,18 +91,18 @@ export function AgendaCalendar({ year, month, items }: AgendaCalendarProps) {
 
 	return (
 		<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-4 shadow-sm sm:p-6 xl:p-7">
-			<div className="grid grid-cols-7 gap-1.5 border-b border-[var(--border-soft)] pb-3 md:hidden">
+			<div className="grid grid-cols-7 gap-1.5 border-b border-[var(--border-soft)] pb-3 sm:gap-2 sm:pb-4 lg:hidden">
 				{weekdayLabels.map((label) => (
 					<p
 						key={label}
-						className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]"
+						className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)] sm:text-[11px] sm:tracking-[0.24em]"
 					>
 						{label}
 					</p>
 				))}
 			</div>
 
-			<div className="mt-3 grid grid-cols-7 gap-1.5 md:hidden">
+			<div className="mt-3 grid grid-cols-7 gap-1.5 sm:gap-2 sm:mt-4 lg:hidden">
 				{days.map((day) => (
 					<AgendaCalendarDayCard
 						key={day.isoDate}
@@ -113,7 +113,7 @@ export function AgendaCalendar({ year, month, items }: AgendaCalendarProps) {
 				))}
 			</div>
 
-			<div className="hidden overflow-x-auto pb-2 md:block">
+			<div className="hidden overflow-x-auto pb-2 lg:block">
 				<div className="min-w-[720px]">
 					<div className="grid grid-cols-7 gap-2 border-b border-[var(--border-soft)] pb-4">
 						{weekdayLabels.map((label) => (

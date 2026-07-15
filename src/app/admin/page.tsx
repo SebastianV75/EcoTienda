@@ -44,7 +44,7 @@ export default async function AdminPage() {
 					</h2>
 				</section>
 
-				<section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+				<section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
 					<article className="rounded-[28px] border border-[var(--border-soft)] bg-white p-5 shadow-sm sm:p-6">
 						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
 							Pendientes y seguimiento

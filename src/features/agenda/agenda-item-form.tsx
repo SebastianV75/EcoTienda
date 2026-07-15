@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import {
+	createAgendaItemAction,
 	updateAgendaItemAction,
 	type AgendaActionState,
 } from "@/features/agenda/actions";
@@ -21,7 +22,8 @@ type AgendaFormClientOption = {
 };
 
 type AgendaItemFormProps = {
-	agendaItemId: string;
+	mode: "create" | "edit";
+	agendaItemId?: string;
 	clients: AgendaFormClientOption[];
 	defaultValues: AgendaItemFormValues;
 };
@@ -31,18 +33,19 @@ const initialState: AgendaActionState = {
 };
 
 export function AgendaItemForm({
+	mode,
 	agendaItemId,
 	clients,
 	defaultValues,
 }: AgendaItemFormProps) {
-	const [state, formAction, isPending] = useActionState(
-		updateAgendaItemAction,
-		initialState,
-	);
+	const action = mode === "create" ? createAgendaItemAction : updateAgendaItemAction;
+	const [state, formAction, isPending] = useActionState(action, initialState);
 
 	return (
 		<form action={formAction} className="space-y-5">
-			<input type="hidden" name="id" value={agendaItemId} />
+			{mode === "edit" && agendaItemId ? (
+				<input type="hidden" name="id" value={agendaItemId} />
+			) : null}
 
 			<div className="grid gap-5 md:grid-cols-2">
 				<div className="space-y-2.5">
@@ -154,7 +157,13 @@ export function AgendaItemForm({
 				disabled={isPending}
 				className="w-full rounded-full bg-[var(--brand)] px-5 py-3.5 font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
 			>
-				{isPending ? "Actualizando..." : "Guardar cambios"}
+				{isPending
+					? mode === "create"
+						? "Creando..."
+						: "Actualizando..."
+					: mode === "create"
+						? "Crear elemento"
+						: "Guardar cambios"}
 			</button>
 		</form>
 	);

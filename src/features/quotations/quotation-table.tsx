@@ -22,7 +22,7 @@ export function QuotationTable({
 }: QuotationTableProps) {
 	return (
 		<section className="rounded-[28px] border border-[var(--border-soft)] bg-white shadow-sm">
-			<div className="overflow-x-auto">
+			<div className="hidden overflow-x-auto sm:block">
 				<table className="w-full table-fixed">
 					<colgroup>
 						<col className="w-[42%]" />
@@ -65,6 +65,7 @@ export function QuotationTable({
 								index={index}
 								onChange={onItemChange}
 								onRemove={onItemRemove}
+								variant="table"
 							/>
 						))
 						) : (
@@ -80,6 +81,26 @@ export function QuotationTable({
 						)}
 					</tbody>
 				</table>
+			</div>
+
+			<div className="divide-y divide-[var(--border-soft)] sm:hidden">
+				{items.length > 0 ? (
+					items.map((item, index) => (
+						<ProductRow
+							key={item.id || index}
+							item={item}
+							index={index}
+							onChange={onItemChange}
+							onRemove={onItemRemove}
+							variant="card"
+						/>
+					))
+				) : (
+					<div className="px-4 py-12 text-center text-sm text-[var(--muted)]">
+						No hay productos agregados. Usa los botones de abajo para
+						agregar productos, secciones o notas.
+					</div>
+				)}
 			</div>
 
 			<div className="flex flex-wrap gap-3 border-t border-[var(--border-soft)] p-4">

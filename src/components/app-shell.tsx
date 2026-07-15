@@ -105,7 +105,7 @@ export function AppShell({
 				</aside>
 
 				<main className="rounded-[32px] border border-[rgba(13,79,46,0.10)] bg-[rgba(255,255,255,0.84)] shadow-[0_28px_70px_rgba(10,44,21,0.08)] backdrop-blur-sm print:rounded-none print:border-0 print:bg-white print:shadow-none print:backdrop-blur-none">
-					<div className="border-b border-[var(--border-soft)] px-4 py-4 lg:hidden print:hidden">
+					<div className="border-b border-[var(--border-soft)] px-4 py-4 sm:hidden print:hidden">
 						<p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
 							EcoTienda interno
 						</p>
@@ -114,7 +114,7 @@ export function AppShell({
 						</h2>
 					</div>
 
-					<div className="hidden border-b border-[var(--border-soft)] px-6 py-6 sm:px-8 sm:py-7 lg:block print:hidden">
+					<div className="hidden border-b border-[var(--border-soft)] px-6 py-6 sm:px-8 sm:py-7 sm:block print:hidden">
 						<div className="max-w-3xl">
 							<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
 								EcoTienda interno

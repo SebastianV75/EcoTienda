@@ -47,7 +47,7 @@ export default async function DocumentsPage() {
 			email={user.email}
 		>
 			<div className="space-y-4">
-				<section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+				<section className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
 					<div className="rounded-[28px] bg-[linear-gradient(135deg,#0d4f2e,#2fb314)] p-6 text-white shadow-[0_24px_60px_rgba(13,79,46,0.22)] sm:p-7">
 						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100/80">
 							Plantillas dinámicas

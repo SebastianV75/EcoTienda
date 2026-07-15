@@ -48,7 +48,7 @@ export default async function QuotationsPage({
 				</section>
 
 				{quotations.length > 0 ? (
-					<section className="grid gap-4 xl:grid-cols-2">
+					<section className="grid gap-4 lg:grid-cols-2">
 						{quotations.map((quotation: QuotationListItem) => (
 							<QuotationCard key={quotation.id} quotation={quotation} />
 						))}

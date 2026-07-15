@@ -1,24 +1,22 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
 import { AgendaItemForm } from "@/features/agenda/agenda-item-form";
-import { getAgendaItemById } from "@/features/agenda/data";
 import { requireRole } from "@/features/auth/session";
 import { getClients } from "@/features/clients/data";
+import type { AgendaItemFormValues } from "@/types/agenda";
 
-export default async function EditAgendaItemPage({
-	params,
-}: {
-	params: Promise<{ id: string }>;
-}) {
+const defaultValues: AgendaItemFormValues = {
+	fecha: new Date().toISOString().slice(0, 10),
+	titulo: "",
+	tipo: "cita",
+	estado: "pendiente",
+	descripcion: "",
+	client_id: "",
+};
+
+export default async function NewAgendaItemPage() {
 	const user = await requireRole(["admin"]);
-	const { id } = await params;
-	const item = await getAgendaItemById(id);
-
-	if (!item) {
-		notFound();
-	}
 
 	let clients: Awaited<ReturnType<typeof getClients>> = [];
 	let clientsNotice: string | null = null;
@@ -27,22 +25,22 @@ export default async function EditAgendaItemPage({
 		clients = await getClients();
 	} catch {
 		clientsNotice =
-			"No pudimos cargar la lista de clientes en este momento. Podés ajustar el resto del elemento y reintentar la vinculación más tarde.";
+			"No pudimos cargar la lista de clientes en este momento. Podés crear la cita o tarea y vincular el cliente más tarde.";
 	}
 
 	return (
 		<AppShell
 			role="admin"
-			title={`Editar ${item.titulo}`}
-			description="Ajusta la fecha, el tipo, el estado y la vinculación del elemento para mantener la agenda operativa alineada."
+			title="Nuevo elemento"
+			description="Crea una cita, visita, instalación o recordatorio interno de forma simple y ordenada."
 			email={user.email}
 		>
 			<div className="space-y-4">
 				<Link
-					href={`/agenda/${item.id}`}
+					href="/agenda"
 					className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
 				>
-					Volver al detalle
+					Volver a agenda
 				</Link>
 
 				{clientsNotice ? (
@@ -53,21 +51,13 @@ export default async function EditAgendaItemPage({
 
 				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
 					<AgendaItemForm
-						mode="edit"
-						agendaItemId={item.id}
+						mode="create"
 						clients={clients.map((client) => ({
 							id: client.id,
 							full_name: client.full_name,
 							rpu: client.rpu,
 						}))}
-						defaultValues={{
-							fecha: item.fecha,
-							titulo: item.titulo,
-							tipo: item.tipo,
-							estado: item.estado,
-							descripcion: item.descripcion ?? "",
-							client_id: item.client_id ?? "",
-						}}
+						defaultValues={defaultValues}
 					/>
 				</section>
 			</div>
