@@ -19,6 +19,7 @@ export default async function EditQuotationPage({
 
 	const initialData = {
 		quotation_number: quotation.quotation_number,
+		trabajo_id: quotation.trabajo_id ?? null,
 		supplier_name: quotation.supplier_name,
 		project: quotation.project,
 		status: quotation.status,

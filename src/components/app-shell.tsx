@@ -11,8 +11,8 @@ import type { AppRole } from "@/types/auth";
 const navigation = [
 	{ href: "/admin", label: "Panel", roles: ["admin"] as AppRole[] },
 	{ href: "/agenda", label: "Agenda", roles: ["admin", "technician"] as AppRole[] },
+	{ href: "/admin/documents", label: "Documentos", roles: ["admin"] as AppRole[] },
 	{ href: "/admin/clients", label: "Clientes", roles: ["admin"] as AppRole[] },
-	{ href: "/admin/documents", label: "Descargables", roles: ["admin"] as AppRole[] },
 	{ href: "/admin/quotations", label: "Cotizaciones", roles: ["admin"] as AppRole[] },
 	{ href: "/admin/visits", label: "Visitas técnicas", roles: ["admin"] as AppRole[] },
 	{ href: "/admin/settings", label: "Configuración", roles: ["admin"] as AppRole[] },

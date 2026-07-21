@@ -57,6 +57,7 @@ CREATE TABLE suppliers (
 CREATE TABLE quotations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   quotation_number TEXT UNIQUE,
+  trabajo_id UUID REFERENCES trabajos(id) ON DELETE SET NULL,
   supplier_id UUID REFERENCES suppliers(id),
   supplier_name TEXT NOT NULL,
   supplier_reference TEXT,
@@ -91,6 +92,7 @@ CREATE TABLE quotation_items (
 
 -- Índices para búsquedas
 CREATE INDEX idx_quotations_supplier ON quotations(supplier_id);
+CREATE INDEX idx_quotations_trabajo ON quotations(trabajo_id);
 CREATE INDEX idx_quotations_status ON quotations(status);
 CREATE INDEX idx_quotations_number ON quotations(quotation_number);
 CREATE INDEX idx_quotation_items_quotation ON quotation_items(quotation_id);

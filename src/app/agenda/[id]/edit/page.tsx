@@ -34,7 +34,7 @@ export default async function EditAgendaItemPage({
 		<AppShell
 			role="admin"
 			title={`Editar ${item.titulo}`}
-			description="Ajusta la fecha, el tipo, el estado y la vinculación del elemento para mantener la agenda operativa alineada."
+			description="Ajusta el ingreso operativo, los datos de contacto y la ubicación para mantener el trabajo alineado."
 			email={user.email}
 		>
 			<div className="space-y-4">
@@ -52,23 +52,31 @@ export default async function EditAgendaItemPage({
 				) : null}
 
 				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
-					<AgendaItemForm
-						mode="edit"
-						agendaItemId={item.id}
-						clients={clients.map((client) => ({
-							id: client.id,
-							full_name: client.full_name,
-							rpu: client.rpu,
-						}))}
-						defaultValues={{
-							fecha: item.fecha,
-							titulo: item.titulo,
-							tipo: item.tipo,
-							estado: item.estado,
-							descripcion: item.descripcion ?? "",
-							client_id: item.client_id ?? "",
-						}}
-					/>
+				<AgendaItemForm
+					mode="edit"
+					agendaItemId={item.id}
+					clients={clients.map((client) => ({
+						id: client.id,
+						full_name: client.full_name,
+						rpu: client.rpu,
+					}))}
+					defaultValues={{
+						fecha: item.fecha,
+						hora: item.appointment_at ? item.appointment_at.slice(11, 16) : "08:00",
+						tipo: item.tipo,
+						estado: item.estado,
+						title: item.titulo,
+						work_type: item.work_type ?? "",
+						assignee_name: item.assignee_name ?? "",
+						contact_name: item.contact_name ?? item.client?.full_name ?? item.titulo,
+						contact_phone: item.contact_phone ?? item.client?.phone ?? "",
+						address_text: item.address_text ?? "",
+						latitude: item.latitude?.toString() ?? "",
+						longitude: item.longitude?.toString() ?? "",
+						descripcion: item.descripcion ?? "",
+						client_id: item.client_id ?? "",
+					}}
+				/>
 				</section>
 			</div>
 		</AppShell>

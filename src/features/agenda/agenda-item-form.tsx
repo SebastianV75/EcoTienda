@@ -1,19 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import {
 	createAgendaItemAction,
 	updateAgendaItemAction,
 	type AgendaActionState,
 } from "@/features/agenda/actions";
-import {
-	agendaItemStateLabels,
-	agendaItemStates,
-	agendaItemTypeLabels,
-	agendaItemTypes,
-	type AgendaItemFormValues,
-} from "@/types/agenda";
+import type { AgendaItemFormValues } from "@/types/agenda";
 
 type AgendaFormClientOption = {
 	id: string;
@@ -32,6 +26,11 @@ const initialState: AgendaActionState = {
 	error: null,
 };
 
+type LocationMessage = {
+	tone: "success" | "error" | "info";
+	text: string;
+};
+
 export function AgendaItemForm({
 	mode,
 	agendaItemId,
@@ -40,17 +39,77 @@ export function AgendaItemForm({
 }: AgendaItemFormProps) {
 	const action = mode === "create" ? createAgendaItemAction : updateAgendaItemAction;
 	const [state, formAction, isPending] = useActionState(action, initialState);
+	const [addressText, setAddressText] = useState(defaultValues.address_text);
+	const [latitude, setLatitude] = useState(defaultValues.latitude);
+	const [longitude, setLongitude] = useState(defaultValues.longitude);
+	const [isLocating, setIsLocating] = useState(false);
+	const [locationMessage, setLocationMessage] =
+		useState<LocationMessage | null>(null);
+
+	function handleUseMyLocation() {
+		setLocationMessage(null);
+
+		if (typeof window === "undefined" || !("geolocation" in navigator)) {
+			setLocationMessage({
+				tone: "error",
+				text: "Tu navegador no permite obtener la ubicación. Puedes seguir capturando los datos manualmente.",
+			});
+			return;
+		}
+
+		setIsLocating(true);
+
+		navigator.geolocation.getCurrentPosition(
+			(position) => {
+				setLatitude(String(position.coords.latitude));
+				setLongitude(String(position.coords.longitude));
+				setLocationMessage({
+					tone: "success",
+					text: "Coordenadas capturadas. Completa o ajusta la dirección antes de guardar.",
+				});
+				setIsLocating(false);
+			},
+			(error) => {
+				setLocationMessage({
+					tone: "error",
+					text:
+						error.code === error.PERMISSION_DENIED
+							? "Permiso de ubicación denegado. Puedes seguir capturando la dirección manualmente."
+							: "No se pudo obtener tu ubicación. Intenta de nuevo o captura los datos manualmente.",
+				});
+				setIsLocating(false);
+			},
+			{ timeout: 5000 },
+		);
+	}
 
 	return (
 		<form action={formAction} className="space-y-5">
-			{mode === "edit" && agendaItemId ? (
-				<input type="hidden" name="id" value={agendaItemId} />
-			) : null}
+			{mode === "edit" && agendaItemId ? <input type="hidden" name="id" value={agendaItemId} /> : null}
+			<input type="hidden" name="tipo" value={defaultValues.tipo} />
+			<input type="hidden" name="estado" value={defaultValues.estado} />
 
-			<div className="grid gap-5 md:grid-cols-2">
-				<div className="space-y-2.5">
-					<label htmlFor="fecha" className="text-sm font-medium text-[var(--brand-deep)]">
-						Fecha
+		<div className="grid gap-5 md:grid-cols-2">
+			<div className="space-y-2.5 md:col-span-2">
+				<label htmlFor="title" className="text-sm font-medium text-[var(--brand-deep)]">
+					Título
+				</label>
+				<input
+					id="title"
+					name="title"
+					defaultValue={defaultValues.title}
+					required
+					className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+					placeholder="Visita técnica · Nuevo trabajo"
+				/>
+				<p className="text-xs leading-6 text-[var(--muted)]">
+					Se genera desde el ingreso de Agenda y puedes ajustarlo antes de guardar.
+				</p>
+			</div>
+
+			<div className="space-y-2.5">
+				<label htmlFor="fecha" className="text-sm font-medium text-[var(--brand-deep)]">
+					Fecha
 					</label>
 					<input
 						id="fecha"
@@ -63,57 +122,141 @@ export function AgendaItemForm({
 				</div>
 
 				<div className="space-y-2.5">
-					<label htmlFor="estado" className="text-sm font-medium text-[var(--brand-deep)]">
-						Estado
-					</label>
-					<select
-						id="estado"
-						name="estado"
-						defaultValue={defaultValues.estado}
-						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-					>
-						{agendaItemStates.map((stateValue) => (
-							<option key={stateValue} value={stateValue}>
-								{agendaItemStateLabels[stateValue]}
-							</option>
-						))}
-					</select>
-				</div>
-
-				<div className="space-y-2.5 md:col-span-2">
-					<label htmlFor="titulo" className="text-sm font-medium text-[var(--brand-deep)]">
-						Título
+					<label htmlFor="hora" className="text-sm font-medium text-[var(--brand-deep)]">
+						Hora
 					</label>
 					<input
-						id="titulo"
-						name="titulo"
-						defaultValue={defaultValues.titulo}
+						id="hora"
+						name="hora"
+						type="time"
+						defaultValue={defaultValues.hora}
 						required
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-						placeholder="Título operativo"
 					/>
 				</div>
 
 				<div className="space-y-2.5">
-					<label htmlFor="tipo" className="text-sm font-medium text-[var(--brand-deep)]">
-						Tipo
+					<label htmlFor="work_type" className="text-sm font-medium text-[var(--brand-deep)]">
+						Tipo de trabajo
 					</label>
-					<select
-						id="tipo"
-						name="tipo"
-						defaultValue={defaultValues.tipo}
+					<input
+						id="work_type"
+						name="work_type"
+						defaultValue={defaultValues.work_type}
+						required
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-					>
-						{agendaItemTypes.map((typeValue) => (
-							<option key={typeValue} value={typeValue}>
-								{agendaItemTypeLabels[typeValue]}
-							</option>
-						))}
-					</select>
+						placeholder="Visita técnica, revisión, instalación pendiente"
+					/>
 				</div>
 
 				<div className="space-y-2.5">
-					<label htmlFor="client_id" className="text-sm font-medium text-[var(--brand-deep)]">
+					<label htmlFor="assignee_name" className="text-sm font-medium text-[var(--brand-deep)]">
+						Asignado a
+					</label>
+					<input
+						id="assignee_name"
+						name="assignee_name"
+						defaultValue={defaultValues.assignee_name}
+						required
+						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						placeholder="Nombre de la persona responsable"
+					/>
+				</div>
+
+				<div className="space-y-2.5 md:col-span-2">
+					<label htmlFor="contact_name" className="text-sm font-medium text-[var(--brand-deep)]">
+						Nombre de contacto
+					</label>
+					<input
+						id="contact_name"
+						name="contact_name"
+						defaultValue={defaultValues.contact_name}
+						required
+						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						placeholder="Nombre de quien recibe"
+					/>
+				</div>
+
+				<div className="space-y-2.5">
+					<label htmlFor="contact_phone" className="text-sm font-medium text-[var(--brand-deep)]">
+						Teléfono
+					</label>
+					<input
+						id="contact_phone"
+						name="contact_phone"
+						defaultValue={defaultValues.contact_phone}
+						required
+						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						placeholder="Teléfono de contacto"
+					/>
+				</div>
+
+				<div className="space-y-2.5 md:col-span-2">
+					<label htmlFor="address_text" className="text-sm font-medium text-[var(--brand-deep)]">
+						Dirección
+					</label>
+						<textarea
+							id="address_text"
+							name="address_text"
+							value={addressText}
+							onChange={(event) => setAddressText(event.target.value)}
+							required
+							rows={3}
+							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						placeholder="Dirección completa"
+					/>
+				</div>
+
+				<div className="space-y-2.5">
+					<label htmlFor="latitude" className="text-sm font-medium text-[var(--brand-deep)]">
+						Latitud
+					</label>
+					<input
+							id="latitude"
+							name="latitude"
+							type="number"
+							step="any"
+							value={latitude}
+							onChange={(event) => setLatitude(event.target.value)}
+							required
+							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						placeholder="20.67"
+					/>
+				</div>
+
+				<div className="space-y-2.5">
+					<label htmlFor="longitude" className="text-sm font-medium text-[var(--brand-deep)]">
+						Longitud
+					</label>
+					<input
+							id="longitude"
+							name="longitude"
+							type="number"
+							step="any"
+							value={longitude}
+							onChange={(event) => setLongitude(event.target.value)}
+							required
+							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+							placeholder="-103.34"
+						/>
+					</div>
+
+					<div className="space-y-2.5 md:col-span-2">
+						<button
+							type="button"
+							onClick={handleUseMyLocation}
+							disabled={isLocating}
+							className="w-full rounded-full border border-emerald-200 bg-white px-5 py-3 text-sm font-medium text-[var(--brand-deep)] shadow-sm transition duration-200 ease-out hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+						>
+							{isLocating ? "Obteniendo ubicación..." : "Usar mi ubicación"}
+						</button>
+						<p className="text-xs leading-5 text-[var(--muted)]">
+							Captura las coordenadas del dispositivo y luego ajusta la dirección si hace falta.
+						</p>
+					</div>
+
+					<div className="space-y-2.5 md:col-span-2">
+						<label htmlFor="client_id" className="text-sm font-medium text-[var(--brand-deep)]">
 						Cliente vinculado
 					</label>
 					<select
@@ -133,21 +276,36 @@ export function AgendaItemForm({
 
 				<div className="space-y-2.5 md:col-span-2">
 					<label htmlFor="descripcion" className="text-sm font-medium text-[var(--brand-deep)]">
-						Descripción
+						Nota
 					</label>
 					<textarea
 						id="descripcion"
 						name="descripcion"
 						defaultValue={defaultValues.descripcion}
-						rows={5}
+						rows={4}
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-						placeholder="Notas útiles para el seguimiento interno"
+						placeholder="Notas útiles para el equipo"
 					/>
 				</div>
-			</div>
+				</div>
 
-			{state.error ? (
-				<p className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+				{locationMessage ? (
+					<p
+						role="status"
+						className={
+							locationMessage.tone === "error"
+								? "rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+								: locationMessage.tone === "success"
+									? "rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+									: "rounded-[18px] border border-emerald-100 bg-[var(--surface-strong)] px-4 py-3 text-sm leading-6 text-[var(--muted)]"
+						}
+					>
+						{locationMessage.text}
+					</p>
+				) : null}
+
+				{state.error ? (
+					<p className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
 					{state.error}
 				</p>
 			) : null}
@@ -157,13 +315,7 @@ export function AgendaItemForm({
 				disabled={isPending}
 				className="w-full rounded-full bg-[var(--brand)] px-5 py-3.5 font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
 			>
-				{isPending
-					? mode === "create"
-						? "Creando..."
-						: "Actualizando..."
-					: mode === "create"
-						? "Crear elemento"
-						: "Guardar cambios"}
+				{isPending ? (mode === "create" ? "Guardando..." : "Actualizando...") : mode === "create" ? "Crear trabajo" : "Guardar cambios"}
 			</button>
 		</form>
 	);

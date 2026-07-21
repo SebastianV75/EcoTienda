@@ -195,8 +195,8 @@ const primaryMobileNavigationByRole: Record<AppRole, PrimaryItem[]> = {
 	admin: [
 		{ href: "/admin", label: "Inicio", icon: HomeIcon, exact: true },
 		{ href: "/agenda", label: "Agenda", icon: AgendaIcon },
+		{ href: "/admin/documents", label: "Documentos", icon: DownloadIcon },
 		{ href: "/admin/clients", label: "Clientes", icon: UsersIcon },
-		{ href: "/admin/documents", label: "Docs", icon: DownloadIcon },
 	],
 	technician: [
 		{ href: "/technician", label: "Inicio", icon: HomeIcon, exact: true },

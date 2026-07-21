@@ -23,8 +23,8 @@ export default async function VisitsPage() {
 	return (
 		<AppShell
 			role="admin"
-			title="Visitas técnicas"
-			description="Esta vista reutiliza la Agenda como fuente única para el seguimiento de visitas técnicas programadas."
+			title="Visitas"
+			description="Revisa los trabajos listos para capturar su visita y avanzar el flujo operativo sin perder compatibilidad con Agenda."
 			email={user?.email}
 		>
 			<div className="space-y-4">
@@ -54,7 +54,7 @@ export default async function VisitsPage() {
 				{visitItems.length > 0 ? (
 					<section className="grid gap-4 lg:grid-cols-2">
 						{visitItems.map((item) => (
-							<AgendaItemCard key={item.id} item={item} href={`/agenda/${item.id}`} />
+							<AgendaItemCard key={item.id} item={item} href={`/admin/visits/${item.id}`} />
 						))}
 					</section>
 				) : (

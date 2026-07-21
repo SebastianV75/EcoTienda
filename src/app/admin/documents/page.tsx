@@ -6,9 +6,16 @@ import { getClients } from "@/features/clients/data";
 
 const templates = [
 	{
+		title: "Documentos de trabajo",
+		description:
+			"Prellenado desde el trabajo para mantener el flujo operativo y las correcciones aisladas por plantilla.",
+		href: "/admin/documents/trabajos",
+		status: "Activo",
+	},
+	{
 		title: "Carta poder",
 		description:
-			"Autollenado con datos del cliente. Testigos y aceptación del poder se mantienen fijos por ahora.",
+			"Autollenado con datos del cliente o del trabajo. Testigos y aceptación del poder se mantienen fijos por ahora.",
 		href: "/admin/documents/carta-poder",
 		status: "Activo",
 	},
@@ -42,8 +49,8 @@ export default async function DocumentsPage() {
 	return (
 		<AppShell
 			role="admin"
-			title="Descargables"
-			description="Selecciona una plantilla, elige un cliente y genera documentos con datos ya registrados dentro del sistema."
+			title="Documentos"
+			description="Selecciona una plantilla, elige un cliente o un trabajo y genera documentos con datos ya registrados dentro del sistema."
 			email={user.email}
 		>
 			<div className="space-y-4">
@@ -53,12 +60,12 @@ export default async function DocumentsPage() {
 							Plantillas dinámicas
 						</p>
 						<h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-balance">
-							Genera documentos con datos reales del cliente
+							Genera documentos con datos reales del trabajo
 						</h2>
 						<p className="mt-4 max-w-2xl text-sm leading-7 text-emerald-50/90 sm:text-base">
-							Ya puedes trabajar Carta Poder y Ubicación del cliente con datos
-							reales. El siguiente paso será sumar impresión, descarga y el
-							formato CFE con más campos específicos.
+							Ya puedes trabajar Carta Poder, Ubicación del cliente y el panel
+							de trabajo con datos reales. El siguiente paso será sumar impresión,
+							descarga y el formato CFE con más campos específicos.
 						</p>
 					</div>
 
@@ -69,20 +76,20 @@ export default async function DocumentsPage() {
 						<p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)]">
 							{clients.length}
 						</p>
-						<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-							Cada plantilla usa los datos del cliente como base para el
-							autollenado.
-						</p>
+					<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+						Cada plantilla usa los datos del cliente o del trabajo como base para
+						autollenado.
+					</p>
 						<Link
-							href="/admin/clients/new"
+							href="/agenda"
 							className="mt-5 inline-flex rounded-full bg-[var(--surface-strong)] px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:bg-emerald-100"
 						>
-							Nuevo cliente
+							Ir a Agenda
 						</Link>
 					</div>
 				</section>
 
-				<section className="grid gap-4 md:grid-cols-3">
+				<section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 					{templates.map((template) => (
 						<article
 							key={template.title}

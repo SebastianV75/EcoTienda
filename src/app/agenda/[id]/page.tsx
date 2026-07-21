@@ -29,7 +29,7 @@ export default async function AgendaItemPage({
 		<AppShell
 			role={role}
 			title={item.titulo}
-			description="Consulta el detalle operativo del elemento programado y su contexto de seguimiento."
+			description="Consulta el detalle operativo del trabajo, su contacto y su estado de seguimiento."
 			email={user?.email}
 		>
 			<AgendaItemDetail item={item} role={role} />

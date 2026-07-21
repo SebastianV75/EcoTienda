@@ -49,6 +49,7 @@ export async function createQuotationAction(
 	_previousState: QuotationActionState,
 	formData: FormData,
 ): Promise<QuotationActionState> {
+	const trabajoId = getString(formData, "trabajo_id");
 	const project = getString(formData, "project");
 	const termsAndConditions = getString(formData, "terms_and_conditions");
 	const orderDeadline = getString(formData, "order_deadline");
@@ -83,6 +84,7 @@ export async function createQuotationAction(
 		.from("quotations")
 		.insert({
 			quotation_number: quotationNumber,
+			trabajo_id: trabajoId || null,
 			project: project || null,
 			terms_and_conditions: termsAndConditions || null,
 			order_deadline: orderDeadline || null,
@@ -134,6 +136,10 @@ export async function createQuotationAction(
 	}
 
 	revalidatePath("/admin/quotations");
+	if (trabajoId) {
+		revalidatePath(`/agenda/${trabajoId}`);
+		revalidatePath(`/admin/visits/${trabajoId}`);
+	}
 	redirect(`/admin/quotations/${quotation.id}`);
 }
 
@@ -142,6 +148,7 @@ export async function updateQuotationAction(
 	formData: FormData,
 ): Promise<QuotationActionState> {
 	const quotationNumber = getString(formData, "quotation_number");
+	const trabajoId = getString(formData, "trabajo_id");
 	const project = getString(formData, "project");
 	const status = getString(formData, "status");
 	const termsAndConditions = getString(formData, "terms_and_conditions");
@@ -180,6 +187,7 @@ export async function updateQuotationAction(
 		.from("quotations")
 		.update({
 			quotation_number: newQuotationNumber,
+			trabajo_id: trabajoId || null,
 			project: project || null,
 			status: status || null,
 			terms_and_conditions: termsAndConditions || null,
@@ -242,5 +250,9 @@ export async function updateQuotationAction(
 	}
 
 	revalidatePath("/admin/quotations");
+	if (trabajoId) {
+		revalidatePath(`/agenda/${trabajoId}`);
+		revalidatePath(`/admin/visits/${trabajoId}`);
+	}
 	redirect(`/admin/quotations/${quotation.id}`);
 }

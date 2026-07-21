@@ -6,33 +6,63 @@ import { requireRole } from "@/features/auth/session";
 import { getClients } from "@/features/clients/data";
 import type { AgendaItemFormValues } from "@/types/agenda";
 
-const defaultValues: AgendaItemFormValues = {
-	fecha: new Date().toISOString().slice(0, 10),
-	titulo: "",
-	tipo: "cita",
-	estado: "pendiente",
-	descripcion: "",
-	client_id: "",
+function buildAgendaTitle(workType: string, contactName: string) {
+	const baseTitle = workType.trim() || "Visita técnica";
+	const contactLabel = contactName.trim() || "Nuevo trabajo";
+
+	return `${baseTitle} · ${contactLabel}`;
+}
+
+function buildDefaultValues(): AgendaItemFormValues {
+	const values = {
+		fecha: new Date().toISOString().slice(0, 10),
+		hora: "08:00",
+		tipo: "visita_tecnica",
+		estado: "pendiente",
+		work_type: "Visita técnica",
+		assignee_name: "",
+		contact_name: "",
+		contact_phone: "",
+		address_text: "",
+		latitude: "",
+		longitude: "",
+		descripcion: "",
+		client_id: "",
+	} satisfies Omit<AgendaItemFormValues, "title">;
+
+	return {
+		...values,
+		title: buildAgendaTitle(values.work_type, values.contact_name),
+	};
+}
+
+type NewAgendaItemPageProps = {
+	searchParams?: Promise<{
+		source?: string;
+	}>;
 };
 
-export default async function NewAgendaItemPage() {
+export default async function NewAgendaItemPage({ searchParams }: NewAgendaItemPageProps) {
 	const user = await requireRole(["admin"]);
+	const resolvedSearchParams = searchParams ? await searchParams : undefined;
+	const fromDashboard = resolvedSearchParams?.source === "admin-dashboard";
+	const defaultValues = buildDefaultValues();
 
 	let clients: Awaited<ReturnType<typeof getClients>> = [];
 	let clientsNotice: string | null = null;
 
 	try {
 		clients = await getClients();
-	} catch {
-		clientsNotice =
-			"No pudimos cargar la lista de clientes en este momento. Podés crear la cita o tarea y vincular el cliente más tarde.";
-	}
+		} catch {
+			clientsNotice =
+				"No pudimos cargar la lista de clientes en este momento. Podés crear el trabajo y vincular el cliente más tarde.";
+		}
 
 	return (
 		<AppShell
 			role="admin"
-			title="Nuevo elemento"
-			description="Crea una cita, visita, instalación o recordatorio interno de forma simple y ordenada."
+			title="Nuevo trabajo"
+			description="Registra el ingreso operativo con contacto libre, ubicación y hora para abrir el trabajo desde Agenda."
 			email={user.email}
 		>
 			<div className="space-y-4">
@@ -48,6 +78,16 @@ export default async function NewAgendaItemPage() {
 						{clientsNotice}
 					</section>
 				) : null}
+
+				{fromDashboard ? (
+					<section className="rounded-[22px] border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+						Creaste este acceso desde el panel administrativo. Revisa el título antes de guardar.
+					</section>
+				) : null}
+
+				<section className="rounded-[22px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+					El cliente vinculado es opcional. Puedes seguir con el ingreso usando solo los datos de contacto.
+				</section>
 
 				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
 					<AgendaItemForm

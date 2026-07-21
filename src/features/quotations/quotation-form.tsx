@@ -16,6 +16,7 @@ type EditQuotationFormProps = {
 	clients: ClientRecord[];
 	initialData?: {
 		quotation_number: string | null;
+		trabajo_id: string | null;
 		supplier_name: string;
 		project: string | null;
 		terms_and_conditions: string | null;
@@ -42,7 +43,7 @@ function createEmptyItem(sortOrder: number): QuotationItem {
 	};
 }
 
-export function EditQuotationForm({ clients, initialData = { quotation_number: null, supplier_name: "", project: null, status: null, terms_and_conditions: null, order_deadline: null, expected_delivery: null, items: [] } }: EditQuotationFormProps) {
+export function EditQuotationForm({ clients, initialData = { quotation_number: null, trabajo_id: null, supplier_name: "", project: null, status: null, terms_and_conditions: null, order_deadline: null, expected_delivery: null, items: [] } }: EditQuotationFormProps) {
 	const isEditing = !!initialData.quotation_number;
 
 	const [state, formAction, isPending] = useActionState(
@@ -154,6 +155,7 @@ export function EditQuotationForm({ clients, initialData = { quotation_number: n
 
 				<input type="hidden" name="items" value={JSON.stringify(items)} />
 				<input type="hidden" name="quotation_number" value={initialData.quotation_number ?? ""} />
+				<input type="hidden" name="trabajo_id" value={initialData.trabajo_id ?? ""} />
 				<input type="hidden" name="status" value={initialData.status ?? ""} />
 
 				{state.error ? (
