@@ -13,6 +13,7 @@ import {
 
 import {
 	Add,
+	Briefcase,
 	Calendar,
 	Clipboard,
 	DocumentText,
@@ -51,6 +52,7 @@ const primaryMobileNavigationByRole: Record<AppRole, PrimaryItem[]> = {
 		{ href: "/admin", label: "Tablero", icon: Home, exact: true },
 		{ href: "/agenda", label: "Agenda", icon: Calendar },
 		{ href: "/admin/visits", label: "Visitas", icon: Location },
+		{ href: "/admin/trabajos", label: "Trabajos", icon: Briefcase },
 	],
 	technician: [
 		{ href: "/technician", label: "Inicio", icon: Home, exact: true },

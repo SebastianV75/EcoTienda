@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import {
+	Briefcase,
 	Calendar,
 	ChevronLeft,
 	Clipboard,
@@ -50,6 +51,12 @@ const workflowNavigation: NavigationItem[] = [
 		icon: Calendar,
 	},
 	{ href: "/admin/visits", label: "Visitas", roles: ["admin"], icon: Location },
+	{
+		href: "/admin/trabajos",
+		label: "Trabajos",
+		roles: ["admin"],
+		icon: Briefcase,
+	},
 ];
 
 const supportNavigation: NavigationItem[] = [

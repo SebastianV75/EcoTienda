@@ -11,6 +11,7 @@ import type {
 	TrabajoQuotationStage,
 	TrabajoSaleStage,
 	TrabajoStage,
+	TrabajoStatus,
 	TrabajoVisitaStage,
 } from "@/types/trabajo";
 import { trabajoStageLabels } from "@/types/trabajo";
@@ -80,6 +81,25 @@ export type ActiveTrabajoDashboardItem = {
 	title: string;
 	currentStage: TrabajoStage;
 	currentStageLabel: string;
+};
+
+export type TrabajoListFilters = {
+	stage?: TrabajoStage;
+	status?: TrabajoStatus;
+	from?: string;
+	to?: string;
+	q?: string;
+};
+
+export type TrabajoListItem = {
+	id: string;
+	current_stage: TrabajoStage;
+	status: TrabajoStatus;
+	intake_name: string;
+	intake_address_text: string;
+	created_at: string;
+	client_name: string | null;
+	agenda_work_type: string | null;
 };
 
 export const trabajoStageOrder = [
@@ -213,6 +233,21 @@ const trabajoVisitaSelect = `
 		full_name,
 		phone,
 		rpu
+	)
+`;
+
+const trabajoListSelect = `
+	id,
+	current_stage,
+	status,
+	intake_name,
+	intake_address_text,
+	created_at,
+	agenda:trabajo_agenda_stage (
+		work_type
+	),
+	client:clients (
+		full_name
 	)
 `;
 
@@ -416,6 +451,84 @@ function normalizeTrabajoVisitaRow(row: TrabajoVisitaRow): TrabajoVisitaRecord {
 		client: normalizeClient(row.client),
 	};
 }
+
+type TrabajoListRow = {
+	id: string;
+	current_stage: TrabajoStage;
+	status: TrabajoStatus;
+	intake_name: string;
+	intake_address_text: string;
+	created_at: string;
+	agenda: Pick<TrabajoAgendaStage, "work_type"> | Pick<TrabajoAgendaStage, "work_type">[] | null;
+	client: { full_name: string } | { full_name: string }[] | null;
+};
+
+function normalizeTrabajoListRow(row: TrabajoListRow): TrabajoListItem {
+	const client = Array.isArray(row.client)
+		? (row.client[0] ?? null)
+		: row.client;
+	const agenda = Array.isArray(row.agenda)
+		? (row.agenda[0] ?? null)
+		: row.agenda;
+
+	return {
+		id: row.id,
+		current_stage: row.current_stage,
+		status: row.status,
+		intake_name: row.intake_name,
+		intake_address_text: row.intake_address_text,
+		created_at: row.created_at,
+		client_name: client?.full_name ?? null,
+		agenda_work_type: agenda?.work_type ?? null,
+	};
+}
+
+export const getTrabajosForList = cache(
+	async (filters: TrabajoListFilters = {}): Promise<TrabajoListItem[]> => {
+		const supabase = await createSupabaseServerClient();
+		let request = supabase
+			.from("trabajos")
+			.select(trabajoListSelect)
+			.order("created_at", { ascending: false });
+
+		if (filters.stage) {
+			request = request.eq("current_stage", filters.stage);
+		}
+
+		if (filters.status) {
+			request = request.eq("status", filters.status);
+		}
+
+		if (filters.from) {
+			request = request.gte("created_at", filters.from);
+		}
+
+		if (filters.to) {
+			request = request.lte("created_at", `${filters.to}T23:59:59.999Z`);
+		}
+
+		if (filters.q) {
+			const normalized = filters.q.trim();
+			if (normalized) {
+				request = request.or(
+					`id.ilike.%${normalized}%,intake_address_text.ilike.%${normalized}%,intake_name.ilike.%${normalized}%,client.full_name.ilike.%${normalized}%`,
+				);
+			}
+		}
+
+		const { data, error } = await request;
+
+		if (error) {
+			throw new Error(
+				`No se pudieron cargar los trabajos. ${error.message}`,
+			);
+		}
+
+		return ((data ?? []) as unknown as TrabajoListRow[]).map(
+			normalizeTrabajoListRow,
+		);
+	},
+);
 
 export const getTrabajoVisitaById = cache(async (id: string) => {
 	const supabase = await createSupabaseServerClient();
