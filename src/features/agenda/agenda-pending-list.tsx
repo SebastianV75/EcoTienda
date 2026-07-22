@@ -58,10 +58,13 @@ export function AgendaPendingList({ items }: AgendaPendingListProps) {
 									{item.titulo}
 								</p>
 								<p className="mt-1 truncate text-sm text-[var(--muted)]">
-									{item.contact_name?.trim() ||
-										item.client?.full_name ||
-										"Sin contacto"}
+									{item.contact_name?.trim() || item.client?.full_name || "Sin contacto"}
 								</p>
+								{item.assignee_worker?.full_name || item.assignee_name ? (
+									<p className="mt-1 truncate text-xs text-[var(--muted)]">
+										{item.assignee_worker?.full_name || item.assignee_name}
+									</p>
+								) : null}
 							</div>
 
 							<div className="flex flex-wrap items-center gap-2">

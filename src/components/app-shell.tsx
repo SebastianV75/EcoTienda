@@ -61,6 +61,12 @@ const supportNavigation: NavigationItem[] = [
 	},
 	{ href: "/admin/clients", label: "Clientes", roles: ["admin"], icon: Users },
 	{
+		href: "/admin/workers",
+		label: "Trabajadores",
+		roles: ["admin"],
+		icon: Profile,
+	},
+	{
 		href: "/admin/quotations",
 		label: "Cotizaciones",
 		roles: ["admin"],

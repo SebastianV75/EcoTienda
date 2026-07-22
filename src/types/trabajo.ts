@@ -1,3 +1,5 @@
+import type { WorkerSummary } from "@/types/worker";
+
 export const trabajoStages = [
 	"agenda",
 	"visita",
@@ -55,7 +57,9 @@ export type TrabajoAgendaStage = {
 	trabajo_id: string;
 	appointment_at: string;
 	work_type: string;
+	assignee_worker_id: string | null;
 	assignee_name: string;
+	assignee_worker: WorkerSummary | null;
 	note: string;
 	contact_name: string;
 	contact_phone: string;

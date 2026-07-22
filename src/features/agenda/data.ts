@@ -6,8 +6,11 @@ import type {
 	AgendaItemClientSummary,
 	AgendaItemType,
 } from "@/types/agenda";
+import type { WorkerSummary } from "@/types/worker";
 
 import { getMonthRange } from "./calendar-utils";
+
+type AgendaWorkerSummaryRow = WorkerSummary | WorkerSummary[] | null;
 
 type AgendaItemRow = {
 	id: string;
@@ -18,6 +21,9 @@ type AgendaItemRow = {
 	descripcion: string | null;
 	client_id: string | null;
 	visit_id: string | null;
+	assignee_worker_id: string | null;
+	assignee_name: string | null;
+	assignee_worker: AgendaWorkerSummaryRow;
 	created_at: string;
 	updated_at: string;
 	client: AgendaItemClientSummary | AgendaItemClientSummary[] | null;
@@ -27,7 +33,9 @@ type WorkflowAgendaItemRow = {
 	trabajo_id: string;
 	appointment_at: string;
 	work_type: string;
-	assignee_name: string;
+	assignee_worker_id: string | null;
+	assignee_name: string | null;
+	assignee_worker: AgendaWorkerSummaryRow;
 	note: string;
 	contact_name: string;
 	contact_phone: string;
@@ -50,6 +58,14 @@ const agendaSelect = `
 	descripcion,
 	client_id,
 	visit_id,
+	assignee_worker_id,
+	assignee_name,
+	assignee_worker:workers (
+		id,
+		full_name,
+		role,
+		active
+	),
 	created_at,
 	updated_at,
 	client:clients (
@@ -64,7 +80,14 @@ const workflowAgendaSelect = `
 	trabajo_id,
 	appointment_at,
 	work_type,
+	assignee_worker_id,
 	assignee_name,
+	assignee_worker:workers (
+		id,
+		full_name,
+		role,
+		active
+	),
 	note,
 	contact_name,
 	contact_phone,
@@ -97,6 +120,16 @@ function normalizeClient(
 	return client;
 }
 
+function normalizeWorker(
+	worker: AgendaWorkerSummaryRow,
+): WorkerSummary | null {
+	if (!worker) {
+		return null;
+	}
+
+	return Array.isArray(worker) ? worker[0] ?? null : worker;
+}
+
 function normalizeAgendaItem(row: AgendaItemRow): AgendaItem {
 	return {
 		id: row.id,
@@ -110,7 +143,9 @@ function normalizeAgendaItem(row: AgendaItemRow): AgendaItem {
 		visit_id: row.visit_id,
 		trabajo_id: null,
 		work_type: null,
-		assignee_name: null,
+		assignee_worker_id: row.assignee_worker_id,
+		assignee_name: row.assignee_name,
+		assignee_worker: normalizeWorker(row.assignee_worker),
 		contact_name: null,
 		contact_phone: null,
 		address_text: null,
@@ -135,7 +170,9 @@ function normalizeWorkflowAgendaItem(row: WorkflowAgendaItemRow): AgendaItem {
 		visit_id: row.completed_at ? row.trabajo_id : null,
 		trabajo_id: row.trabajo_id,
 		work_type: row.work_type,
+		assignee_worker_id: row.assignee_worker_id,
 		assignee_name: row.assignee_name,
+		assignee_worker: normalizeWorker(row.assignee_worker),
 		contact_name: row.contact_name,
 		contact_phone: row.contact_phone,
 		address_text: row.address_text,

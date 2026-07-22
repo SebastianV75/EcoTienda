@@ -49,6 +49,7 @@ export function isTrabajoAgendaStageComplete(
 		TrabajoAgendaStage,
 		| "appointment_at"
 		| "work_type"
+		| "assignee_worker_id"
 		| "assignee_name"
 		| "note"
 		| "contact_name"
@@ -58,10 +59,13 @@ export function isTrabajoAgendaStageComplete(
 		| "longitude"
 	>,
 ): boolean {
+	const hasWorkerAssignment = hasText(stage.assignee_worker_id);
+	const hasLegacyAssignment = hasText(stage.assignee_name);
+
 	return (
 		hasText(stage.appointment_at) &&
 		hasText(stage.work_type) &&
-		hasText(stage.assignee_name) &&
+		(hasWorkerAssignment || hasLegacyAssignment) &&
 		hasText(stage.note) &&
 		hasText(stage.contact_name) &&
 		hasText(stage.contact_phone) &&

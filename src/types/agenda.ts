@@ -1,3 +1,5 @@
+import type { WorkerSummary } from "@/types/worker";
+
 export const agendaItemTypes = [
 	"cita",
 	"visita_tecnica",
@@ -27,7 +29,9 @@ export type AgendaItem = {
 	visit_id: string | null;
 	trabajo_id: string | null;
 	work_type: string | null;
+	assignee_worker_id: string | null;
 	assignee_name: string | null;
+	assignee_worker?: WorkerSummary | null;
 	contact_name: string | null;
 	contact_phone: string | null;
 	address_text: string | null;
@@ -52,6 +56,7 @@ export type AgendaItemFormValues = {
 	estado: AgendaItemState;
 	title: string;
 	work_type: string;
+	assignee_worker_id: string;
 	assignee_name: string;
 	contact_name: string;
 	contact_phone: string;

@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { AgendaItemClientSummary } from "@/types/agenda";
+import type { WorkerSummary } from "@/types/worker";
 import type {
 	Trabajo,
 	TrabajoAgendaStage,
@@ -138,8 +139,12 @@ export function groupTrabajoDocumentOverridesByTemplate(
 	);
 }
 
+type TrabajoAgendaStageRow = Omit<TrabajoAgendaStage, "assignee_worker"> & {
+	assignee_worker: WorkerSummary | WorkerSummary[] | null;
+};
+
 type TrabajoVisitaRow = Trabajo & {
-	agenda: TrabajoAgendaStage | TrabajoAgendaStage[] | null;
+	agenda: TrabajoAgendaStageRow | TrabajoAgendaStageRow[] | null;
 	visita: TrabajoVisitaStage | TrabajoVisitaStage[] | null;
 	client: AgendaItemClientSummary | AgendaItemClientSummary[] | null;
 };
@@ -165,7 +170,14 @@ const trabajoVisitaSelect = `
 		trabajo_id,
 		appointment_at,
 		work_type,
+		assignee_worker_id,
 		assignee_name,
+		assignee_worker:workers (
+			id,
+			full_name,
+			role,
+			active
+		),
 		note,
 		contact_name,
 		contact_phone,
@@ -225,7 +237,14 @@ const trabajoDocumentSelect = `
 		trabajo_id,
 		appointment_at,
 		work_type,
+		assignee_worker_id,
 		assignee_name,
+		assignee_worker:workers (
+			id,
+			full_name,
+			role,
+			active
+		),
 		note,
 		contact_name,
 		contact_phone,
@@ -352,6 +371,27 @@ function normalizeOneToOne<T>(value: T | T[] | null): T | null {
 	return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
+function normalizeWorkerSummary(
+	worker: WorkerSummary | WorkerSummary[] | null,
+): WorkerSummary | null {
+	return normalizeOneToOne(worker);
+}
+
+function normalizeTrabajoAgendaStage(
+	stage: TrabajoAgendaStageRow | TrabajoAgendaStageRow[] | null,
+): TrabajoAgendaStage | null {
+	const normalizedStage = normalizeOneToOne(stage);
+
+	if (!normalizedStage) {
+		return null;
+	}
+
+	return {
+		...normalizedStage,
+		assignee_worker: normalizeWorkerSummary(normalizedStage.assignee_worker),
+	};
+}
+
 export type TrabajoVisitaRecord = Trabajo & {
 	agenda: TrabajoAgendaStage | null;
 	visita: TrabajoVisitaStage | null;
@@ -371,7 +411,7 @@ export type TrabajoDocumentRecord = TrabajoDocumentSource & {
 function normalizeTrabajoVisitaRow(row: TrabajoVisitaRow): TrabajoVisitaRecord {
 	return {
 		...row,
-		agenda: normalizeOneToOne(row.agenda),
+		agenda: normalizeTrabajoAgendaStage(row.agenda),
 		visita: normalizeOneToOne(row.visita),
 		client: normalizeClient(row.client),
 	};
@@ -397,7 +437,7 @@ export const getTrabajoVisitaById = cache(async (id: string) => {
 });
 
 type TrabajoDocumentRow = Trabajo & {
-	agenda: TrabajoAgendaStage | TrabajoAgendaStage[] | null;
+	agenda: TrabajoAgendaStageRow | TrabajoAgendaStageRow[] | null;
 	visita: TrabajoVisitaStage | TrabajoVisitaStage[] | null;
 	cotizacion: TrabajoQuotationStage | TrabajoQuotationStage[] | null;
 	venta: TrabajoSaleStage | TrabajoSaleStage[] | null;
@@ -425,7 +465,7 @@ function normalizeTrabajoDocumentRow(
 ): TrabajoDocumentRecord {
 	return {
 		...row,
-		agenda: normalizeOneToOne(row.agenda),
+		agenda: normalizeTrabajoAgendaStage(row.agenda),
 		visita: normalizeOneToOne(row.visita),
 		cotizacion: normalizeOneToOne(row.cotizacion),
 		venta: normalizeOneToOne(row.venta),

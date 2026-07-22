@@ -19,6 +19,7 @@ import {
 	Home,
 	Location,
 	More,
+	Profile,
 	Settings,
 	Users,
 } from "reicon-react";
@@ -61,6 +62,7 @@ const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
 	admin: [
 		{ href: "/admin/documents", label: "Documentos", icon: DocumentText },
 		{ href: "/admin/clients", label: "Clientes", icon: Users },
+		{ href: "/admin/workers", label: "Trabajadores", icon: Profile },
 		{ href: "/admin/quotations", label: "Cotizaciones", icon: Clipboard },
 		{ href: "/admin/settings", label: "Configuración", icon: Settings },
 	],

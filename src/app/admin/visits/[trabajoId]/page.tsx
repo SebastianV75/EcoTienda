@@ -100,6 +100,14 @@ export default async function WorkVisitHubPage({
 							<p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
 								Selecciona el formulario que deseas completar para este trabajo.
 							</p>
+							<div className="mt-4 rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3">
+								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
+									Asignado a
+								</p>
+								<p className="mt-2 text-sm font-medium text-[var(--brand-deep)]">
+									{work.agenda?.assignee_worker?.full_name || work.agenda?.assignee_name || "Sin asignación"}
+								</p>
+							</div>
 						</div>
 
 						<Link

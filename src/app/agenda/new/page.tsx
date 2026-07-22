@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { AgendaItemForm } from "@/features/agenda/agenda-item-form";
 import { requireRole } from "@/features/auth/session";
 import { getClients } from "@/features/clients/data";
+import { getActiveWorkers } from "@/features/workers/data";
 import type { AgendaItemFormValues } from "@/types/agenda";
 
 function buildAgendaTitle(workType: string, contactName: string) {
@@ -23,6 +24,7 @@ function buildDefaultValues(date?: string): AgendaItemFormValues {
 		tipo: "visita_tecnica",
 		estado: "pendiente",
 		work_type: "Visita técnica",
+		assignee_worker_id: "",
 		assignee_name: "",
 		contact_name: "",
 		contact_phone: "",
@@ -56,12 +58,26 @@ export default async function NewAgendaItemPage({
 
 	let clients: Awaited<ReturnType<typeof getClients>> = [];
 	let clientsNotice: string | null = null;
+	let workers: Awaited<ReturnType<typeof getActiveWorkers>> = [];
+	let workersNotice: string | null = null;
 
 	try {
 		clients = await getClients();
 	} catch {
 		clientsNotice =
 			"No pudimos cargar la lista de clientes en este momento. Puedes crear el trabajo y vincular el cliente más tarde.";
+	}
+
+	try {
+		workers = await getActiveWorkers();
+	} catch {
+		workersNotice =
+			"No hay trabajadores activos disponibles en este momento. Necesitas al menos uno para crear este ingreso.";
+	}
+
+	if (!workersNotice && workers.length === 0) {
+		workersNotice =
+			"No hay trabajadores activos disponibles en este momento. Necesitas al menos uno para crear este ingreso.";
 	}
 
 	return (
@@ -107,6 +123,12 @@ export default async function NewAgendaItemPage({
 						</section>
 					) : null}
 
+					{workersNotice ? (
+						<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+							{workersNotice}
+						</section>
+					) : null}
+
 					{resolvedSearchParams?.date ? (
 						<section className="rounded-[22px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
 							Este trabajo se abrirá para la fecha {defaultValues.fecha}.
@@ -122,6 +144,7 @@ export default async function NewAgendaItemPage({
 							full_name: client.full_name,
 							rpu: client.rpu,
 						}))}
+						workers={workers}
 						defaultValues={defaultValues}
 					/>
 				</section>

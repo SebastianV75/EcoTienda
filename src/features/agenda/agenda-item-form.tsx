@@ -8,6 +8,7 @@ import {
 	type AgendaActionState,
 } from "@/features/agenda/actions";
 import type { AgendaItemFormValues } from "@/types/agenda";
+import { workerRoleLabels, type WorkerSummary } from "@/types/worker";
 
 type AgendaFormClientOption = {
 	id: string;
@@ -19,6 +20,7 @@ type AgendaItemFormProps = {
 	mode: "create" | "edit";
 	agendaItemId?: string;
 	clients: AgendaFormClientOption[];
+	workers: WorkerSummary[];
 	defaultValues: AgendaItemFormValues;
 };
 
@@ -42,11 +44,20 @@ export function AgendaItemForm({
 	mode,
 	agendaItemId,
 	clients,
+	workers,
 	defaultValues,
 }: AgendaItemFormProps) {
 	const action =
 		mode === "create" ? createAgendaItemAction : updateAgendaItemAction;
 	const [state, formAction, isPending] = useActionState(action, initialState);
+	const initialWorkerId = useMemo(() => {
+		if (defaultValues.assignee_worker_id.trim()) {
+			return defaultValues.assignee_worker_id;
+		}
+
+		return workers.find((worker) => worker.full_name === defaultValues.assignee_name)?.id ?? "";
+	}, [defaultValues.assignee_name, defaultValues.assignee_worker_id, workers]);
+	const [selectedWorkerId, setSelectedWorkerId] = useState(initialWorkerId);
 	const [title, setTitle] = useState(defaultValues.title);
 	const [workType, setWorkType] = useState(defaultValues.work_type);
 	const [contactName, setContactName] = useState(defaultValues.contact_name);
@@ -64,6 +75,11 @@ export function AgendaItemForm({
 		defaultValues.title.trim() !==
 			buildAgendaTitle(defaultValues.work_type, defaultValues.contact_name),
 	);
+	const selectedWorker = useMemo(
+		() => workers.find((worker) => worker.id === selectedWorkerId) ?? null,
+		[workers, selectedWorkerId],
+	);
+	const assigneeSnapshot = selectedWorker?.full_name ?? defaultValues.assignee_name;
 
 	function syncGeneratedTitle(nextWorkType: string, nextContactName: string) {
 		if (isTitleManuallyEdited) {
@@ -132,6 +148,7 @@ export function AgendaItemForm({
 			) : null}
 			<input type="hidden" name="tipo" value={defaultValues.tipo} />
 			<input type="hidden" name="estado" value={defaultValues.estado} />
+			<input type="hidden" name="assignee_name" value={assigneeSnapshot} />
 
 			<div className="rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-4 sm:px-5">
 				<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
@@ -226,19 +243,29 @@ export function AgendaItemForm({
 
 				<div className="space-y-2.5">
 					<label
-						htmlFor="assignee_name"
+						htmlFor="assignee_worker_id"
 						className="text-sm font-medium text-[var(--brand-deep)]"
 					>
-						Asignado a
+						Trabajador asignado
 					</label>
-					<input
-						id="assignee_name"
-						name="assignee_name"
-						defaultValue={defaultValues.assignee_name}
+					<select
+						id="assignee_worker_id"
+						name="assignee_worker_id"
+						value={selectedWorkerId}
+						onChange={(event) => setSelectedWorkerId(event.target.value)}
 						required
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-						placeholder="Nombre de la persona responsable"
-					/>
+					>
+						<option value="">Selecciona un trabajador activo</option>
+						{workers.map((worker) => (
+							<option key={worker.id} value={worker.id}>
+								{worker.full_name} · {workerRoleLabels[worker.role]}
+							</option>
+						))}
+					</select>
+					<p className="text-xs leading-6 text-[var(--muted)]">
+						Se guarda el nombre del trabajador como snapshot legible.
+					</p>
 				</div>
 
 				<div className="space-y-2.5 md:col-span-2">

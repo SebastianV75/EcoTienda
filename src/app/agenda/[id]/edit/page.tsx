@@ -6,6 +6,7 @@ import { AgendaItemForm } from "@/features/agenda/agenda-item-form";
 import { getAgendaItemById } from "@/features/agenda/data";
 import { requireRole } from "@/features/auth/session";
 import { getClients } from "@/features/clients/data";
+import { getActiveWorkers } from "@/features/workers/data";
 
 export default async function EditAgendaItemPage({
 	params,
@@ -22,12 +23,26 @@ export default async function EditAgendaItemPage({
 
 	let clients: Awaited<ReturnType<typeof getClients>> = [];
 	let clientsNotice: string | null = null;
+	let workers: Awaited<ReturnType<typeof getActiveWorkers>> = [];
+	let workersNotice: string | null = null;
 
 	try {
 		clients = await getClients();
 	} catch {
 		clientsNotice =
 			"No pudimos cargar la lista de clientes en este momento. Puedes ajustar el resto del ingreso y reintentar la vinculación más tarde.";
+	}
+
+	try {
+		workers = await getActiveWorkers();
+	} catch {
+		workersNotice =
+			"No hay trabajadores activos disponibles en este momento. Necesitas al menos uno para guardar estos cambios.";
+	}
+
+	if (!workersNotice && workers.length === 0) {
+		workersNotice =
+			"No hay trabajadores activos disponibles en este momento. Necesitas al menos uno para guardar estos cambios.";
 	}
 
 	return (
@@ -64,6 +79,12 @@ export default async function EditAgendaItemPage({
 					</section>
 				) : null}
 
+				{workersNotice ? (
+					<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+						{workersNotice}
+					</section>
+				) : null}
+
 				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-5 shadow-sm sm:p-6">
 					<AgendaItemForm
 						mode="edit"
@@ -73,6 +94,7 @@ export default async function EditAgendaItemPage({
 							full_name: client.full_name,
 							rpu: client.rpu,
 						}))}
+						workers={workers}
 						defaultValues={{
 							fecha: item.fecha,
 							hora: item.appointment_at
@@ -82,7 +104,8 @@ export default async function EditAgendaItemPage({
 							estado: item.estado,
 							title: item.titulo,
 							work_type: item.work_type ?? "",
-							assignee_name: item.assignee_name ?? "",
+							assignee_worker_id: item.assignee_worker_id ?? "",
+							assignee_name: item.assignee_worker?.full_name ?? item.assignee_name ?? "",
 							contact_name:
 								item.contact_name ?? item.client?.full_name ?? item.titulo,
 							contact_phone: item.contact_phone ?? item.client?.phone ?? "",

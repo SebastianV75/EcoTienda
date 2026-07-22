@@ -81,6 +81,12 @@ export function AgendaItemDetail({ item, role }: AgendaItemDetailProps) {
 								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">{agendaItemTypeLabels[item.tipo]}</dd>
 							</div>
 							<div>
+								<dt className="text-sm font-medium text-[var(--brand-deep)]">Asignado a</dt>
+								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
+									{item.assignee_worker?.full_name || item.assignee_name || "Sin asignación"}
+								</dd>
+							</div>
+							<div>
 								<dt className="text-sm font-medium text-[var(--brand-deep)]">Trabajo solicitado</dt>
 								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
 									{item.work_type?.trim() || "Sin descripción de trabajo."}

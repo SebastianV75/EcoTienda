@@ -27,6 +27,8 @@ type AgendaBridgeSnapshot = {
 	descripcion: string | null;
 	client_id: string | null;
 	visit_id: string | null;
+	assignee_worker_id: string | null;
+	assignee_name: string | null;
 	created_at?: string;
 	updated_at?: string;
 };
@@ -51,7 +53,8 @@ type AgendaStageSnapshot = {
 	trabajo_id: string;
 	appointment_at: string;
 	work_type: string;
-	assignee_name: string;
+	assignee_worker_id: string | null;
+	assignee_name: string | null;
 	note: string;
 	contact_name: string;
 	contact_phone: string;
@@ -105,6 +108,7 @@ function validateAgendaItemInput(formData: FormData) {
 	const estado = getString(formData, "estado");
 	const title = getString(formData, "title");
 	const workType = getString(formData, "work_type");
+	const assigneeWorkerId = getString(formData, "assignee_worker_id");
 	const assigneeName = getString(formData, "assignee_name");
 	const contactName = getString(formData, "contact_name");
 	const contactPhone = getString(formData, "contact_phone");
@@ -121,7 +125,7 @@ function validateAgendaItemInput(formData: FormData) {
 	if (!tipo) missing.push("tipo");
 	if (!estado) missing.push("estado");
 	if (!workType) missing.push("tipo de trabajo");
-	if (!assigneeName) missing.push("asignado a");
+	if (!assigneeWorkerId) missing.push("trabajador asignado");
 	if (!contactName) missing.push("nombre de contacto");
 	if (!contactPhone) missing.push("teléfono");
 	if (!addressText) missing.push("dirección");
@@ -184,6 +188,7 @@ function validateAgendaItemInput(formData: FormData) {
 			estado,
 			title,
 			workType,
+			assigneeWorkerId,
 			assigneeName,
 			contactName,
 			contactPhone,
@@ -198,11 +203,13 @@ function validateAgendaItemInput(formData: FormData) {
 
 function getWorkflowStagePayload(
 	values: NonNullable<ReturnType<typeof validateAgendaItemInput>["values"]>,
+	assigneeName: string,
 ) {
 	return {
 		appointment_at: values.appointmentAt,
 		work_type: values.workType,
-		assignee_name: values.assigneeName,
+		assignee_worker_id: values.assigneeWorkerId,
+		assignee_name: assigneeName,
 		note: values.descripcion,
 		contact_name: values.contactName,
 		contact_phone: values.contactPhone,
@@ -273,6 +280,17 @@ export async function createAgendaItemAction(
 	}
 
 	const supabase = await createSupabaseServerClient();
+	const { data: assigneeWorker, error: assigneeWorkerError } = await supabase
+		.from("workers")
+		.select("id, full_name, active")
+		.eq("id", values.assigneeWorkerId)
+		.eq("active", true)
+		.maybeSingle();
+
+	if (assigneeWorkerError || !assigneeWorker) {
+		return { error: "El trabajador asignado no está activo." };
+	}
+
 	const trabajoId = globalThis.crypto.randomUUID();
 
 	const { error: trabajoError } = await supabase.from("trabajos").insert({
@@ -293,7 +311,10 @@ export async function createAgendaItemAction(
 
 	const { error: agendaStageError } = await supabase
 		.from("trabajo_agenda_stage")
-		.insert({ trabajo_id: trabajoId, ...getWorkflowStagePayload(values) });
+		.insert({
+			trabajo_id: trabajoId,
+			...getWorkflowStagePayload(values, assigneeWorker.full_name),
+		});
 
 	if (agendaStageError) {
 		await rollbackAgendaShell(supabase, trabajoId);
@@ -309,6 +330,8 @@ export async function createAgendaItemAction(
 		descripcion: values.descripcion,
 		client_id: values.clientId,
 		visit_id: trabajoId,
+		assignee_worker_id: values.assigneeWorkerId,
+		assignee_name: assigneeWorker.full_name,
 	});
 
 	if (agendaBridgeError) {
@@ -340,6 +363,17 @@ export async function updateAgendaItemAction(
 	}
 
 	const supabase = await createSupabaseServerClient();
+	const { data: assigneeWorker, error: assigneeWorkerError } = await supabase
+		.from("workers")
+		.select("id, full_name, active")
+		.eq("id", values.assigneeWorkerId)
+		.eq("active", true)
+		.maybeSingle();
+
+	if (assigneeWorkerError || !assigneeWorker) {
+		return { error: "El trabajador asignado no está activo." };
+	}
+
 	const { data: workflowStage } = await supabase
 		.from("trabajo_agenda_stage")
 		.select("trabajo_id, completed_at")
@@ -354,10 +388,12 @@ export async function updateAgendaItemAction(
 		descripcion: values.descripcion,
 		client_id: values.clientId,
 		visit_id: agendaItemId,
+		assignee_worker_id: values.assigneeWorkerId,
+		assignee_name: assigneeWorker.full_name,
 	};
 
 	const workflowPayload = {
-		...getWorkflowStagePayload(values),
+		...getWorkflowStagePayload(values, assigneeWorker.full_name),
 		completed_at: workflowStage?.completed_at ?? null,
 	};
 
@@ -374,14 +410,14 @@ export async function updateAgendaItemAction(
 				supabase
 					.from("trabajo_agenda_stage")
 					.select(
-						"trabajo_id, appointment_at, work_type, assignee_name, note, contact_name, contact_phone, address_text, latitude, longitude, client_id, completed_at",
+						"trabajo_id, appointment_at, work_type, assignee_worker_id, assignee_name, note, contact_name, contact_phone, address_text, latitude, longitude, client_id, completed_at",
 					)
 					.eq("trabajo_id", agendaItemId)
 					.maybeSingle(),
 				supabase
 					.from("agenda_items")
 					.select(
-						"id, fecha, titulo, tipo, estado, descripcion, client_id, visit_id",
+						"id, fecha, titulo, tipo, estado, descripcion, client_id, visit_id, assignee_worker_id, assignee_name",
 					)
 					.eq("id", agendaItemId)
 					.maybeSingle(),

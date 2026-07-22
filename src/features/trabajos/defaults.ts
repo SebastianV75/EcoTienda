@@ -16,6 +16,7 @@ export type TrabajoDocumentDefaults = {
 	agenda: {
 		appointment_at: string;
 		work_type: string;
+		assignee_worker_id: string;
 		assignee_name: string;
 		note: string;
 	};
@@ -55,7 +56,9 @@ function getAgendaDefaults(
 	return {
 		appointment_at: trabajo.agenda?.appointment_at ?? "",
 		work_type: trabajo.agenda?.work_type ?? "",
-		assignee_name: trabajo.agenda?.assignee_name ?? "",
+		assignee_worker_id: trabajo.agenda?.assignee_worker_id ?? "",
+		assignee_name:
+			trabajo.agenda?.assignee_worker?.full_name ?? trabajo.agenda?.assignee_name ?? "",
 		note: trabajo.agenda?.note ?? "",
 	};
 }
