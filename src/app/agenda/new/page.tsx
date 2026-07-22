@@ -13,9 +13,12 @@ function buildAgendaTitle(workType: string, contactName: string) {
 	return `${baseTitle} · ${contactLabel}`;
 }
 
-function buildDefaultValues(): AgendaItemFormValues {
+function buildDefaultValues(date?: string): AgendaItemFormValues {
 	const values = {
-		fecha: new Date().toISOString().slice(0, 10),
+		fecha:
+			date && /^\d{4}-\d{2}-\d{2}$/.test(date)
+				? date
+				: new Date().toISOString().slice(0, 10),
 		hora: "08:00",
 		tipo: "visita_tecnica",
 		estado: "pendiente",
@@ -39,30 +42,33 @@ function buildDefaultValues(): AgendaItemFormValues {
 type NewAgendaItemPageProps = {
 	searchParams?: Promise<{
 		source?: string;
+		date?: string;
 	}>;
 };
 
-export default async function NewAgendaItemPage({ searchParams }: NewAgendaItemPageProps) {
+export default async function NewAgendaItemPage({
+	searchParams,
+}: NewAgendaItemPageProps) {
 	const user = await requireRole(["admin"]);
 	const resolvedSearchParams = searchParams ? await searchParams : undefined;
 	const fromDashboard = resolvedSearchParams?.source === "admin-dashboard";
-	const defaultValues = buildDefaultValues();
+	const defaultValues = buildDefaultValues(resolvedSearchParams?.date);
 
 	let clients: Awaited<ReturnType<typeof getClients>> = [];
 	let clientsNotice: string | null = null;
 
 	try {
 		clients = await getClients();
-		} catch {
-			clientsNotice =
-				"No pudimos cargar la lista de clientes en este momento. Podés crear el trabajo y vincular el cliente más tarde.";
-		}
+	} catch {
+		clientsNotice =
+			"No pudimos cargar la lista de clientes en este momento. Puedes crear el trabajo y vincular el cliente más tarde.";
+	}
 
 	return (
 		<AppShell
 			role="admin"
-			title="Nuevo trabajo"
-			description="Registra el ingreso operativo con contacto libre, ubicación y hora para abrir el trabajo desde Agenda."
+			title="Nuevo trabajo de Agenda"
+			description="Crea el ingreso inicial del Trabajo desde Agenda con una sola superficie sobria y continua."
 			email={user.email}
 		>
 			<div className="space-y-4">
@@ -73,23 +79,42 @@ export default async function NewAgendaItemPage({ searchParams }: NewAgendaItemP
 					Volver a agenda
 				</Link>
 
-				{clientsNotice ? (
-					<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-						{clientsNotice}
-					</section>
-				) : null}
-
-				{fromDashboard ? (
-					<section className="rounded-[22px] border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
-						Creaste este acceso desde el panel administrativo. Revisa el título antes de guardar.
-					</section>
-				) : null}
-
-				<section className="rounded-[22px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-					El cliente vinculado es opcional. Puedes seguir con el ingreso usando solo los datos de contacto.
+				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-5 shadow-sm sm:p-6">
+					<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
+						Inicio de Trabajo
+					</p>
+					<h1 className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)] sm:text-3xl">
+						Abrir un ingreso desde Agenda
+					</h1>
+					<p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+						Captura el trabajo en una sola pasada. El título se arma con tipo de
+						trabajo y contacto mientras no lo cambies a mano, y el cliente sigue
+						siendo opcional.
+					</p>
 				</section>
 
-				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
+				<div className="space-y-3">
+					{clientsNotice ? (
+						<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+							{clientsNotice}
+						</section>
+					) : null}
+
+					{fromDashboard ? (
+						<section className="rounded-[22px] border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+							Abriste este ingreso desde el tablero. Revisa el título antes de
+							guardar.
+						</section>
+					) : null}
+
+					{resolvedSearchParams?.date ? (
+						<section className="rounded-[22px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+							Este trabajo se abrirá para la fecha {defaultValues.fecha}.
+						</section>
+					) : null}
+				</div>
+
+				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-5 shadow-sm sm:p-6">
 					<AgendaItemForm
 						mode="create"
 						clients={clients.map((client) => ({

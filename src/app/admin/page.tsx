@@ -26,128 +26,124 @@ export default async function AdminPage() {
 		? await requireRole(["admin"])
 		: await getCurrentUser();
 
-	const activitySummary = hasSupabaseEnv()
-		? await getClientActivitySummary()
-		: emptyActivitySummary;
-	const activeTrabajos = hasSupabaseEnv()
-		? await getActiveTrabajosForDashboard()
-		: emptyActiveTrabajos;
-
-	const moduleCards = [
-		{
-			href: "/admin/clients",
-			label: "Clientes",
-			description: "Alta, búsqueda y seguimiento de clientes.",
-		},
-		{
-			href: "/admin/documents",
-			label: "Descargables",
-			description: "Plantillas y documentos listos para usar.",
-		},
-		{
-			href: "/admin/quotations",
-			label: "Cotizaciones",
-			description: "Presupuestos y trabajo de propuesta.",
-		},
-		{
-			href: "/admin/visits",
-			label: "Visitas técnicas",
-			description: "Trabajo de campo y pendientes de visita.",
-		},
-	] as const;
+	const [activitySummaryResult, activeTrabajosResult] = hasSupabaseEnv()
+		? await Promise.allSettled([
+				getClientActivitySummary(),
+				getActiveTrabajosForDashboard(),
+			])
+		: [
+				{ status: "fulfilled", value: emptyActivitySummary } as const,
+				{ status: "fulfilled", value: emptyActiveTrabajos } as const,
+			];
+	const activitySummary =
+		activitySummaryResult.status === "fulfilled"
+			? activitySummaryResult.value
+			: emptyActivitySummary;
+	const activeTrabajos =
+		activeTrabajosResult.status === "fulfilled"
+			? activeTrabajosResult.value
+			: emptyActiveTrabajos;
+	const loadingNotice =
+		activitySummaryResult.status === "rejected" ||
+		activeTrabajosResult.status === "rejected"
+			? "Parte del tablero no cargó. Mostramos lo disponible para no cortar el flujo operativo."
+			: null;
 
 	return (
 		<AppShell
 			role="admin"
-			title="Panel administrativo"
-			description="Seguimiento operativo, Agenda y trabajos en curso."
+			title="Tablero operativo"
+			description="Trabajo activo primero. Accesos de apoyo abajo."
 			email={user?.email}
 		>
-			<div className="space-y-6">
+			<div className="space-y-4">
+				{loadingNotice ? (
+					<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+						{loadingNotice}
+					</section>
+				) : null}
 				<DashboardActiveList items={activeTrabajos} />
+
+				<section className="rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface)] p-4">
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+						<div className="min-w-0">
+							<p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-strong)]">
+								Estado del tablero
+							</p>
+							<h3 className="mt-2 text-lg font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
+								Trabajo activo y accesos clave
+							</h3>
+							<p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+								Lo que requiere atención queda arriba. Lo de apoyo se mantiene
+								cerca sin competir.
+							</p>
+						</div>
+
+						<div className="flex flex-wrap gap-2">
+							<Link
+								href="/agenda"
+								className="inline-flex min-h-[40px] items-center rounded-full border border-[var(--border-soft)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--brand-deep)] transition-[transform,background-color,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-[rgba(13,79,46,0.18)] hover:bg-[rgba(239,246,239,0.96)] hover:shadow-[0_8px_20px_rgba(10,44,21,0.05)] active:scale-[0.96]"
+							>
+								Abrir agenda
+							</Link>
+							<Link
+								href="/agenda/new?source=admin-dashboard"
+								className="inline-flex min-h-[40px] items-center rounded-full bg-[var(--brand)] px-3.5 py-2 text-sm font-medium text-white transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[var(--brand-strong)] hover:shadow-[0_10px_24px_rgba(47,179,20,0.22)] active:scale-[0.96]"
+							>
+								Nuevo trabajo
+							</Link>
+						</div>
+					</div>
+
+					<dl className="mt-4 divide-y divide-[var(--border-soft)] rounded-[20px] border border-[var(--border-soft)] bg-white px-4">
+						<div className="flex items-center justify-between gap-4 py-3">
+							<dt className="text-sm font-medium text-[var(--muted)]">
+								Trabajos en marcha
+							</dt>
+							<dd className="text-lg font-semibold tracking-[-0.04em] tabular-nums text-[var(--brand-deep)]">
+								{activeTrabajos.length}
+							</dd>
+						</div>
+						<div className="flex items-center justify-between gap-4 py-3">
+							<dt className="text-sm font-medium text-[var(--muted)]">
+								Clientes registrados
+							</dt>
+							<dd className="text-lg font-semibold tracking-[-0.04em] tabular-nums text-[var(--brand-deep)]">
+								{activitySummary.totalClients}
+							</dd>
+						</div>
+						<div className="flex items-center justify-between gap-4 py-3">
+							<dt className="text-sm font-medium text-[var(--muted)]">
+								Altas recientes
+							</dt>
+							<dd className="text-lg font-semibold tracking-[-0.04em] tabular-nums text-[var(--brand-deep)]">
+								{activitySummary.recentClients}
+							</dd>
+						</div>
+					</dl>
+				</section>
 
 				{!hasSupabaseEnv() ? <SetupNotice /> : null}
 
-				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-5 shadow-sm sm:p-6">
-					<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-						<div>
-							<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-								Clientes
-							</p>
-							<h3 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)]">
-								Base operativa secundaria
-							</h3>
-						</div>
-
-						<Link
-							href="/admin/clients"
-							className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-[var(--surface-strong)] px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:bg-emerald-100"
-						>
-							Abrir clientes
-						</Link>
-					</div>
-
-					<div className="mt-5 grid gap-3 sm:grid-cols-2">
-						<article className="rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface)] p-4">
-							<p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
-								Total clientes
-							</p>
-							<p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)]">
-								{activitySummary.totalClients}
-							</p>
-						</article>
-
-						<article className="rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface)] p-4">
-							<p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
-								Nuevos en 7 días
-							</p>
-							<p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)]">
-								{activitySummary.recentClients}
-							</p>
-						</article>
-					</div>
-				</section>
-
-				<section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-					{moduleCards.map((card) => (
-						<Link
-							key={card.href}
-							href={card.href}
-							className="flex min-h-[96px] flex-col justify-between rounded-[24px] border border-[var(--border-soft)] bg-white p-4 shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(13,79,46,0.08)]"
-						>
-							<div>
-								<p className="text-sm font-semibold tracking-[-0.03em] text-[var(--brand-deep)]">
-									{card.label}
-								</p>
-								<p className="mt-2 hidden text-xs leading-5 text-[var(--muted)] sm:block">
-									{card.description}
-								</p>
-							</div>
-							<span className="text-xs font-medium text-[var(--brand-strong)]">Abrir</span>
-						</Link>
-					))}
-				</section>
-
-				<section className="rounded-[28px] border border-[var(--border-soft)] bg-[linear-gradient(160deg,rgba(247,250,247,0.98),rgba(233,244,233,0.92))] p-6 shadow-[0_28px_70px_rgba(13,79,46,0.08)] sm:p-8">
-					<p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--brand-strong)]">
-						Vista general
+				<section className="rounded-[24px] border border-[var(--border-soft)] bg-white p-4">
+					<p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-strong)]">
+						Apoyo
 					</p>
-					<h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)] text-balance sm:text-4xl">
-						Agenda primero, trabajo después.
-					</h2>
-					<div className="mt-5 flex flex-wrap gap-3">
-						<Link
-							href="/agenda"
-							className="inline-flex min-h-[44px] items-center rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
-						>
-							Abrir Agenda
-						</Link>
-						<Link
-							href="/admin/documents"
-							className="inline-flex min-h-[44px] items-center rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
-						>
-							Ir a Descargables
-						</Link>
+					<div className="mt-3 flex flex-wrap gap-2">
+						{[
+							{ href: "/admin/clients", label: "Clientes" },
+							{ href: "/admin/documents", label: "Documentos" },
+							{ href: "/admin/quotations", label: "Cotizaciones" },
+							{ href: "/admin/visits", label: "Visitas" },
+						].map((item) => (
+							<Link
+								key={item.href}
+								href={item.href}
+								className="inline-flex min-h-[40px] items-center rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-3.5 py-2 text-sm font-medium text-[var(--brand-deep)] transition-[transform,background-color,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-[rgba(13,79,46,0.18)] hover:bg-[rgba(243,247,243,0.92)] hover:shadow-[0_8px_20px_rgba(10,44,21,0.04)] active:scale-[0.96]"
+							>
+								{item.label}
+							</Link>
+						))}
 					</div>
 				</section>
 			</div>

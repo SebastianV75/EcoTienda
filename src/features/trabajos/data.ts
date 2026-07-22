@@ -64,7 +64,10 @@ export type TrabajoDashboardSummary = {
 	descargablesTrabajos: number;
 };
 
-type ActiveTrabajoDashboardRow = Pick<Trabajo, "id" | "current_stage" | "intake_name">;
+type ActiveTrabajoDashboardRow = Pick<
+	Trabajo,
+	"id" | "current_stage" | "intake_name"
+>;
 
 type ActiveTrabajoDashboardTitleRow = {
 	id: string;
@@ -91,7 +94,8 @@ export function getTrabajoStagePosition(stage: TrabajoStage) {
 }
 
 export function getTrabajoLatestCompletedStage(
-	documentSource: Pick<Trabajo, "current_stage"> & Partial<TrabajoStageSnapshots>,
+	documentSource: Pick<Trabajo, "current_stage"> &
+		Partial<TrabajoStageSnapshots>,
 ): TrabajoStage | null {
 	if (documentSource.venta) {
 		return "venta";
@@ -312,7 +316,9 @@ const trabajoDocumentSelect = `
 	)
 `;
 
-function normalizeClient(client: TrabajoVisitaRow["client"]): AgendaItemClientSummary | null {
+function normalizeClient(
+	client: TrabajoVisitaRow["client"],
+): AgendaItemClientSummary | null {
 	if (!client) {
 		return null;
 	}
@@ -343,7 +349,7 @@ function normalizeOneToOne<T>(value: T | T[] | null): T | null {
 		return null;
 	}
 
-	return Array.isArray(value) ? value[0] ?? null : value;
+	return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
 export type TrabajoVisitaRecord = Trabajo & {
@@ -414,7 +420,9 @@ function normalizeDocumentCollection<T>(value: T[] | null): T[] {
 	return value ?? [];
 }
 
-function normalizeTrabajoDocumentRow(row: TrabajoDocumentRow): TrabajoDocumentRecord {
+function normalizeTrabajoDocumentRow(
+	row: TrabajoDocumentRow,
+): TrabajoDocumentRecord {
 	return {
 		...row,
 		agenda: normalizeOneToOne(row.agenda),
@@ -430,7 +438,9 @@ function normalizeTrabajoDocumentRow(row: TrabajoDocumentRow): TrabajoDocumentRe
 function normalizeTrabajoDocumentSelectionRow(
 	row: TrabajoDocumentSelectionRow,
 ): TrabajoDocumentSelectionItem {
-	const client = Array.isArray(row.client) ? row.client[0] ?? null : row.client;
+	const client = Array.isArray(row.client)
+		? (row.client[0] ?? null)
+		: row.client;
 
 	return {
 		id: row.id,
@@ -448,7 +458,8 @@ function normalizeActiveTrabajoDashboardItem(
 	row: ActiveTrabajoDashboardRow,
 	title: string | null,
 ): ActiveTrabajoDashboardItem {
-	const fallbackTitle = title?.trim() || row.intake_name.trim();
+	const fallbackTitle =
+		title?.trim() || row.intake_name.trim() || "Trabajo sin título";
 
 	return {
 		id: row.id,
@@ -467,7 +478,9 @@ export const getTrabajoDocumentById = cache(async (id: string) => {
 		.maybeSingle();
 
 	if (error) {
-		throw new Error(`No se pudo cargar el trabajo para documentos. ${error.message}`);
+		throw new Error(
+			`No se pudo cargar el trabajo para documentos. ${error.message}`,
+		);
 	}
 
 	if (!data) {
@@ -487,7 +500,9 @@ export const getTrabajosForDocumentSelection = cache(async () => {
 		.order("updated_at", { ascending: false });
 
 	if (error) {
-		throw new Error(`No se pudieron cargar los trabajos para descargables. ${error.message}`);
+		throw new Error(
+			`No se pudieron cargar los trabajos para descargables. ${error.message}`,
+		);
 	}
 
 	return ((data ?? []) as unknown as TrabajoDocumentSelectionRow[]).map(
@@ -495,11 +510,18 @@ export const getTrabajosForDocumentSelection = cache(async () => {
 	);
 });
 
-export const getTrabajoDashboardSummary = cache(async (): Promise<TrabajoDashboardSummary> => {
-	const supabase = await createSupabaseServerClient();
+export const getTrabajoDashboardSummary = cache(
+	async (): Promise<TrabajoDashboardSummary> => {
+		const supabase = await createSupabaseServerClient();
 
-	const [totalResult, agendaResult, visitaResult, cotizacionResult, ventaResult, descargablesResult] =
-		await Promise.all([
+		const [
+			totalResult,
+			agendaResult,
+			visitaResult,
+			cotizacionResult,
+			ventaResult,
+			descargablesResult,
+		] = await Promise.all([
 			supabase.from("trabajos").select("id", { count: "exact", head: true }),
 			supabase
 				.from("trabajos")
@@ -523,64 +545,80 @@ export const getTrabajoDashboardSummary = cache(async (): Promise<TrabajoDashboa
 				.eq("current_stage", "descargables"),
 		]);
 
-	for (const result of [
-		totalResult,
-		agendaResult,
-		visitaResult,
-		cotizacionResult,
-		ventaResult,
-		descargablesResult,
-	]) {
-		if (result.error) {
-			throw new Error(`No se pudo cargar el resumen de trabajos. ${result.error.message}`);
+		for (const result of [
+			totalResult,
+			agendaResult,
+			visitaResult,
+			cotizacionResult,
+			ventaResult,
+			descargablesResult,
+		]) {
+			if (result.error) {
+				throw new Error(
+					`No se pudo cargar el resumen de trabajos. ${result.error.message}`,
+				);
+			}
 		}
-	}
 
-	return {
-		totalTrabajos: totalResult.count ?? 0,
-		agendaTrabajos: agendaResult.count ?? 0,
-		visitaTrabajos: visitaResult.count ?? 0,
-		cotizacionTrabajos: cotizacionResult.count ?? 0,
-		ventaTrabajos: ventaResult.count ?? 0,
-		descargablesTrabajos: descargablesResult.count ?? 0,
-	};
-});
+		return {
+			totalTrabajos: totalResult.count ?? 0,
+			agendaTrabajos: agendaResult.count ?? 0,
+			visitaTrabajos: visitaResult.count ?? 0,
+			cotizacionTrabajos: cotizacionResult.count ?? 0,
+			ventaTrabajos: ventaResult.count ?? 0,
+			descargablesTrabajos: descargablesResult.count ?? 0,
+		};
+	},
+);
 
-export const getActiveTrabajosForDashboard = cache(async (): Promise<ActiveTrabajoDashboardItem[]> => {
-	const supabase = await createSupabaseServerClient();
-	const { data: activeTrabajos, error: activeTrabajosError } = await supabase
-		.from("trabajos")
-		.select("id, current_stage, intake_name")
-		.eq("status", "open")
-		.order("updated_at", { ascending: false });
+export const getActiveTrabajosForDashboard = cache(
+	async (): Promise<ActiveTrabajoDashboardItem[]> => {
+		const supabase = await createSupabaseServerClient();
+		const { data: activeTrabajos, error: activeTrabajosError } = await supabase
+			.from("trabajos")
+			.select("id, current_stage, intake_name")
+			.eq("status", "open")
+			.order("updated_at", { ascending: false });
 
-	if (activeTrabajosError) {
-		throw new Error(`No se pudieron cargar los trabajos activos del tablero. ${activeTrabajosError.message}`);
-	}
+		if (activeTrabajosError) {
+			throw new Error(
+				`No se pudieron cargar los trabajos activos del tablero. ${activeTrabajosError.message}`,
+			);
+		}
 
-	const normalizedActiveTrabajos = (activeTrabajos ?? []) as ActiveTrabajoDashboardRow[];
+		const normalizedActiveTrabajos = (activeTrabajos ??
+			[]) as ActiveTrabajoDashboardRow[];
 
-	if (normalizedActiveTrabajos.length === 0) {
-		return [];
-	}
+		if (normalizedActiveTrabajos.length === 0) {
+			return [];
+		}
 
-	const { data: agendaItems, error: agendaItemsError } = await supabase
-		.from("agenda_items")
-		.select("id, titulo")
-		.in(
-			"id",
-			normalizedActiveTrabajos.map((trabajo) => trabajo.id),
+		const { data: agendaItems, error: agendaItemsError } = await supabase
+			.from("agenda_items")
+			.select("id, titulo")
+			.in(
+				"id",
+				normalizedActiveTrabajos.map((trabajo) => trabajo.id),
+			);
+
+		if (agendaItemsError) {
+			throw new Error(
+				`No se pudieron cargar los títulos del tablero. ${agendaItemsError.message}`,
+			);
+		}
+
+		const titleByTrabajoId = new Map(
+			((agendaItems ?? []) as ActiveTrabajoDashboardTitleRow[]).map((item) => [
+				item.id,
+				item.titulo,
+			]),
 		);
 
-	if (agendaItemsError) {
-		throw new Error(`No se pudieron cargar los títulos del tablero. ${agendaItemsError.message}`);
-	}
-
-	const titleByTrabajoId = new Map(
-		((agendaItems ?? []) as ActiveTrabajoDashboardTitleRow[]).map((item) => [item.id, item.titulo]),
-	);
-
-	return normalizedActiveTrabajos.map((trabajo) =>
-		normalizeActiveTrabajoDashboardItem(trabajo, titleByTrabajoId.get(trabajo.id) ?? null),
-	);
-});
+		return normalizedActiveTrabajos.map((trabajo) =>
+			normalizeActiveTrabajoDashboardItem(
+				trabajo,
+				titleByTrabajoId.get(trabajo.id) ?? null,
+			),
+		);
+	},
+);
