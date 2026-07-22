@@ -1,7 +1,7 @@
-import type { ClientRecord } from "@/types/client";
+import type { DocumentPreviewSubject } from "./preview-data";
 
 type DiagramaUnifilarPreviewProps = {
-	client: ClientRecord;
+	client: DocumentPreviewSubject;
 };
 
 type PanelField = {

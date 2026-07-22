@@ -188,11 +188,21 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
             </div>
 
             <dl className="mt-4 space-y-3 text-sm text-[var(--muted)]">
-              <div>
-                <dt className="font-medium text-[var(--brand-deep)]">Cliente</dt>
-                <dd>{quotation.project ?? "No especificado"}</dd>
-              </div>
-              <div>
+				<div>
+					<dt className="font-medium text-[var(--brand-deep)]">Cliente</dt>
+					<dd>{quotation.project ?? "No especificado"}</dd>
+				</div>
+				{quotation.trabajo_id ? (
+					<div>
+						<dt className="font-medium text-[var(--brand-deep)]">Trabajo</dt>
+						<dd>
+							<Link href={"/agenda/" + quotation.trabajo_id} className="text-[var(--brand-strong)] underline-offset-4 hover:underline">
+								Abrir trabajo vinculado
+							</Link>
+						</dd>
+					</div>
+				) : null}
+				<div>
                 <dt className="font-medium text-[var(--brand-deep)]">Total</dt>
                 <dd className="text-lg font-semibold text-[var(--brand-deep)]">
                   {formatCurrency(quotation.total)}

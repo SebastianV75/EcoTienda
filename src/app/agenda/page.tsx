@@ -1,11 +1,11 @@
-import Link from "next/link";
-
 import { AppShell } from "@/components/app-shell";
-import { AgendaCalendar } from "@/features/agenda/agenda-calendar";
-import { AgendaMonthControls } from "@/features/agenda/agenda-month-controls";
+import { AgendaCalendarSection } from "@/features/agenda/agenda-calendar-section";
 import { AgendaPendingList } from "@/features/agenda/agenda-pending-list";
 import { parseMonthParam } from "@/features/agenda/calendar-utils";
-import { getAgendaItemsForMonth, getPendingAgendaItems } from "@/features/agenda/data";
+import {
+	getAgendaItemsForMonth,
+	getPendingAgendaItems,
+} from "@/features/agenda/data";
 import { getCurrentUser, requireRole } from "@/features/auth/session";
 import { hasSupabaseEnv } from "@/lib/env";
 
@@ -19,7 +19,7 @@ type AgendaPageProps = {
 
 export default async function AgendaPage({ searchParams }: AgendaPageProps) {
 	const user = hasSupabaseEnv()
-		? await requireRole(["admin", "technician"])
+		? await requireRole(["admin"])
 		: await getCurrentUser();
 	const resolvedSearchParams = searchParams ? await searchParams : undefined;
 
@@ -31,7 +31,7 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
 			parsedMonth = parseMonthParam(resolvedSearchParams.month);
 		} catch {
 			monthNotice =
-				"El mes solicitado no es válido. Mostramos la agenda del mes actual para que puedas seguir trabajando.";
+				"El mes pedido no es válido. Mostramos la agenda del mes actual para seguir trabajando.";
 		}
 	}
 
@@ -41,31 +41,24 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
 		getPendingAgendaItems(),
 	]);
 
-	const monthItems = monthItemsResult.status === "fulfilled" ? monthItemsResult.value : [];
-	const pendingItems = pendingItemsResult.status === "fulfilled" ? pendingItemsResult.value : [];
+	const monthItems =
+		monthItemsResult.status === "fulfilled" ? monthItemsResult.value : [];
+	const pendingItems =
+		pendingItemsResult.status === "fulfilled" ? pendingItemsResult.value : [];
 	const loadingNotice =
-		monthItemsResult.status === "rejected" || pendingItemsResult.status === "rejected"
-			? "Parte de la agenda no se pudo cargar en este momento. Mostramos la información disponible para evitar cortar el flujo operativo."
+		monthItemsResult.status === "rejected" ||
+		pendingItemsResult.status === "rejected"
+			? "Parte de la agenda no cargó. Mostramos lo disponible para no cortar el flujo operativo."
 			: null;
 
 	return (
 		<AppShell
 			role={user?.role ?? defaultRole}
 			title="Agenda"
-			description="Calendario mensual y pendientes ordenados para organizar citas, visitas e instalaciones."
+			description="Ingreso mensual de trabajos. Calendario arriba, pendientes abajo."
 			email={user?.email}
 		>
-			<div className="space-y-6">
-				{user?.role === "admin" ? (
-					<div className="flex justify-end">
-						<Link
-							href="/agenda/new"
-							className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
-						>
-							Nuevo elemento
-						</Link>
-					</div>
-				) : null}
+			<div className="space-y-4">
 				{monthNotice ? (
 					<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
 						{monthNotice}
@@ -76,8 +69,7 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
 						{loadingNotice}
 					</section>
 				) : null}
-				<AgendaMonthControls year={year} month={month} />
-				<AgendaCalendar year={year} month={month} items={monthItems} />
+				<AgendaCalendarSection year={year} month={month} items={monthItems} />
 				<AgendaPendingList items={pendingItems} />
 			</div>
 		</AppShell>

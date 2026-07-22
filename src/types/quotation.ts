@@ -25,6 +25,7 @@ export type QuotationItem = {
 export type Quotation = {
 	id?: string;
 	quotation_number?: string;
+	trabajo_id?: string | null;
 	supplier_id: string | null;
 	supplier_name: string;
 	supplier_reference: string | null;

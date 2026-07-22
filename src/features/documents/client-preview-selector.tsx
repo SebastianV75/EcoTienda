@@ -3,39 +3,45 @@
 import { useRouter } from "next/navigation";
 import { useTransition, type ChangeEvent } from "react";
 
-type DocumentTemplateSlug =
+export type DocumentTemplateSlug =
 	| "carta-poder"
 	| "ubicacion-cliente"
 	| "diagrama-unifilar";
 
-type ClientPreviewSelectorClient = {
+export type DocumentPreviewSelectorItem = {
 	id: string;
-	full_name: string;
-	rpu: string | null;
+	label: string;
+	supportingText?: string | null;
 };
 
 type ClientPreviewSelectorProps = {
-	clients: ClientPreviewSelectorClient[];
+	items: DocumentPreviewSelectorItem[];
 	template: DocumentTemplateSlug;
+	mode?: "client" | "trabajo";
 };
 
 export function ClientPreviewSelector({
-	clients,
+	items,
 	template,
+	mode = "client",
 }: ClientPreviewSelectorProps) {
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
+	const fieldName = mode === "trabajo" ? "trabajoId" : "clientId";
+	const label = mode === "trabajo" ? "Trabajo" : "Cliente";
+	const placeholder =
+		mode === "trabajo" ? "Selecciona un trabajo" : "Selecciona un cliente";
 
 	function handleChange(event: ChangeEvent<HTMLSelectElement>) {
-		const clientId = event.target.value;
+		const selectedId = event.target.value;
 
-		if (!clientId) {
+		if (!selectedId) {
 			return;
 		}
 
 		startTransition(() => {
 			router.push(
-				`/admin/documents/${template}/preview?clientId=${encodeURIComponent(clientId)}`,
+				`/admin/documents/${template}/preview?${fieldName}=${encodeURIComponent(selectedId)}`,
 			);
 		});
 	}
@@ -43,23 +49,24 @@ export function ClientPreviewSelector({
 	return (
 		<div className="space-y-2.5">
 			<label
-				htmlFor="clientId"
+				htmlFor={fieldName}
 				className="text-sm font-medium text-[var(--brand-deep)]"
 			>
-				Cliente
+				{label}
 			</label>
 			<select
-				id="clientId"
-				name="clientId"
+				id={fieldName}
+				name={fieldName}
 				defaultValue=""
 				disabled={isPending}
 				onChange={handleChange}
 				className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300 disabled:cursor-wait disabled:opacity-70"
 			>
-				<option value="">Selecciona un cliente</option>
-				{clients.map((client) => (
-					<option key={client.id} value={client.id}>
-						{client.full_name} · {client.rpu}
+				<option value="">{placeholder}</option>
+				{items.map((item) => (
+					<option key={item.id} value={item.id}>
+						{item.label}
+						{item.supportingText ? ` · ${item.supportingText}` : ""}
 					</option>
 				))}
 			</select>

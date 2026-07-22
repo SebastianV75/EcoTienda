@@ -6,6 +6,7 @@ import type { Supplier } from "@/types/quotation";
 export type QuotationListItem = {
 	id: string;
 	quotation_number: string | null;
+	trabajo_id: string | null;
 	supplier_name: string;
 	project: string | null;
 	subtotal: number;
@@ -31,6 +32,7 @@ export type QuotationItem = {
 export type QuotationDetail = {
 	id: string;
 	quotation_number: string | null;
+	trabajo_id: string | null;
 	supplier_name: string;
 	project: string | null;
 	terms_and_conditions: string | null;
@@ -89,7 +91,7 @@ export const getQuotations = cache(async (query?: string) => {
 	let request = supabase
 		.from("quotations")
 		.select(
-			"id, quotation_number, supplier_name, project, subtotal, total, status, created_at, pdf_url",
+			"id, quotation_number, trabajo_id, supplier_name, project, subtotal, total, status, created_at, pdf_url",
 		)
 		.order("created_at", { ascending: false });
 

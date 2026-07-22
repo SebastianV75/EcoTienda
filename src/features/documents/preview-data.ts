@@ -1,0 +1,120 @@
+import type { ClientRecord } from "@/types/client";
+
+import { composeTrabajoDocumentDefaults } from "@/features/trabajos/defaults";
+import type { TrabajoDocumentSource } from "@/features/trabajos/data";
+
+import type { DocumentTemplateSlug } from "./client-preview-selector";
+
+export type DocumentPreviewSubject = {
+	full_name: string;
+	phone: string | null;
+	address: string | null;
+	neighborhood: string | null;
+	rfc: string | null;
+	rpu: string | null;
+	latitude: number | null;
+	longitude: number | null;
+	panel_count: string | null;
+	panel_power: string | null;
+	inverter: string | null;
+	installed_capacity: string | null;
+	estimated_monthly_generation: string | null;
+};
+
+function pickText(...values: Array<string | null | undefined>): string {
+	return (
+		values.find((value) => typeof value === "string" && value.trim().length > 0)?.trim() ?? ""
+	);
+}
+
+function toNullableNumber(value: unknown): number | null {
+	if (typeof value === "number" && Number.isFinite(value)) {
+		return value;
+	}
+
+	return null;
+}
+
+function coercePreviewValue(value: unknown) {
+	if (typeof value === "string" || typeof value === "number" || value === null) {
+		return value;
+	}
+
+	if (typeof value === "boolean") {
+		return value ? "true" : "false";
+	}
+
+	return null;
+}
+
+function applyOverrides(
+	subject: DocumentPreviewSubject,
+	overrides: TrabajoDocumentSource["document_overrides"],
+) {
+	const next = { ...subject };
+
+	for (const override of overrides) {
+		if (!Object.prototype.hasOwnProperty.call(next, override.field_key)) {
+			continue;
+		}
+
+		const value = coercePreviewValue(override.field_value);
+		if (value === null) {
+			continue;
+		}
+
+		(next as Record<string, string | number | null>)[override.field_key] = value as string | number | null;
+	}
+
+	return next;
+}
+
+export function buildClientPreviewSubject(
+	client: ClientRecord,
+): DocumentPreviewSubject {
+	return {
+		full_name: client.full_name,
+		phone: client.phone,
+		address: client.address,
+		neighborhood: client.neighborhood,
+		rfc: client.rfc,
+		rpu: client.rpu,
+		latitude: toNullableNumber(client.latitude),
+		longitude: toNullableNumber(client.longitude),
+		panel_count: client.panel_count,
+		panel_power: client.panel_power,
+		inverter: client.inverter,
+		installed_capacity: client.installed_capacity,
+		estimated_monthly_generation: client.estimated_monthly_generation,
+	};
+}
+
+export function buildTrabajoPreviewSubject(
+	trabajo: TrabajoDocumentSource,
+	template: DocumentTemplateSlug,
+): DocumentPreviewSubject {
+	const defaults = composeTrabajoDocumentDefaults(trabajo);
+	const client = trabajo.client;
+	const subject: DocumentPreviewSubject = {
+		full_name: pickText(defaults.client_name, client?.full_name, trabajo.intake_name),
+		phone: pickText(defaults.client_phone, client?.phone, trabajo.intake_phone),
+		address: pickText(defaults.address_text, client?.address, trabajo.intake_address_text),
+		neighborhood: client?.neighborhood ?? null,
+		rfc: client?.rfc ?? null,
+		rpu: client?.rpu ?? null,
+		latitude: defaults.latitude ?? client?.latitude ?? null,
+		longitude: defaults.longitude ?? client?.longitude ?? null,
+		panel_count: client?.panel_count ?? null,
+		panel_power: client?.panel_power ?? null,
+		inverter: client?.inverter ?? null,
+		installed_capacity: client?.installed_capacity ?? null,
+		estimated_monthly_generation: client?.estimated_monthly_generation ?? null,
+	};
+
+	const templateOverrides = trabajo.document_overrides.filter(
+		(override) =>
+			override.template_key === template && override.export_instance_key === "preview",
+	);
+
+	return applyOverrides(subject, templateOverrides);
+}

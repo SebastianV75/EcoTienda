@@ -1,14 +1,19 @@
 import Image from "next/image";
 
-import type { ClientRecord } from "@/types/client";
+import type { DocumentPreviewSubject } from "./preview-data";
 
 type CartaPoderPreviewProps = {
-	client: ClientRecord;
+	client: DocumentPreviewSubject;
 };
 
 const POWER_ACCEPTOR = "ANA VICTORIA SALCIDO MARQUEZ";
 const WITNESS_ONE = "GUILLERMO ORPINEL AGUIRRE";
 const WITNESS_TWO = "RICARDO LOPEZ BEALL";
+
+function formatField(value: string | null | undefined) {
+	const trimmed = (value ?? "").trim();
+	return trimmed.length > 0 ? trimmed : "Sin dato";
+}
 
 function InlineField({
 	value,
@@ -61,12 +66,12 @@ export function CartaPoderPreview({ client }: CartaPoderPreviewProps) {
 					REPRESENTACIÓN, BAJO MI AUTORIZACIÓN PLENA Y CONSCIENTE DEL TRÁMITE A
 					CAMBIO DE MEDIDOR BIDIRECCIONAL ANTE LA COMISIÓN FEDERAL DE
 					ELECTRICIDAD (CFE), DE MI DOMICILIO:{" "}
-					<InlineField value={client.address} widthClass="min-w-[420px]" />
+					<InlineField value={formatField(client.address)} widthClass="min-w-[420px]" />
 					COLONIA{" "}
-					<InlineField value={client.neighborhood} widthClass="min-w-[220px]" />
+					<InlineField value={formatField(client.neighborhood)} widthClass="min-w-[220px]" />
 					, CON EL NÚMERO DE SERVICIO (RPU){" "}
-					<InlineField value={client.rpu} widthClass="min-w-[220px]" />, SIENDO
-					MI RFC <InlineField value={client.rfc} widthClass="min-w-[220px]" />
+					<InlineField value={formatField(client.rpu)} widthClass="min-w-[220px]" />, SIENDO
+					MI RFC <InlineField value={formatField(client.rfc)} widthClass="min-w-[220px]" />
 				</p>
 			</div>
 

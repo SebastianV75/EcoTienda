@@ -87,16 +87,30 @@ export default async function QuotationDetailPage({
 								)}
 							</div>
 
-							<div>
-								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-									Cliente / Proyecto
-								</p>
-								<p className="mt-2 text-sm text-[var(--foreground)]">
-									{quotationData.project || "No especificado"}
-								</p>
-							</div>
+					<div>
+						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
+							Cliente / Proyecto
+						</p>
+						<p className="mt-2 text-sm text-[var(--foreground)]">
+							{quotationData.project || "No especificado"}
+						</p>
+					</div>
 
-							<div>
+					{quotationData.trabajo_id ? (
+						<div>
+							<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
+								Trabajo asociado
+							</p>
+							<Link
+								href={`/agenda/${quotationData.trabajo_id}`}
+								className="mt-2 inline-flex rounded-full border border-[var(--border-soft)] bg-white px-3 py-1.5 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
+							>
+								Abrir trabajo vinculado
+							</Link>
+						</div>
+					) : null}
+
+					<div>
 								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
 									Entregar a
 								</p>

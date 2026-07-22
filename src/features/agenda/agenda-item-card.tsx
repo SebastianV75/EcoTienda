@@ -27,13 +27,22 @@ export function AgendaItemCard({ item, compact = false, href }: AgendaItemCardPr
 					<p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
 						{agendaItemTypeLabels[item.tipo]}
 					</p>
-					<h3 className={compact ? "mt-1 text-[13px] font-semibold leading-5 text-[var(--brand-deep)]" : "mt-2 text-base font-semibold text-[var(--brand-deep)]"}>
-						{item.titulo}
-					</h3>
-					{item.client ? (
-						<p className={compact ? "mt-1 text-[11px] leading-4 text-[var(--muted)]" : "mt-2 text-sm leading-6 text-[var(--muted)]"}>
-							{item.client.full_name}
-						</p>
+				<h3 className={compact ? "mt-1 text-[13px] font-semibold leading-5 text-[var(--brand-deep)]" : "mt-2 text-base font-semibold text-[var(--brand-deep)]"}>
+					{item.titulo}
+				</h3>
+				{item.appointment_at ? (
+					<p className={compact ? "mt-1 text-[11px] leading-4 text-[var(--muted)]" : "mt-1 text-sm leading-5 text-[var(--muted)]"}>
+						{new Intl.DateTimeFormat("es-MX", {
+							dateStyle: compact ? undefined : "medium",
+							timeStyle: "short",
+							timeZone: "UTC",
+						}).format(new Date(item.appointment_at))}
+					</p>
+				) : null}
+				{item.client ? (
+					<p className={compact ? "mt-1 text-[11px] leading-4 text-[var(--muted)]" : "mt-2 text-sm leading-6 text-[var(--muted)]"}>
+						{item.client.full_name}
+					</p>
 					) : null}
 				</div>
 				<span

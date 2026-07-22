@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import type { ClientRecord } from "@/types/client";
+import type { DocumentPreviewSubject } from "./preview-data";
 
 type UbicacionClientePreviewProps = {
-	client: ClientRecord;
+	client: DocumentPreviewSubject;
 	mapApiKey?: string | null;
 };
 
@@ -36,7 +36,7 @@ function toFiniteNumber(value: unknown): number | null {
 	return null;
 }
 
-function hasValidCoordinates(client: ClientRecord) {
+function hasValidCoordinates(client: DocumentPreviewSubject) {
 	const latitude = toFiniteNumber(client.latitude);
 	const longitude = toFiniteNumber(client.longitude);
 

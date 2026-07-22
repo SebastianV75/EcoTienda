@@ -18,12 +18,21 @@ export type AgendaItemState = (typeof agendaItemStates)[number];
 export type AgendaItem = {
 	id: string;
 	fecha: string;
+	appointment_at: string | null;
 	titulo: string;
 	tipo: AgendaItemType;
 	estado: AgendaItemState;
 	descripcion: string | null;
 	client_id: string | null;
 	visit_id: string | null;
+	trabajo_id: string | null;
+	work_type: string | null;
+	assignee_name: string | null;
+	contact_name: string | null;
+	contact_phone: string | null;
+	address_text: string | null;
+	latitude: number | null;
+	longitude: number | null;
 	created_at: string;
 	updated_at: string;
 	client?: AgendaItemClientSummary | null;
@@ -38,9 +47,17 @@ export type AgendaItemClientSummary = {
 
 export type AgendaItemFormValues = {
 	fecha: string;
-	titulo: string;
+	hora: string;
 	tipo: AgendaItemType;
 	estado: AgendaItemState;
+	title: string;
+	work_type: string;
+	assignee_name: string;
+	contact_name: string;
+	contact_phone: string;
+	address_text: string;
+	latitude: string;
+	longitude: string;
 	descripcion: string;
 	client_id: string;
 };

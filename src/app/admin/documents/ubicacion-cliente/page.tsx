@@ -22,16 +22,16 @@ export default async function UbicacionClienteTemplatePage() {
 						href="/admin/documents"
 						className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
 					>
-						Volver a descargables
+						Volver a documentos
 					</Link>
 				</div>
 
 				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
 					<ClientPreviewSelector
-						clients={clients.map((client) => ({
+						items={clients.map((client) => ({
 							id: client.id,
-							full_name: client.full_name,
-							rpu: client.rpu,
+							label: client.full_name,
+							supportingText: client.rpu,
 						}))}
 						template="ubicacion-cliente"
 					/>
