@@ -5,7 +5,7 @@ import { useActionState, useState } from "react";
 import { VoiceInput } from "./components/voice-input";
 import { SignaturePad } from "./components/signature-pad";
 import { ImageUpload } from "./components/image-upload";
-import { GeoLocationButton } from "./components/geo-location-button";
+import { GoogleMapsPicker } from "./components/google-maps-picker";
 import { ToggleGroup } from "./components/toggle-group";
 import { SurveySelect } from "./components/survey-select";
 import { DropdownSelect } from "./components/dropdown-select";
@@ -87,7 +87,7 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5 md:col-span-2">
 						<FieldLabel>Ubicación</FieldLabel>
-						<GeoLocationButton name="location" />
+						<GoogleMapsPicker name="location" />
 					</div>
 				</div>
 			</div>

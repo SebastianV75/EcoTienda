@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { VoiceInput } from "./components/voice-input";
 import { ImageUpload } from "./components/image-upload";
 import { VideoUpload } from "./components/video-upload";
-import { GeoLocationButton } from "./components/geo-location-button";
+import { GoogleMapsPicker } from "./components/google-maps-picker";
 import { DateTimePicker } from "./components/date-time-picker";
 
 import {
@@ -103,7 +103,7 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 
 					<div className="space-y-2.5 md:col-span-2">
 						<FieldLabel>Ubicación</FieldLabel>
-						<GeoLocationButton name="location" />
+						<GoogleMapsPicker name="location" />
 					</div>
 
 					<div className="space-y-2.5">

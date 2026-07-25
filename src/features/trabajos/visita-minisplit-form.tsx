@@ -4,7 +4,7 @@ import { useActionState } from "react";
 
 import { VoiceInput } from "./components/voice-input";
 import { ImageUpload } from "./components/image-upload";
-import { GeoLocationButton } from "./components/geo-location-button";
+import { GoogleMapsPicker } from "./components/google-maps-picker";
 import { ToggleGroup } from "./components/toggle-group";
 import { SurveySelect } from "./components/survey-select";
 
@@ -78,7 +78,7 @@ export function VisitaMinisplitForm({ trabajoId }: VisitaMinisplitFormProps) {
 
 					<div className="space-y-2.5 md:col-span-2">
 						<FieldLabel>Ubicación</FieldLabel>
-						<GeoLocationButton name="location" />
+						<GoogleMapsPicker name="location" />
 					</div>
 				</div>
 			</div>

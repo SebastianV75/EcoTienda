@@ -27,7 +27,8 @@ export async function saveVisitaAmpliarAction(
 	}
 
 	const trabajoId = getString(formData, "trabajo_id");
-	const executionDate = getString(formData, "execution_date");
+	const executionDate = getString(formData, "execution_date_date");
+	const executionTime = getString(formData, "execution_date_time");
 	const contactName = getString(formData, "contact_name");
 	const contactPhone = getString(formData, "contact_phone");
 	const email = getString(formData, "email");
@@ -53,6 +54,14 @@ export async function saveVisitaAmpliarAction(
 	if (!trabajoId) {
 		return { error: "Falta el identificador del trabajo.", success: null };
 	}
+
+	if (!executionDate) {
+		return { error: "La fecha es obligatoria.", success: null };
+	}
+
+	const executionDateIso = executionTime
+		? `${executionDate}T${executionTime}:00`
+		: executionDate;
 
 	const supabase = await createSupabaseServerClient();
 
@@ -81,7 +90,7 @@ export async function saveVisitaAmpliarAction(
 
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: executionDate || new Date().toISOString(),
+		execution_date: executionDateIso,
 		contact_name: contactName,
 		contact_phone: contactPhone,
 		confirmed_address: location,
