@@ -97,7 +97,7 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 				<div className="grid gap-4 md:grid-cols-2">
 					<div className="space-y-2.5">
 						<FieldLabel>Recibo de luz</FieldLabel>
-						<ImageUpload name="utility_bill" />
+						<ImageUpload name="utility_bill" trabajoId={trabajoId} fieldName="utility_bill" />
 					</div>
 
 					<div className="space-y-2.5">
@@ -136,7 +136,7 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 							<div className="space-y-2.5">
 								<FieldLabel>Foto de donde va el minisplit</FieldLabel>
-								<ImageUpload name="minisplit_photo" />
+								<ImageUpload name="minisplit_photo" trabajoId={trabajoId} fieldName="minisplit_photo" />
 							</div>
 						</div>
 					)}
@@ -148,12 +148,12 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 				<div className="grid gap-4 md:grid-cols-2">
 					<div className="space-y-2.5">
 						<FieldLabel>Hojas de visita</FieldLabel>
-						<ImageUpload name="hojas_visita" />
+						<ImageUpload name="hojas_visita" trabajoId={trabajoId} fieldName="hojas_visita" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de casa</FieldLabel>
-						<ImageUpload name="house_image" />
+						<ImageUpload name="house_image" trabajoId={trabajoId} fieldName="house_image" />
 					</div>
 
 					<div className="space-y-2.5">
@@ -172,12 +172,12 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen del medidor de lejos</FieldLabel>
-						<ImageUpload name="meter_far" />
+						<ImageUpload name="meter_far" trabajoId={trabajoId} fieldName="meter_far" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de medidor de cerca</FieldLabel>
-						<ImageUpload name="meter_close" />
+						<ImageUpload name="meter_close" trabajoId={trabajoId} fieldName="meter_close" />
 					</div>
 
 					<div className="space-y-2.5">
@@ -198,12 +198,12 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de centro de carga</FieldLabel>
-						<ImageUpload name="load_center" />
+						<ImageUpload name="load_center" trabajoId={trabajoId} fieldName="load_center" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de subida eléctrica</FieldLabel>
-						<ImageUpload name="electrical_rise" />
+						<ImageUpload name="electrical_rise" trabajoId={trabajoId} fieldName="electrical_rise" />
 					</div>
 				</div>
 			</div>
@@ -218,7 +218,7 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen del techo</FieldLabel>
-						<ImageUpload name="roof_image" />
+						<ImageUpload name="roof_image" trabajoId={trabajoId} fieldName="roof_image" />
 					</div>
 
 					<div className="space-y-2.5">
@@ -236,17 +236,17 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de sombreado 1</FieldLabel>
-						<ImageUpload name="shading_1" />
+						<ImageUpload name="shading_1" trabajoId={trabajoId} fieldName="shading_1" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de sombreado 2</FieldLabel>
-						<ImageUpload name="shading_2" />
+						<ImageUpload name="shading_2" trabajoId={trabajoId} fieldName="shading_2" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Medidas del techo</FieldLabel>
-						<ImageUpload name="roof_measurements" />
+						<ImageUpload name="roof_measurements" trabajoId={trabajoId} fieldName="roof_measurements" />
 					</div>
 
 					<div className="space-y-2.5">

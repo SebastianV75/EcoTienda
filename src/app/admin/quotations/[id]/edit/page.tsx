@@ -2,7 +2,6 @@ import { AppShell } from "@/components/app-shell";
 import { EditQuotationForm } from "@/features/quotations/quotation-form";
 import { requireRole } from "@/features/auth/session";
 import { getQuotationById } from "@/features/quotations/data";
-import { getClients } from "@/features/clients/data";
 
 export default async function EditQuotationPage({
 	params,
@@ -12,10 +11,7 @@ export default async function EditQuotationPage({
 	const user = await requireRole(["admin"]);
 	const { id } = await params;
 
-	const [quotation, clients] = await Promise.all([
-		getQuotationById(id),
-		getClients(),
-	]);
+	const quotation = await getQuotationById(id);
 
 	const initialData = {
 		quotation_number: quotation.quotation_number,
@@ -37,7 +33,6 @@ export default async function EditQuotationPage({
 			email={user.email}
 		>
 			<EditQuotationForm
-				clients={clients}
 				initialData={initialData}
 			/>
 		</AppShell>

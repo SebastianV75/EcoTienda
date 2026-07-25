@@ -3,7 +3,6 @@ import { Document, Page } from "@react-pdf/renderer";
 import { PDFHeader } from "./pdf-header";
 import { PDFClientInfo } from "./pdf-client-info";
 import { PDFNotes } from "./pdf-notes";
-import { PDFCommercialTable } from "./pdf-commercial-table";
 import { PDFProductsTable } from "./pdf-products-table";
 import { PDFTotals } from "./pdf-totals";
 import { PDFFooter } from "./pdf-footer";
@@ -29,6 +28,19 @@ function formatDate(dateString: string | null | undefined): string {
 	return `${day}/${month}/${year}`;
 }
 
+/**
+ * Extrae solo el nombre del cliente del campo project.
+ * El formato es "Nombre Cliente - Paquete de interés"
+ */
+function extractClientName(project: string | null | undefined): string {
+	if (!project) return "No especificado";
+	const separatorIndex = project.indexOf(" - ");
+	if (separatorIndex > 0) {
+		return project.substring(0, separatorIndex).trim();
+	}
+	return project.trim();
+}
+
 export function QuotationPDF({
 	quotation,
 	items,
@@ -36,6 +48,7 @@ export function QuotationPDF({
 }: QuotationPDFProps) {
 	const quotationDate = formatDate(quotation.created_at);
 	const orderDeadline = formatDate(quotation.order_deadline);
+	const clientName = extractClientName(quotation.project);
 
 	return (
 		<Document>
@@ -47,17 +60,12 @@ export function QuotationPDF({
 				/>
 
 				<PDFClientInfo
-					clientName={quotation.project}
+					clientName={clientName}
 					orderDeadline={orderDeadline}
 					company={company}
 				/>
 
 				<PDFNotes termsAndConditions={quotation.terms_and_conditions} />
-
-				<PDFCommercialTable
-					expectedDelivery={formatDate(quotation.expected_delivery)}
-					company={company}
-				/>
 
 				<PDFProductsTable items={items} />
 

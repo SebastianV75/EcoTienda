@@ -1,14 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { requireRole } from "@/features/auth/session";
 import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createQuotationFromVisita } from "./create-quotation-from-visita";
 
 export type VisitaAmpliarActionState = {
 	error: string | null;
 	success: string | null;
+	quotationId?: string | null;
 };
 
 function getString(formData: FormData, key: string) {
@@ -104,7 +107,7 @@ export async function saveVisitaAmpliarAction(
 	const { error: trabajoError } = await supabase
 		.from("trabajos")
 		.update({
-			current_stage: "visita",
+			current_stage: "cotizacion",
 			visita_completed_at: payload.completed_at,
 		})
 		.eq("id", trabajoId);
@@ -116,10 +119,35 @@ export async function saveVisitaAmpliarAction(
 		};
 	}
 
+	// Crear automáticamente la cotización vinculada al trabajo
+	const { quotationId, error: quotationError } = await createQuotationFromVisita(supabase, {
+		trabajo_id: trabajoId,
+		contact_name: contactName,
+		contact_phone: contactPhone,
+		confirmed_address: location,
+		interest_package: "Ampliar Sistema",
+		quotation_type: "Ampliación",
+		notes: notes,
+		house_attributes: houseAttributes,
+		electrical_attributes: electricalAttributes,
+		roof_attributes: roofAttributes,
+		minisplit_attributes: {},
+	});
+
+	if (quotationError) {
+		console.error("[Visita Ampliar] Error creando cotización automática:", quotationError);
+	}
+
 	revalidatePath("/admin/visits");
 	revalidatePath(`/admin/visits/${trabajoId}`);
 	revalidatePath(`/admin/visits/${trabajoId}/visita-ampliar`);
 	revalidatePath(`/agenda/${trabajoId}`);
+	revalidatePath("/admin/quotations");
 
-	return { error: null, success: "Visita de ampliar sistema guardada correctamente." };
+	// Redirigir a la cotización creada
+	if (quotationId) {
+		redirect(`/admin/quotations/${quotationId}/edit`);
+	}
+
+	return { error: null, success: "Visita de ampliar sistema guardada correctamente. Cotización creada automáticamente.", quotationId };
 }

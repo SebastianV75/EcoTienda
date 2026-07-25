@@ -9,11 +9,9 @@ import { QuotationTabs } from "@/features/quotations/quotation-tabs";
 import { QuotationTable } from "@/features/quotations/quotation-table";
 import { QuotationFooter } from "@/features/quotations/quotation-footer";
 import type { Supplier, QuotationItem } from "@/types/quotation";
-import type { ClientRecord } from "@/types/client";
 
 type EditQuotationFormProps = {
 	suppliers?: Supplier[];
-	clients: ClientRecord[];
 	initialData?: {
 		quotation_number: string | null;
 		trabajo_id: string | null;
@@ -43,7 +41,7 @@ function createEmptyItem(sortOrder: number): QuotationItem {
 	};
 }
 
-export function EditQuotationForm({ clients, initialData = { quotation_number: null, trabajo_id: null, supplier_name: "", project: null, status: null, terms_and_conditions: null, order_deadline: null, expected_delivery: null, items: [] } }: EditQuotationFormProps) {
+export function EditQuotationForm({ initialData = { quotation_number: null, trabajo_id: null, supplier_name: "", project: null, status: null, terms_and_conditions: null, order_deadline: null, expected_delivery: null, items: [] } }: EditQuotationFormProps) {
 	const isEditing = !!initialData.quotation_number;
 
 	const [state, formAction, isPending] = useActionState(
@@ -122,14 +120,13 @@ export function EditQuotationForm({ clients, initialData = { quotation_number: n
 					</div>
 				</div>
 
-				<QuotationHeader
-					clients={clients}
-					quotationNumber={initialData.quotation_number}
-					status={initialData.status}
-					orderDeadline={initialData.order_deadline}
-					expectedDelivery={initialData.expected_delivery}
-					isEditing={isEditing}
-				/>
+			<QuotationHeader
+				quotationNumber={initialData.quotation_number}
+				status={initialData.status}
+				orderDeadline={initialData.order_deadline}
+				project={initialData.project}
+				isEditing={isEditing}
+			/>
 
 				<QuotationTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

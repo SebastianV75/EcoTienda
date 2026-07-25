@@ -1,48 +1,34 @@
 "use client";
 
-import type { ClientRecord } from "@/types/client";
-
 type QuotationHeaderProps = {
-	clients: ClientRecord[];
 	quotationNumber?: string | null;
 	status?: string | null;
 	orderDeadline?: string | null;
-	expectedDelivery?: string | null;
+	project?: string | null;
 	isEditing?: boolean;
 };
 
 export function QuotationHeader({
-	clients,
 	quotationNumber,
 	status,
 	orderDeadline,
-	expectedDelivery,
+	project,
 	isEditing,
 }: QuotationHeaderProps) {
 	return (
 		<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
 			<div className="space-y-5">
-				<div className="space-y-2.5">
-					<label
-						htmlFor="project"
-						className="text-sm font-medium text-[var(--brand-deep)]"
-					>
-						Cliente
-					</label>
-					<select
-						id="project"
-						name="project"
-						required
-						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-					>
-						<option value="">Selecciona un cliente</option>
-						{clients.map((client) => (
-							<option key={client.id} value={client.full_name}>
-								{client.full_name}
-							</option>
-						))}
-					</select>
-				</div>
+				{project && (
+					<div className="space-y-2.5">
+						<label className="text-sm font-medium text-[var(--brand-deep)]">
+							Cliente
+						</label>
+						<div className="w-full rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface-strong)] px-4 py-3 text-[var(--foreground)]">
+							{project}
+						</div>
+						<input type="hidden" name="project" value={project} />
+					</div>
+				)}
 
 				<div className="space-y-5">
 					<div className="space-y-2.5">
@@ -66,37 +52,20 @@ export function QuotationHeader({
 						</select>
 					</div>
 
-					<div className="grid gap-4 sm:grid-cols-2">
-						<div className="space-y-2.5">
-							<label
-								htmlFor="order_deadline"
-								className="text-sm font-medium text-[var(--brand-deep)]"
-							>
-								Cotización válida hasta
-							</label>
-							<input
-								id="order_deadline"
-								name="order_deadline"
-								type="date"
-								defaultValue={orderDeadline ?? ""}
-								className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-							/>
-						</div>
-						<div className="space-y-2.5">
-							<label
-								htmlFor="expected_delivery"
-								className="text-sm font-medium text-[var(--brand-deep)]"
-							>
-								Fecha de entrega
-							</label>
-							<input
-								id="expected_delivery"
-								name="expected_delivery"
-								type="date"
-								defaultValue={expectedDelivery ?? ""}
-								className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-							/>
-						</div>
+					<div className="space-y-2.5">
+						<label
+							htmlFor="order_deadline"
+							className="text-sm font-medium text-[var(--brand-deep)]"
+						>
+							Cotización válida hasta
+						</label>
+						<input
+							id="order_deadline"
+							name="order_deadline"
+							type="date"
+							defaultValue={orderDeadline ?? ""}
+							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						/>
 					</div>
 
 					{isEditing && quotationNumber && (

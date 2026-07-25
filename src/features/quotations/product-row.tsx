@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { TAX_OPTIONS, type QuotationItem } from "@/types/quotation";
+import { ProductAutocomplete } from "@/features/quotations/product-autocomplete";
 
 type ProductRowProps = {
 	item: QuotationItem;
@@ -98,10 +99,9 @@ export function ProductRow({
 		return (
 			<div className="px-4 py-3">
 				<div className="space-y-2.5">
-					<input
-						type="text"
+					<ProductAutocomplete
 						value={item.product_name}
-						onChange={(e) => updateField("product_name", e.target.value)}
+						onChange={(val) => updateField("product_name", val)}
 						placeholder="Nombre del producto"
 						className="w-full rounded-[14px] border border-[var(--border-soft)] bg-white px-3 py-2 text-sm outline-none transition duration-200 focus:border-emerald-300"
 					/>
@@ -235,13 +235,11 @@ export function ProductRow({
 
 	return (
 		<tr className="border-b border-[var(--border-soft)] transition duration-150 hover:bg-emerald-50/30">
-			<td className="px-3 py-2 overflow-hidden">
-				<input
-					type="text"
+			<td className="relative px-3 py-2">
+				<ProductAutocomplete
 					value={item.product_name}
-					onChange={(e) => updateField("product_name", e.target.value)}
+					onChange={(val) => updateField("product_name", val)}
 					placeholder="Nombre del producto"
-					className="w-full rounded-[14px] border border-transparent bg-transparent px-2.5 py-1.5 text-sm outline-none transition duration-200 focus:border-emerald-300 focus:bg-white truncate"
 				/>
 			</td>
 			<td className="px-2 py-2">

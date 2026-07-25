@@ -94,22 +94,22 @@ export function PanelesSolaresForm({ trabajoId }: PanelesSolaresFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto del medidor</FieldLabel>
-						<ImageUpload name="meter_photo" />
+						<ImageUpload name="meter_photo" trabajoId={trabajoId} fieldName="meter_photo" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto de casa</FieldLabel>
-						<ImageUpload name="house_photo" />
+						<ImageUpload name="house_photo" trabajoId={trabajoId} fieldName="house_photo" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto del lugar donde va el evaporador</FieldLabel>
-						<ImageUpload name="evaporator_photo" />
+						<ImageUpload name="evaporator_photo" trabajoId={trabajoId} fieldName="evaporator_photo" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto de donde va el compresor</FieldLabel>
-						<ImageUpload name="compressor_photo" />
+						<ImageUpload name="compressor_photo" trabajoId={trabajoId} fieldName="compressor_photo" />
 					</div>
 				</div>
 			</div>

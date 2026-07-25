@@ -66,12 +66,12 @@ export function Cambio220Form({ trabajoId }: Cambio220FormProps) {
 				<div className="grid gap-4 md:grid-cols-2">
 					<div className="space-y-2.5">
 						<FieldLabel>Foto del medidor</FieldLabel>
-						<ImageUpload name="meter_photo" />
+						<ImageUpload name="meter_photo" trabajoId={trabajoId} fieldName="meter_photo" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto de la quinta terminal puesta</FieldLabel>
-						<ImageUpload name="terminal_photo" />
+						<ImageUpload name="terminal_photo" trabajoId={trabajoId} fieldName="terminal_photo" />
 					</div>
 				</div>
 			</div>

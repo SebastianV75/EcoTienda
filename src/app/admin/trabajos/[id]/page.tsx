@@ -8,6 +8,7 @@ import { getTrabajoDocumentById } from "@/features/trabajos/data";
 import { trabajoStageLabels } from "@/types/trabajo";
 import { TrabajoTimeline } from "@/features/trabajos/trabajo-timeline";
 import { TrabajoStageSection } from "@/features/trabajos/components/trabajo-stage-section";
+import { VisitaAttributeGroup } from "@/features/trabajos/components/visita-attribute-group";
 import { VentaForm } from "@/features/trabajos/venta-form";
 
 function formatDate(dateString: string | null | undefined) {
@@ -30,14 +31,9 @@ function formatDateTime(dateString: string | null | undefined) {
 	});
 }
 
-function getMediaByKind(assets: any[], kind: string) {
-	return assets.filter((a) => a.kind === kind);
-}
-
 function getDisplayValue(value: unknown, fallback = "—") {
 	if (value === null || value === undefined) return fallback;
 	if (typeof value === "string") return value || fallback;
-	if (typeof value === "object") return JSON.stringify(value, null, 2);
 	return String(value);
 }
 
@@ -182,38 +178,26 @@ export default async function TrabajoDetailPage({ params }: { params: Promise<{ 
 										<p className="text-sm text-[var(--foreground)]">Asset ID: {trabajo.visita.utility_bill_asset_id}</p>
 									</div>
 								)}
-								{Object.keys(trabajo.visita.house_attributes || {}).length > 0 && (
-									<div className="space-y-2 md:col-span-2">
-										<p className="text-xs font-medium text-[var(--brand-strong)]">Datos de casa</p>
-										<pre className="text-xs text-[var(--muted)] bg-[var(--surface)] p-3 rounded-[12px] overflow-x-auto">
-											{JSON.stringify(trabajo.visita.house_attributes, null, 2)}
-										</pre>
-									</div>
-								)}
-								{Object.keys(trabajo.visita.electrical_attributes || {}).length > 0 && (
-									<div className="space-y-2 md:col-span-2">
-										<p className="text-xs font-medium text-[var(--brand-strong)]">Datos eléctricos</p>
-										<pre className="text-xs text-[var(--muted)] bg-[var(--surface)] p-3 rounded-[12px] overflow-x-auto">
-											{JSON.stringify(trabajo.visita.electrical_attributes, null, 2)}
-										</pre>
-									</div>
-								)}
-								{Object.keys(trabajo.visita.roof_attributes || {}).length > 0 && (
-									<div className="space-y-2 md:col-span-2">
-										<p className="text-xs font-medium text-[var(--brand-strong)]">Datos de techo</p>
-										<pre className="text-xs text-[var(--muted)] bg-[var(--surface)] p-3 rounded-[12px] overflow-x-auto">
-											{JSON.stringify(trabajo.visita.roof_attributes, null, 2)}
-										</pre>
-									</div>
-								)}
-								{Object.keys(trabajo.visita.minisplit_attributes || {}).length > 0 && (
-									<div className="space-y-2 md:col-span-2">
-										<p className="text-xs font-medium text-[var(--brand-strong)]">Datos minisplit</p>
-										<pre className="text-xs text-[var(--muted)] bg-[var(--surface)] p-3 rounded-[12px] overflow-x-auto">
-											{JSON.stringify(trabajo.visita.minisplit_attributes, null, 2)}
-										</pre>
-									</div>
-								)}
+								<VisitaAttributeGroup
+									group="house"
+									attributes={trabajo.visita.house_attributes ?? {}}
+									title="Datos de casa"
+									/>
+								<VisitaAttributeGroup
+									group="electrical"
+									attributes={trabajo.visita.electrical_attributes ?? {}}
+									title="Datos eléctricos"
+									/>
+								<VisitaAttributeGroup
+									group="roof"
+									attributes={trabajo.visita.roof_attributes ?? {}}
+									title="Datos de techo"
+									/>
+								<VisitaAttributeGroup
+									group="minisplit"
+									attributes={trabajo.visita.minisplit_attributes ?? {}}
+									title="Datos minisplit"
+									/>
 							</div>
 						)}
 					</TrabajoStageSection>

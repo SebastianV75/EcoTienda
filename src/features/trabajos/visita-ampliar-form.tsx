@@ -68,7 +68,7 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto de la casa</FieldLabel>
-						<ImageUpload name="house_photo" />
+						<ImageUpload name="house_photo" trabajoId={trabajoId} fieldName="house_photo" />
 					</div>
 				</div>
 			</div>
@@ -78,12 +78,12 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 				<div className="grid gap-4 md:grid-cols-2">
 					<div className="space-y-2.5">
 						<FieldLabel>Medidor (foto)</FieldLabel>
-						<ImageUpload name="meter_photo" />
+						<ImageUpload name="meter_photo" trabajoId={trabajoId} fieldName="meter_photo" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Medidor (video)</FieldLabel>
-						<VideoUpload name="meter_video" />
+						<VideoUpload name="meter_video" trabajoId={trabajoId} fieldName="meter_video" />
 					</div>
 
 					<div className="space-y-2.5">
@@ -108,7 +108,7 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Recibo de luz</FieldLabel>
-						<ImageUpload name="utility_bill" />
+						<ImageUpload name="utility_bill" trabajoId={trabajoId} fieldName="utility_bill" />
 					</div>
 				</div>
 			</div>
@@ -123,12 +123,12 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto del inversor</FieldLabel>
-						<ImageUpload name="inverter_photo" />
+						<ImageUpload name="inverter_photo" trabajoId={trabajoId} fieldName="inverter_photo" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Etiqueta del inversor</FieldLabel>
-						<ImageUpload name="inverter_label" />
+						<ImageUpload name="inverter_label" trabajoId={trabajoId} fieldName="inverter_label" />
 					</div>
 
 					<div className="space-y-2.5">
@@ -143,12 +143,12 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto paneles</FieldLabel>
-						<ImageUpload name="panels_photo" />
+						<ImageUpload name="panels_photo" trabajoId={trabajoId} fieldName="panels_photo" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Etiqueta de los paneles</FieldLabel>
-						<ImageUpload name="panels_label" />
+						<ImageUpload name="panels_label" trabajoId={trabajoId} fieldName="panels_label" />
 					</div>
 
 					<div className="space-y-2.5 md:col-span-2">
@@ -173,17 +173,17 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Fotos del área</FieldLabel>
-						<ImageUpload name="area_photos" />
+						<ImageUpload name="area_photos" trabajoId={trabajoId} fieldName="area_photos" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Video del área</FieldLabel>
-						<VideoUpload name="area_video" />
+						<VideoUpload name="area_video" trabajoId={trabajoId} fieldName="area_video" />
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Medidas</FieldLabel>
-						<ImageUpload name="measurements" />
+						<ImageUpload name="measurements" trabajoId={trabajoId} fieldName="measurements" />
 					</div>
 
 					<div className="space-y-2.5">
