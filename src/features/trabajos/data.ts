@@ -66,10 +66,25 @@ export type TrabajoDashboardSummary = {
 	descargablesTrabajos: number;
 };
 
+type ActiveTrabajoDashboardAgendaRow = Pick<
+	TrabajoAgendaStage,
+	"appointment_at" | "assignee_name"
+> & {
+	assignee_worker:
+		| Pick<WorkerSummary, "full_name">
+		| Pick<WorkerSummary, "full_name">[]
+		| null;
+};
+
 type ActiveTrabajoDashboardRow = Pick<
 	Trabajo,
 	"id" | "current_stage" | "intake_name"
->;
+> & {
+	agenda:
+		| ActiveTrabajoDashboardAgendaRow
+		| ActiveTrabajoDashboardAgendaRow[]
+		| null;
+};
 
 type ActiveTrabajoDashboardTitleRow = {
 	id: string;
@@ -81,6 +96,8 @@ export type ActiveTrabajoDashboardItem = {
 	title: string;
 	currentStage: TrabajoStage;
 	currentStageLabel: string;
+	assignedWorkerName: string | null;
+	appointmentAt: string | null;
 };
 
 export type TrabajoListFilters = {
@@ -89,6 +106,7 @@ export type TrabajoListFilters = {
 	from?: string;
 	to?: string;
 	q?: string;
+	assignee_worker_id?: string;
 };
 
 export type TrabajoListItem = {
@@ -100,6 +118,8 @@ export type TrabajoListItem = {
 	created_at: string;
 	client_name: string | null;
 	agenda_work_type: string | null;
+	assigned_worker_name: string | null;
+	appointment_at: string | null;
 };
 
 export const trabajoStageOrder = [
@@ -244,7 +264,12 @@ const trabajoListSelect = `
 	intake_address_text,
 	created_at,
 	agenda:trabajo_agenda_stage (
-		work_type
+		work_type,
+		appointment_at,
+		assignee_name,
+		assignee_worker:workers (
+			full_name
+		)
 	),
 	client:clients (
 		full_name
@@ -452,6 +477,16 @@ function normalizeTrabajoVisitaRow(row: TrabajoVisitaRow): TrabajoVisitaRecord {
 	};
 }
 
+type TrabajoListAgendaRow = Pick<
+	TrabajoAgendaStage,
+	"work_type" | "appointment_at" | "assignee_name"
+> & {
+	assignee_worker:
+		| Pick<WorkerSummary, "full_name">
+		| Pick<WorkerSummary, "full_name">[]
+		| null;
+};
+
 type TrabajoListRow = {
 	id: string;
 	current_stage: TrabajoStage;
@@ -459,7 +494,7 @@ type TrabajoListRow = {
 	intake_name: string;
 	intake_address_text: string;
 	created_at: string;
-	agenda: Pick<TrabajoAgendaStage, "work_type"> | Pick<TrabajoAgendaStage, "work_type">[] | null;
+	agenda: TrabajoListAgendaRow | TrabajoListAgendaRow[] | null;
 	client: { full_name: string } | { full_name: string }[] | null;
 };
 
@@ -471,6 +506,10 @@ function normalizeTrabajoListRow(row: TrabajoListRow): TrabajoListItem {
 		? (row.agenda[0] ?? null)
 		: row.agenda;
 
+	const agendaWorker = Array.isArray(agenda?.assignee_worker)
+		? (agenda.assignee_worker[0] ?? null)
+		: (agenda?.assignee_worker ?? null);
+
 	return {
 		id: row.id,
 		current_stage: row.current_stage,
@@ -480,6 +519,9 @@ function normalizeTrabajoListRow(row: TrabajoListRow): TrabajoListItem {
 		created_at: row.created_at,
 		client_name: client?.full_name ?? null,
 		agenda_work_type: agenda?.work_type ?? null,
+		assigned_worker_name:
+			agendaWorker?.full_name ?? agenda?.assignee_name?.trim() ?? null,
+		appointment_at: agenda?.appointment_at ?? null,
 	};
 }
 
@@ -516,12 +558,57 @@ export const getTrabajosForList = cache(
 			}
 		}
 
+		if (filters.assignee_worker_id) {
+			const { data: workerRow, error: workerError } = await supabase
+				.from("workers")
+				.select("full_name")
+				.eq("id", filters.assignee_worker_id)
+				.maybeSingle();
+
+			if (workerError) {
+				throw new Error(
+					`No se pudo resolver el trabajador del filtro. ${workerError.message}`,
+				);
+			}
+
+			let stageRequest = supabase
+				.from("trabajo_agenda_stage")
+				.select("trabajo_id")
+				.eq("assignee_worker_id", filters.assignee_worker_id);
+
+			const legacyAssigneeName = workerRow?.full_name?.trim();
+			if (legacyAssigneeName) {
+				stageRequest = supabase
+					.from("trabajo_agenda_stage")
+					.select("trabajo_id")
+					.or(
+						`assignee_worker_id.eq.${filters.assignee_worker_id},assignee_name.eq.${legacyAssigneeName}`,
+					);
+			}
+
+			const { data: stageRows, error: stageError } = await stageRequest;
+
+			if (stageError) {
+				throw new Error(
+					`No se pudieron filtrar los trabajos por trabajador. ${stageError.message}`,
+				);
+			}
+
+			const trabajoIds = [
+				...new Set((stageRows ?? []).map((row) => row.trabajo_id)),
+			];
+
+			if (trabajoIds.length === 0) {
+				return [];
+			}
+
+			request = request.in("id", trabajoIds);
+		}
+
 		const { data, error } = await request;
 
 		if (error) {
-			throw new Error(
-				`No se pudieron cargar los trabajos. ${error.message}`,
-			);
+			throw new Error(`No se pudieron cargar los trabajos. ${error.message}`);
 		}
 
 		return ((data ?? []) as unknown as TrabajoListRow[]).map(
@@ -613,12 +700,22 @@ function normalizeActiveTrabajoDashboardItem(
 ): ActiveTrabajoDashboardItem {
 	const fallbackTitle =
 		title?.trim() || row.intake_name.trim() || "Trabajo sin título";
+	const agenda = Array.isArray(row.agenda)
+		? (row.agenda[0] ?? null)
+		: row.agenda;
+	const agendaWorker = Array.isArray(agenda?.assignee_worker)
+		? (agenda.assignee_worker[0] ?? null)
+		: (agenda?.assignee_worker ?? null);
+	const assignedWorkerName =
+		agendaWorker?.full_name ?? agenda?.assignee_name?.trim() ?? null;
 
 	return {
 		id: row.id,
 		title: fallbackTitle,
 		currentStage: row.current_stage,
 		currentStageLabel: trabajoStageLabels[row.current_stage],
+		assignedWorkerName,
+		appointmentAt: agenda?.appointment_at ?? null,
 	};
 }
 
@@ -729,7 +826,9 @@ export const getActiveTrabajosForDashboard = cache(
 		const supabase = await createSupabaseServerClient();
 		const { data: activeTrabajos, error: activeTrabajosError } = await supabase
 			.from("trabajos")
-			.select("id, current_stage, intake_name")
+			.select(
+				"id, current_stage, intake_name, agenda:trabajo_agenda_stage(appointment_at, assignee_name, assignee_worker:workers(full_name))",
+			)
 			.eq("status", "open")
 			.order("updated_at", { ascending: false });
 

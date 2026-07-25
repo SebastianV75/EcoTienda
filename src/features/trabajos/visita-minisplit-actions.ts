@@ -23,7 +23,7 @@ export async function saveVisitaMinisplitAction(
 	formData: FormData,
 ): Promise<VisitaMinisplitActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "technician"]);
 	}
 
 	const trabajoId = getString(formData, "trabajo_id");

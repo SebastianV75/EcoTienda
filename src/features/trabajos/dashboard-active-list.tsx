@@ -13,17 +13,27 @@ const nextActionByStage: Record<
 	ActiveTrabajoDashboardItem["currentStage"],
 	string
 > = {
-	agenda: "Abrir agenda",
-	visita: "Seguir visita",
-	cotizacion: "Abrir cotización",
-	venta: "Cerrar venta",
-	descargables: "Revisar descargables",
+	agenda: "Ver trabajo",
+	visita: "Preparar visita",
+	cotizacion: "Abrir trabajo",
+	venta: "Abrir trabajo",
+	descargables: "Abrir trabajo",
 };
 
 function getWorkHref(item: ActiveTrabajoDashboardItem) {
-	return item.currentStage === "visita"
-		? `/admin/visits/${item.id}`
-		: `/agenda/${item.id}`;
+	return `/admin/trabajos/${item.id}`;
+}
+
+function formatAppointment(dateString: string | null) {
+	if (!dateString) {
+		return null;
+	}
+
+	return new Intl.DateTimeFormat("es-MX", {
+		dateStyle: "medium",
+		timeStyle: "short",
+		timeZone: "UTC",
+	}).format(new Date(dateString));
 }
 
 export function DashboardActiveList({ items }: DashboardActiveListProps) {
@@ -62,6 +72,22 @@ export function DashboardActiveList({ items }: DashboardActiveListProps) {
 									<p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)] sm:mt-1 sm:text-xs sm:tracking-[0.18em]">
 										Etapa {trabajoStageLabels[item.currentStage]}
 									</p>
+									{item.assignedWorkerName || item.appointmentAt ? (
+										<dl className="mt-2 space-y-1 text-sm text-[var(--muted)]">
+											{item.assignedWorkerName ? (
+												<div className="flex gap-2">
+													<dt className="shrink-0 text-[var(--brand-deep)]">Asignado</dt>
+													<dd className="truncate">{item.assignedWorkerName}</dd>
+												</div>
+											) : null}
+											{item.appointmentAt ? (
+												<div className="flex gap-2">
+													<dt className="shrink-0 text-[var(--brand-deep)]">Cita</dt>
+													<dd className="truncate">{formatAppointment(item.appointmentAt)}</dd>
+												</div>
+											) : null}
+										</dl>
+									) : null}
 								</div>
 
 								<Link

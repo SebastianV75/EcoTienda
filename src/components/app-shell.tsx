@@ -25,6 +25,7 @@ import {
 import { AuthStatus } from "@/components/auth-status";
 import { MobileBottomNavigation } from "@/components/mobile-bottom-navigation";
 import { MobileSignOut } from "@/components/mobile-sign-out";
+import { signOutAction } from "@/features/auth/actions";
 import { roleConfig } from "@/features/auth/roles";
 import type { AppRole } from "@/types/auth";
 
@@ -263,16 +264,28 @@ export function AppShell({
 					</div>
 
 					<div className="hidden border-b border-[var(--border-soft)] px-6 py-6 sm:block print:hidden">
-						<div className="max-w-3xl">
-							<p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
-								EcoTienda interno
-							</p>
-							<h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)] sm:text-4xl">
-								{title}
-							</h2>
-							<p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)] sm:text-base">
-								{description}
-							</p>
+						<div className="flex items-start justify-between gap-4">
+							<div className="max-w-3xl">
+								<p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
+									EcoTienda interno
+								</p>
+								<h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)] sm:text-4xl">
+									{title}
+								</h2>
+								<p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)] sm:text-base">
+									{description}
+								</p>
+							</div>
+							{email ? (
+								<form action={signOutAction} className="shrink-0">
+									<button
+										type="submit"
+										className="inline-flex min-h-[40px] items-center rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-300 hover:bg-emerald-50 active:scale-[0.96]"
+									>
+										Cerrar sesión
+									</button>
+								</form>
+							) : null}
 						</div>
 					</div>
 

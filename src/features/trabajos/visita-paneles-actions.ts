@@ -23,7 +23,7 @@ export async function saveVisitaPanelesAction(
 	formData: FormData,
 ): Promise<VisitaPanelesActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "technician"]);
 	}
 
 	const trabajoId = getString(formData, "trabajo_id");

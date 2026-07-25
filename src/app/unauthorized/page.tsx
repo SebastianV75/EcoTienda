@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { signOutAction } from "@/features/auth/actions";
+
 export default function UnauthorizedPage() {
 	return (
 		<main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
@@ -15,12 +17,22 @@ export default function UnauthorizedPage() {
 					usuario autenticado en los metadatos o en el perfil de Supabase antes
 					de probar flujos restringidos.
 				</p>
-				<Link
-					href="/"
-					className="mt-6 inline-flex rounded-full bg-white px-4 py-2 font-medium text-slate-950 transition hover:bg-slate-100"
-				>
-					Volver al inicio
-				</Link>
+				<div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+					<Link
+						href="/"
+						className="inline-flex rounded-full bg-white px-4 py-2 font-medium text-slate-950 transition hover:bg-slate-100"
+					>
+						Volver al inicio
+					</Link>
+					<form action={signOutAction}>
+						<button
+							type="submit"
+							className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 font-medium text-white transition hover:bg-white/15"
+						>
+							Cerrar sesión
+						</button>
+					</form>
+				</div>
 			</div>
 		</main>
 	);

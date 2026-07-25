@@ -3,6 +3,7 @@ import { TrabajoCard } from "@/features/trabajos/components/trabajo-card";
 import { TrabajoListFilters } from "@/features/trabajos/components/trabajo-list-filters";
 import { getTrabajosForList } from "@/features/trabajos/data";
 import { parseTrabajoListFilters } from "@/features/trabajos/list-filters";
+import { getActiveWorkers } from "@/features/workers/data";
 import { requireRole } from "@/features/auth/session";
 
 type TrabajosPageProps = {
@@ -15,7 +16,10 @@ export default async function TrabajosPage({
 	const user = await requireRole(["admin"]);
 	const params = searchParams ? await searchParams : undefined;
 	const filters = parseTrabajoListFilters(params ?? {});
-	const trabajos = await getTrabajosForList(filters);
+	const [trabajos, workers] = await Promise.all([
+		getTrabajosForList(filters),
+		getActiveWorkers(),
+	]);
 
 	const activeFilterCount = [
 		filters.stage,
@@ -23,6 +27,7 @@ export default async function TrabajosPage({
 		filters.from,
 		filters.to,
 		filters.q,
+		filters.assignee_worker_id,
 	].filter(Boolean).length;
 
 	return (
@@ -33,7 +38,7 @@ export default async function TrabajosPage({
 			email={user.email}
 		>
 			<div className="space-y-4">
-				<TrabajoListFilters initialFilters={filters} />
+				<TrabajoListFilters initialFilters={filters} workers={workers} />
 
 				{trabajos.length > 0 ? (
 					<section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -53,7 +58,7 @@ export default async function TrabajosPage({
 						</h3>
 						<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
 							{activeFilterCount > 0
-								? "Probá ajustando la etapa, el estado, el rango de fechas o la búsqueda."
+								? "Probá ajustando el trabajador, la etapa, el estado, el rango de fechas o la búsqueda."
 								: "Cuando crees trabajos desde Agenda, aparecerán aquí para seguir todo el flujo."}
 						</p>
 					</section>

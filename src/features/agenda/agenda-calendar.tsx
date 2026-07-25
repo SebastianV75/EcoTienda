@@ -209,7 +209,7 @@ export function AgendaCalendar({
 			</div>
 
 			<div className="hidden pb-2 lg:block">
-				<div className="w-full max-w-[860px]">
+				<div className="w-full">
 					<div className="grid grid-cols-7 gap-2 border-b border-[var(--border-soft)] pb-4">
 						{weekdayLabels.map((label) => (
 							<p

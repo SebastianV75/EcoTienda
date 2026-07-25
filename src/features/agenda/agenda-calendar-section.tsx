@@ -111,7 +111,7 @@ export function AgendaCalendarSection({
 
 			{isCollapsed ? null : (
 				<div
-					className={`mt-4 grid gap-4 ${peekItems.length > 0 ? "lg:grid-cols-[minmax(0,860px)_360px] lg:justify-between lg:gap-6 lg:items-stretch" : "grid-cols-1 lg:max-w-[860px]"}`}
+					className={`mt-4 grid gap-4 ${peekItems.length > 0 ? "lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6 lg:items-stretch" : "grid-cols-1"}`}
 				>
 					<AgendaCalendar
 						year={year}

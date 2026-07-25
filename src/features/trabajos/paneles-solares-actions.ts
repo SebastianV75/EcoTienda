@@ -23,7 +23,7 @@ export async function savePanelesSolaresAction(
 	formData: FormData,
 ): Promise<PanelesSolaresActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "technician"]);
 	}
 
 	const trabajoId = getString(formData, "trabajo_id");

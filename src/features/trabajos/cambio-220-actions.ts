@@ -23,7 +23,7 @@ export async function saveCambio220Action(
 	formData: FormData,
 ): Promise<Cambio220ActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "technician"]);
 	}
 
 	const trabajoId = getString(formData, "trabajo_id");

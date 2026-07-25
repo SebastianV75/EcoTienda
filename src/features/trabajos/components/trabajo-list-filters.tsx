@@ -10,6 +10,7 @@ import {
 	trabajoStatusLabels,
 	trabajoStatuses,
 } from "@/types/trabajo";
+import type { WorkerSummary } from "@/types/worker";
 
 const inputClassName =
 	"w-full rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition duration-200 ease-out placeholder:text-[var(--muted)]/70 focus:border-emerald-300";
@@ -19,6 +20,7 @@ const buttonClassName =
 
 type TrabajoListFiltersProps = {
 	initialFilters: TrabajoListFilters;
+	workers: WorkerSummary[];
 };
 
 function buildFilterParams(
@@ -39,11 +41,14 @@ function buildFilterParams(
 }
 
 function hasActiveFilters(params: URLSearchParams): boolean {
-	const keys = ["stage", "status", "from", "to", "q"];
+	const keys = ["stage", "status", "from", "to", "q", "assignee_worker_id"];
 	return keys.some((key) => params.has(key));
 }
 
-export function TrabajoListFilters({ initialFilters }: TrabajoListFiltersProps) {
+export function TrabajoListFilters({
+	initialFilters,
+	workers,
+}: TrabajoListFiltersProps) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [isPending, startTransition] = useTransition();
@@ -139,6 +144,32 @@ export function TrabajoListFilters({ initialFilters }: TrabajoListFiltersProps) 
 						{trabajoStatuses.map((status) => (
 							<option key={status} value={status}>
 								{trabajoStatusLabels[status]}
+							</option>
+						))}
+					</select>
+				</div>
+
+				<div className="flex-1 sm:min-w-[220px]">
+					<label
+						htmlFor="trabajo-assignee-worker"
+						className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]"
+					>
+						Trabajador
+					</label>
+					<select
+						id="trabajo-assignee-worker"
+						value={initialFilters.assignee_worker_id ?? ""}
+						className={inputClassName}
+						onChange={(event) =>
+							updateFilters({
+								assignee_worker_id: event.target.value || undefined,
+							})
+						}
+					>
+						<option value="">Todos</option>
+						{workers.map((worker) => (
+							<option key={worker.id} value={worker.id}>
+								{worker.full_name}
 							</option>
 						))}
 					</select>

@@ -14,6 +14,10 @@ export type VisitaActionState = {
 	success: string | null;
 };
 
+export type TrabajoAssignmentActionState = {
+	error: string | null;
+};
+
 export type VisitaFormValues = {
 	trabajo_id: string;
 	execution_date: string;
@@ -71,6 +75,18 @@ type AgendaBridgeSnapshot = {
 	visit_id: string | null;
 };
 
+type AgendaAssignmentSnapshot = {
+	trabajo_id: string;
+	assignee_worker_id: string | null;
+	assignee_name: string | null;
+};
+
+type AgendaBridgeAssignmentSnapshot = {
+	id: string;
+	assignee_worker_id: string | null;
+	assignee_name: string | null;
+};
+
 function getString(formData: FormData, key: string) {
 	return formData.get(key)?.toString().trim() ?? "";
 }
@@ -122,9 +138,13 @@ function validateVisitaInput(formData: FormData): ValidVisitaInput {
 		};
 	}
 
-	if (requiresMinisplitBranch(values.quotation_type) && !values.minisplit_notes) {
+	if (
+		requiresMinisplitBranch(values.quotation_type) &&
+		!values.minisplit_notes
+	) {
 		return {
-			error: "La cotización minisplit necesita datos adicionales en su rama condicional.",
+			error:
+				"La cotización minisplit necesita datos adicionales en su rama condicional.",
 			values: null,
 		};
 	}
@@ -192,13 +212,116 @@ async function restoreAgendaBridge(
 	await supabase.from("agenda_items").upsert(snapshot, { onConflict: "id" });
 }
 
+export async function updateTrabajoAssignmentAction(
+	_previousState: TrabajoAssignmentActionState,
+	formData: FormData,
+): Promise<TrabajoAssignmentActionState> {
+	if (hasSupabaseEnv()) {
+		await requireRole(["admin", "technician"]);
+	}
+
+	const trabajoId = getString(formData, "trabajo_id");
+	const assigneeWorkerId = getString(formData, "assignee_worker_id");
+
+	if (!trabajoId) {
+		return { error: "Falta el identificador del trabajo." };
+	}
+
+	if (!assigneeWorkerId) {
+		return { error: "Selecciona un trabajador activo." };
+	}
+
+	const supabase = await createSupabaseServerClient();
+	const { data: worker, error: workerError } = await supabase
+		.from("workers")
+		.select("id, full_name, active")
+		.eq("id", assigneeWorkerId)
+		.eq("active", true)
+		.maybeSingle();
+
+	if (workerError || !worker) {
+		return { error: "El trabajador seleccionado no está activo." };
+	}
+
+	const [agendaSnapshotResult, agendaBridgeSnapshotResult] = await Promise.all([
+		supabase
+			.from("trabajo_agenda_stage")
+			.select("trabajo_id, assignee_worker_id, assignee_name")
+			.eq("trabajo_id", trabajoId)
+			.maybeSingle(),
+		supabase
+			.from("agenda_items")
+			.select("id, assignee_worker_id, assignee_name")
+			.eq("id", trabajoId)
+			.maybeSingle(),
+	]);
+
+	if (agendaSnapshotResult.error || agendaBridgeSnapshotResult.error) {
+		return { error: "No se pudo preparar la reasignación." };
+	}
+
+	const agendaSnapshot =
+		(agendaSnapshotResult.data as AgendaAssignmentSnapshot | null) ?? null;
+	const agendaBridgeSnapshot =
+		(agendaBridgeSnapshotResult.data as AgendaBridgeAssignmentSnapshot | null) ??
+		null;
+
+	if (!agendaSnapshot) {
+		return {
+			error: "Este trabajo todavía no tiene una etapa de agenda editable.",
+		};
+	}
+
+	const assignmentPayload = {
+		assignee_worker_id: worker.id,
+		assignee_name: worker.full_name,
+	};
+
+	const { error: agendaUpdateError } = await supabase
+		.from("trabajo_agenda_stage")
+		.update(assignmentPayload)
+		.eq("trabajo_id", trabajoId);
+
+	if (agendaUpdateError) {
+		return { error: "No se pudo actualizar la asignación del trabajo." };
+	}
+
+	const { error: agendaBridgeUpdateError } = await supabase
+		.from("agenda_items")
+		.update(assignmentPayload)
+		.eq("id", trabajoId);
+
+	if (agendaBridgeUpdateError) {
+		await supabase
+			.from("trabajo_agenda_stage")
+			.upsert(agendaSnapshot, { onConflict: "trabajo_id" });
+		if (agendaBridgeSnapshot) {
+			await supabase
+				.from("agenda_items")
+				.upsert(agendaBridgeSnapshot, { onConflict: "id" });
+		}
+		return {
+			error: "Se actualizó agenda, pero falló el puente de compatibilidad.",
+		};
+	}
+
+	revalidatePath("/agenda");
+	revalidatePath(`/agenda/${trabajoId}`);
+	revalidatePath("/admin");
+	revalidatePath("/admin/trabajos");
+	revalidatePath(`/admin/trabajos/${trabajoId}`);
+	revalidatePath("/admin/visits");
+	revalidatePath(`/admin/visits/${trabajoId}`);
+	redirect(`/admin/visits/${trabajoId}`);
+}
+
 export async function saveTrabajoVisitaAction(
 	_previousState: VisitaActionState,
 	formData: FormData,
 ): Promise<VisitaActionState> {
-	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
-	}
+	const user = hasSupabaseEnv()
+		? await requireRole(["admin", "technician"])
+		: null;
 
 	const result = validateVisitaInput(formData);
 
@@ -208,31 +331,37 @@ export async function saveTrabajoVisitaAction(
 
 	const supabase = await createSupabaseServerClient();
 	const completionIso = result.stagePayload.completed_at;
-	const [trabajoSnapshotResult, agendaStageSnapshotResult, agendaBridgeSnapshotResult] =
-		await Promise.all([
-			supabase
-				.from("trabajos")
-				.select("id, current_stage, agenda_completed_at, visita_completed_at")
-				.eq("id", result.values.trabajo_id)
-				.maybeSingle(),
-			supabase
-				.from("trabajo_agenda_stage")
-				.select("trabajo_id, completed_at")
-				.eq("trabajo_id", result.values.trabajo_id)
-				.maybeSingle(),
-			supabase
-				.from("agenda_items")
-				.select("id, estado, visit_id")
-				.eq("id", result.values.trabajo_id)
-				.maybeSingle(),
-		]);
+	const [
+		trabajoSnapshotResult,
+		agendaStageSnapshotResult,
+		agendaBridgeSnapshotResult,
+	] = await Promise.all([
+		supabase
+			.from("trabajos")
+			.select("id, current_stage, agenda_completed_at, visita_completed_at")
+			.eq("id", result.values.trabajo_id)
+			.maybeSingle(),
+		supabase
+			.from("trabajo_agenda_stage")
+			.select("trabajo_id, completed_at")
+			.eq("trabajo_id", result.values.trabajo_id)
+			.maybeSingle(),
+		supabase
+			.from("agenda_items")
+			.select("id, estado, visit_id")
+			.eq("id", result.values.trabajo_id)
+			.maybeSingle(),
+	]);
 
 	if (
 		trabajoSnapshotResult.error ||
 		agendaStageSnapshotResult.error ||
 		agendaBridgeSnapshotResult.error
 	) {
-		return { error: "No se pudo preparar la visita para guardarse.", success: null };
+		return {
+			error: "No se pudo preparar la visita para guardarse.",
+			success: null,
+		};
 	}
 
 	const trabajoSnapshot =
@@ -290,7 +419,8 @@ export async function saveTrabajoVisitaAction(
 		await restoreTrabajo(supabase, trabajoSnapshot);
 		await restoreAgendaBridge(supabase, agendaBridgeSnapshot);
 		return {
-			error: "La visita se guardó, pero no se pudo actualizar el puente de agenda.",
+			error:
+				"La visita se guardó, pero no se pudo actualizar el puente de agenda.",
 			success: null,
 		};
 	}
@@ -299,5 +429,9 @@ export async function saveTrabajoVisitaAction(
 	revalidatePath("/admin/visits");
 	revalidatePath(`/agenda/${result.values.trabajo_id}`);
 	revalidatePath(`/admin/visits/${result.values.trabajo_id}`);
-	redirect(`/agenda/${result.values.trabajo_id}`);
+	redirect(
+		user?.role === "technician"
+			? `/admin/visits/${result.values.trabajo_id}`
+			: `/agenda/${result.values.trabajo_id}`,
+	);
 }

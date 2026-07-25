@@ -3,7 +3,10 @@
 import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getDefaultRouteForRole, getUserRole } from "@/features/auth/session";
+import {
+	getDefaultRouteForRole,
+	resolveUserRole,
+} from "@/features/auth/session";
 
 export type AuthActionState = {
 	error: string | null;
@@ -34,7 +37,7 @@ export async function signInAction(
 		};
 	}
 
-	const role = getUserRole(data.user);
+	const role = await resolveUserRole(data.user);
 	redirect(getDefaultRouteForRole(role));
 }
 

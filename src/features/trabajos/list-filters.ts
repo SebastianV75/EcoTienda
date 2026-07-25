@@ -9,7 +9,12 @@ const trabajoStages = [
 	"descargables",
 ] as const satisfies readonly TrabajoStage[];
 
-const trabajoStatuses = ["open", "won", "lost", "archived"] as const satisfies readonly TrabajoStatus[];
+const trabajoStatuses = [
+	"open",
+	"won",
+	"lost",
+	"archived",
+] as const satisfies readonly TrabajoStatus[];
 
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -66,6 +71,8 @@ export function parseTrabajoListFilters(
 	const rawFrom = params.get("from") ?? undefined;
 	const rawTo = params.get("to") ?? undefined;
 	const rawQuery = params.get("q")?.trim() ?? undefined;
+	const rawAssigneeWorkerId =
+		params.get("assignee_worker_id")?.trim() ?? undefined;
 
 	const stage = trabajoStages.includes(rawStage as TrabajoStage)
 		? (rawStage as TrabajoStage)
@@ -80,5 +87,6 @@ export function parseTrabajoListFilters(
 		from: isValidISODate(rawFrom) ? rawFrom : undefined,
 		to: isValidISODate(rawTo) ? rawTo : undefined,
 		q: rawQuery || undefined,
+		assignee_worker_id: rawAssigneeWorkerId || undefined,
 	};
 }

@@ -21,6 +21,18 @@ function formatDate(dateString: string): string {
 	return `${day}/${month}/${year}`;
 }
 
+function formatAppointment(dateString: string | null): string | null {
+	if (!dateString) {
+		return null;
+	}
+
+	return new Intl.DateTimeFormat("es-MX", {
+		dateStyle: "medium",
+		timeStyle: "short",
+		timeZone: "UTC",
+	}).format(new Date(dateString));
+}
+
 function getStatusConfig(status: TrabajoStatus) {
 	switch (status) {
 		case "open":
@@ -70,6 +82,10 @@ export function TrabajoCard({ trabajo }: TrabajoCardProps) {
 	const statusConfig = getStatusConfig(trabajo.status);
 	const briefDescription = buildBriefDescription(trabajo);
 	const createdDate = formatDate(trabajo.created_at);
+	const appointmentLabel = formatAppointment(trabajo.appointment_at);
+	const assignedWorkerName = trabajo.assigned_worker_name?.trim() || null;
+	const primaryCtaLabel =
+		trabajo.current_stage === "agenda" ? "Ver agenda" : "Abrir trabajo";
 
 	return (
 		<Link
@@ -101,11 +117,32 @@ export function TrabajoCard({ trabajo }: TrabajoCardProps) {
 				{briefDescription}
 			</p>
 
-			<div className="mt-4 flex items-center justify-between text-sm text-[var(--muted)]">
+			{assignedWorkerName || appointmentLabel ? (
+				<dl className="mt-4 space-y-1.5 text-sm text-[var(--muted)]">
+					{assignedWorkerName ? (
+						<div className="flex gap-2">
+							<dt className="shrink-0 text-[var(--brand-deep)]">Asignado</dt>
+							<dd className="truncate">{assignedWorkerName}</dd>
+						</div>
+					) : null}
+					{appointmentLabel ? (
+						<div className="flex gap-2">
+							<dt className="shrink-0 text-[var(--brand-deep)]">Cita</dt>
+							<dd className="truncate">{appointmentLabel}</dd>
+						</div>
+					) : null}
+				</dl>
+			) : null}
+
+			<div className="mt-4 flex items-center justify-between gap-3 text-sm text-[var(--muted)]">
 				<span className="truncate">{trabajo.intake_address_text}</span>
 				<time dateTime={trabajo.created_at} className="shrink-0">
 					{createdDate}
 				</time>
+			</div>
+
+			<div className="mt-4 flex items-center justify-end border-t border-[var(--border-soft)] pt-3 text-sm font-medium text-[var(--brand-deep)]">
+				<span>{primaryCtaLabel}</span>
 			</div>
 		</Link>
 	);
