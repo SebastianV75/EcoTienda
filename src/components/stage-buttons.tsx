@@ -10,7 +10,7 @@ const stageRoutes: Record<string, string> = {
 	agenda: "/agenda",
 	visita: "/admin/visits",
 	cotizacion: "/admin/quotations",
-	venta: "/admin/trabajos?stage=venta",
+	venta: "/admin/sales",
 	descargables: "/admin/documents",
 };
 
