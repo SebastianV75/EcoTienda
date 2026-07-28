@@ -2,7 +2,6 @@
 
 import { useActionState, useState } from "react";
 
-import { VoiceInput } from "./components/voice-input";
 import { SignaturePad } from "./components/signature-pad";
 import { ImageUpload } from "./components/image-upload";
 import { GoogleMapsPicker } from "./components/google-maps-picker";
@@ -67,7 +66,12 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Nombre de cliente</FieldLabel>
-						<VoiceInput name="contact_name" />
+						<input
+							type="text"
+							name="contact_name"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5">
@@ -82,7 +86,12 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Correo electrónico</FieldLabel>
-						<VoiceInput name="email" />
+						<input
+							type="email"
+							name="email"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5 md:col-span-2">
@@ -102,7 +111,12 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Paquete de interés</FieldLabel>
-						<VoiceInput name="interest_package" />
+						<input
+							type="text"
+							name="interest_package"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5 md:col-span-2">
@@ -131,7 +145,12 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 						<div className="grid gap-4 md:grid-cols-2">
 							<div className="space-y-2.5">
 								<FieldLabel>Especificaciones de minisplit</FieldLabel>
-								<VoiceInput name="minisplit_specs" />
+								<input
+									type="text"
+									name="minisplit_specs"
+									placeholder="Escribe aquí"
+									className={sectionFieldClass()}
+								/>
 							</div>
 
 							<div className="space-y-2.5">
@@ -261,7 +280,12 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 				<div className="grid gap-4 md:grid-cols-2">
 					<div className="space-y-2.5 md:col-span-2">
 						<FieldLabel>Notas adicionales</FieldLabel>
-						<VoiceInput name="notes" />
+						<textarea
+							name="notes"
+							rows={3}
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5 md:col-span-2">

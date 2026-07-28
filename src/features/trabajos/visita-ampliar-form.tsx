@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 
-import { VoiceInput } from "./components/voice-input";
 import { ImageUpload } from "./components/image-upload";
 import { VideoUpload } from "./components/video-upload";
 import { GoogleMapsPicker } from "./components/google-maps-picker";
@@ -63,7 +62,12 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Nombre</FieldLabel>
-						<VoiceInput name="contact_name" />
+						<input
+							type="text"
+							name="contact_name"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5">
@@ -98,7 +102,12 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Correo</FieldLabel>
-						<VoiceInput name="email" />
+						<input
+							type="email"
+							name="email"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5 md:col-span-2">
@@ -118,7 +127,12 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 				<div className="grid gap-4 md:grid-cols-2">
 					<div className="space-y-2.5">
 						<FieldLabel>Capacidad del inversor</FieldLabel>
-						<VoiceInput name="inverter_capacity" />
+						<input
+							type="text"
+							name="inverter_capacity"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5">
@@ -153,7 +167,12 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 
 					<div className="space-y-2.5 md:col-span-2">
 						<FieldLabel>Estado de los paneles</FieldLabel>
-						<VoiceInput name="panels_condition" />
+						<input
+							type="text"
+							name="panels_condition"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 				</div>
 			</div>
@@ -188,12 +207,22 @@ export function VisitaAmpliarForm({ trabajoId }: VisitaAmpliarFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Tipo de aislante</FieldLabel>
-						<VoiceInput name="insulation_type" />
+						<input
+							type="text"
+							name="insulation_type"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5 md:col-span-2">
 						<FieldLabel>Nota</FieldLabel>
-						<VoiceInput name="notes" />
+						<textarea
+							name="notes"
+							rows={3}
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 				</div>
 			</div>

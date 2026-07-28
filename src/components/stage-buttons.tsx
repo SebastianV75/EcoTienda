@@ -100,18 +100,18 @@ const stageIcons: Record<string, React.ReactNode> = {
 
 export function StageButtons({ stats }: StageButtonsProps) {
 	return (
-		<div className="flex gap-2 overflow-x-auto">
+		<div className="flex gap-1.5">
 			{trabajoStages.map((stage) => (
 				<Link
 					key={stage}
 					href={stageRoutes[stage]}
-					className="group flex min-w-[100px] flex-col items-center rounded-lg border border-gray-200 bg-white px-3 py-2 transition-all duration-200 hover:border-emerald-300 hover:shadow-sm active:scale-[0.98]"
+					className="group flex flex-1 flex-col items-center rounded-lg border border-gray-200 bg-white px-1 py-2 transition-all duration-200 hover:border-emerald-300 hover:shadow-sm active:scale-[0.98]"
 				>
 					<div className="mb-1 text-gray-400 transition-colors duration-200 group-hover:text-emerald-600">
 						{stageIcons[stage]}
 					</div>
-					<div className="text-lg font-bold text-gray-900">{stats[stage]}</div>
-					<div className="mt-0.5 text-[10px] font-medium text-gray-500 group-hover:text-gray-700">
+					<div className="text-base font-bold text-gray-900">{stats[stage]}</div>
+					<div className="mt-0.5 text-[9px] font-medium leading-tight text-gray-500 group-hover:text-gray-700">
 						{trabajoStageLabels[stage]}
 					</div>
 				</Link>

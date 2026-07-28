@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 
-import { VoiceInput } from "./components/voice-input";
 import { ImageUpload } from "./components/image-upload";
 
 import {
@@ -36,6 +35,10 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 	);
 }
 
+function sectionFieldClass() {
+	return "w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300";
+}
+
 export function Cambio220Form({ trabajoId }: Cambio220FormProps) {
 	const [state, formAction, isPending] = useActionState(
 		saveCambio220Action,
@@ -51,12 +54,22 @@ export function Cambio220Form({ trabajoId }: Cambio220FormProps) {
 				<div className="grid gap-4 md:grid-cols-2">
 					<div className="space-y-2.5">
 						<FieldLabel>Nombre del cliente</FieldLabel>
-						<VoiceInput name="contact_name" />
+						<input
+							type="text"
+							name="contact_name"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Dirección</FieldLabel>
-						<VoiceInput name="address" />
+						<input
+							type="text"
+							name="address"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 				</div>
 			</div>

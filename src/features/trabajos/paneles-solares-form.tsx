@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 
-import { VoiceInput } from "./components/voice-input";
 import { ImageUpload } from "./components/image-upload";
 import { GoogleMapsPicker } from "./components/google-maps-picker";
 import { ToggleGroup } from "./components/toggle-group";
@@ -58,12 +57,22 @@ export function PanelesSolaresForm({ trabajoId }: PanelesSolaresFormProps) {
 				<div className="grid gap-4 md:grid-cols-2">
 					<div className="space-y-2.5">
 						<FieldLabel>Nombre de cliente</FieldLabel>
-						<VoiceInput name="contact_name" />
+						<input
+							type="text"
+							name="contact_name"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Correo electrónico</FieldLabel>
-						<VoiceInput name="email" />
+						<input
+							type="email"
+							name="email"
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 
 					<div className="space-y-2.5">
@@ -127,7 +136,12 @@ export function PanelesSolaresForm({ trabajoId }: PanelesSolaresFormProps) {
 
 					<div className="space-y-2.5 md:col-span-2">
 						<FieldLabel>Nota</FieldLabel>
-						<VoiceInput name="notes" />
+						<textarea
+							name="notes"
+							rows={3}
+							placeholder="Escribe aquí"
+							className={sectionFieldClass()}
+						/>
 					</div>
 				</div>
 			</div>

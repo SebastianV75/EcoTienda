@@ -68,8 +68,8 @@ export default async function AdminPage() {
 				) : null}
 
 				{/* Botones de estadísticas por etapa */}
-				<section className="rounded-[24px] border border-[var(--border-soft)] bg-white p-4">
-					<p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-strong)]">
+				<section className="rounded-2xl border border-[var(--border-soft)] bg-white p-3">
+					<p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-strong)]">
 						Trabajos por etapa
 					</p>
 					<StageButtons stats={stageStats} />
