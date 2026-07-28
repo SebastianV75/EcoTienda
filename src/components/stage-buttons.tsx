@@ -17,8 +17,8 @@ const stageRoutes: Record<string, string> = {
 const stageIcons: Record<string, React.ReactNode> = {
 	agenda: (
 		<svg
-			width="24"
-			height="24"
+			width="18"
+			height="18"
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
@@ -34,8 +34,8 @@ const stageIcons: Record<string, React.ReactNode> = {
 	),
 	visita: (
 		<svg
-			width="24"
-			height="24"
+			width="18"
+			height="18"
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
@@ -49,8 +49,8 @@ const stageIcons: Record<string, React.ReactNode> = {
 	),
 	cotizacion: (
 		<svg
-			width="24"
-			height="24"
+			width="18"
+			height="18"
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
@@ -66,8 +66,8 @@ const stageIcons: Record<string, React.ReactNode> = {
 	),
 	venta: (
 		<svg
-			width="24"
-			height="24"
+			width="18"
+			height="18"
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
@@ -82,8 +82,8 @@ const stageIcons: Record<string, React.ReactNode> = {
 	),
 	descargables: (
 		<svg
-			width="24"
-			height="24"
+			width="18"
+			height="18"
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
@@ -100,18 +100,18 @@ const stageIcons: Record<string, React.ReactNode> = {
 
 export function StageButtons({ stats }: StageButtonsProps) {
 	return (
-		<div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+		<div className="flex gap-2 overflow-x-auto">
 			{trabajoStages.map((stage) => (
 				<Link
 					key={stage}
 					href={stageRoutes[stage]}
-					className="group relative flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98]"
+					className="group flex min-w-[100px] flex-col items-center rounded-lg border border-gray-200 bg-white px-3 py-2 transition-all duration-200 hover:border-emerald-300 hover:shadow-sm active:scale-[0.98]"
 				>
-					<div className="mb-2 text-gray-400 transition-colors duration-200 group-hover:text-emerald-600">
+					<div className="mb-1 text-gray-400 transition-colors duration-200 group-hover:text-emerald-600">
 						{stageIcons[stage]}
 					</div>
-					<div className="text-2xl font-bold text-gray-900">{stats[stage]}</div>
-					<div className="mt-1 text-xs font-medium text-gray-500 group-hover:text-gray-700">
+					<div className="text-lg font-bold text-gray-900">{stats[stage]}</div>
+					<div className="mt-0.5 text-[10px] font-medium text-gray-500 group-hover:text-gray-700">
 						{trabajoStageLabels[stage]}
 					</div>
 				</Link>
