@@ -126,10 +126,10 @@ export default async function DocumentWorkSelectionPage({
 					<ClientPreviewSelector
 						items={trabajos.map((trabajo) => ({
 							id: trabajo.id,
-							label: trabajo.client_name ?? trabajo.intake_name,
+							label: trabajo.intake_name,
 							supportingText: [
 								formatStageLabel(trabajo.current_stage),
-								trabajo.intake_phone || trabajo.client_phone || null,
+								trabajo.intake_phone,
 								trabajo.intake_address_text,
 							]
 								.filter((part): part is string => Boolean(part && part.trim()))

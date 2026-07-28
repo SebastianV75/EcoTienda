@@ -73,13 +73,13 @@ function getVisitaDefaults(
 		execution_date: trabajo.visita?.execution_date ?? "",
 		contact_name:
 			trabajo.visita?.contact_name ??
-			pickText(trabajo.agenda?.contact_name, trabajo.client?.full_name, trabajo.intake_name),
+			pickText(trabajo.agenda?.contact_name, trabajo.intake_name),
 		contact_phone:
 			trabajo.visita?.contact_phone ??
-			pickText(trabajo.agenda?.contact_phone, trabajo.client?.phone, trabajo.intake_phone),
+			pickText(trabajo.agenda?.contact_phone, trabajo.intake_phone),
 		confirmed_address:
 			trabajo.visita?.confirmed_address ??
-			pickText(trabajo.agenda?.address_text, trabajo.client?.address, trabajo.intake_address_text),
+			pickText(trabajo.agenda?.address_text, trabajo.intake_address_text),
 		interest_package: trabajo.visita?.interest_package ?? "",
 		quotation_type: trabajo.visita?.quotation_type ?? "",
 		notes: trabajo.visita?.notes ?? "",
@@ -116,25 +116,22 @@ export function composeTrabajoDocumentDefaults(
 		current_stage: trabajo.current_stage,
 		status: trabajo.status,
 		client_name: pickText(
-			trabajo.intake_name,
-			trabajo.client?.full_name,
-			trabajo.agenda?.contact_name,
 			trabajo.visita?.contact_name,
+			trabajo.agenda?.contact_name,
+			trabajo.intake_name,
 		),
 		client_phone: pickText(
-			trabajo.intake_phone,
-			trabajo.client?.phone,
-			trabajo.agenda?.contact_phone,
 			trabajo.visita?.contact_phone,
+			trabajo.agenda?.contact_phone,
+			trabajo.intake_phone,
 		),
 		address_text: pickText(
-			trabajo.intake_address_text,
-			trabajo.client?.address,
-			trabajo.agenda?.address_text,
 			trabajo.visita?.confirmed_address,
+			trabajo.agenda?.address_text,
+			trabajo.intake_address_text,
 		),
-		latitude: trabajo.intake_latitude ?? trabajo.client?.latitude ?? null,
-		longitude: trabajo.intake_longitude ?? trabajo.client?.longitude ?? null,
+		latitude: pickNumber(trabajo.agenda?.latitude, trabajo.intake_latitude),
+		longitude: pickNumber(trabajo.agenda?.longitude, trabajo.intake_longitude),
 		agenda: getAgendaDefaults(trabajo),
 		visita: getVisitaDefaults(trabajo),
 		quotation: getQuotationDefaults(trabajo),

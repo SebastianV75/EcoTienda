@@ -21,12 +21,6 @@ export type DocumentPreviewSubject = {
 	estimated_monthly_generation: string | null;
 };
 
-function pickText(...values: Array<string | null | undefined>): string {
-	return (
-		values.find((value) => typeof value === "string" && value.trim().length > 0)?.trim() ?? ""
-	);
-}
-
 function toNullableNumber(value: unknown): number | null {
 	if (typeof value === "number" && Number.isFinite(value)) {
 		return value;
@@ -130,21 +124,20 @@ export function buildTrabajoPreviewSubject(
 	template: DocumentTemplateSlug,
 ): DocumentPreviewSubject {
 	const defaults = composeTrabajoDocumentDefaults(trabajo);
-	const client = trabajo.client;
 	const subject: DocumentPreviewSubject = {
-		full_name: pickText(defaults.client_name, client?.full_name, trabajo.intake_name),
-		phone: pickText(defaults.client_phone, client?.phone, trabajo.intake_phone),
-		address: pickText(defaults.address_text, client?.address, trabajo.intake_address_text),
-		neighborhood: client?.neighborhood ?? null,
-		rfc: pickText(defaults.quotation.rfc, client?.rfc),
-		rpu: pickText(defaults.quotation.rpu, client?.rpu),
-		latitude: defaults.latitude ?? client?.latitude ?? null,
-		longitude: defaults.longitude ?? client?.longitude ?? null,
-		panel_count: client?.panel_count ?? null,
-		panel_power: client?.panel_power ?? null,
-		inverter: client?.inverter ?? null,
-		installed_capacity: client?.installed_capacity ?? null,
-		estimated_monthly_generation: client?.estimated_monthly_generation ?? null,
+		full_name: defaults.client_name,
+		phone: defaults.client_phone,
+		address: defaults.address_text,
+		neighborhood: null,
+		rfc: defaults.quotation.rfc,
+		rpu: defaults.quotation.rpu,
+		latitude: defaults.latitude,
+		longitude: defaults.longitude,
+		panel_count: null,
+		panel_power: null,
+		inverter: null,
+		installed_capacity: null,
+		estimated_monthly_generation: null,
 	};
 
 	const templateOverrides = trabajo.document_overrides.filter(
