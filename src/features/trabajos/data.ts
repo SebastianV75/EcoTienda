@@ -525,6 +525,10 @@ function normalizeTrabajoListRow(row: TrabajoListRow): TrabajoListItem {
 	};
 }
 
+function escapePostgRESTPattern(value: string): string {
+	return value.replace(/\\/g, "\\\\").replace(/[,()]/g, "\\$&");
+}
+
 export const getTrabajosForList = cache(
 	async (filters: TrabajoListFilters = {}): Promise<TrabajoListItem[]> => {
 		const supabase = await createSupabaseServerClient();
@@ -552,9 +556,31 @@ export const getTrabajosForList = cache(
 		if (filters.q) {
 			const normalized = filters.q.trim();
 			if (normalized) {
-				request = request.or(
-					`id.ilike.%${normalized}%,intake_address_text.ilike.%${normalized}%,intake_name.ilike.%${normalized}%,client.full_name.ilike.%${normalized}%`,
-				);
+				const escaped = escapePostgRESTPattern(normalized);
+				const pattern = `%${escaped}%`;
+				const textConditions = [
+					`intake_address_text.ilike.${pattern}`,
+					`intake_name.ilike.${pattern}`,
+				];
+
+				// UUID regex pattern
+				const uuidPattern =
+					/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+				if (uuidPattern.test(normalized)) {
+					textConditions.unshift(`id.eq.${normalized}`);
+				}
+
+				const { data: matchingClients } = await supabase
+					.from("clients")
+					.select("id")
+					.ilike("full_name", pattern);
+
+				const clientIds = (matchingClients ?? []).map((c) => c.id);
+				if (clientIds.length > 0) {
+					textConditions.push(`client_id.in.(${clientIds.join(",")})`);
+				}
+
+				request = request.or(textConditions.join(","));
 			}
 		}
 
