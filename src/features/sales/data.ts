@@ -28,59 +28,42 @@ type SaleRow = {
 export const getSales = cache(async (query?: string): Promise<SaleListItem[]> => {
 	const supabase = await createSupabaseServerClient();
 
-	// Primero obtener los trabajos en etapa venta
+	// Obtener todos los trabajos en etapa venta con sus datos de venta (si existen)
 	const { data: trabajosData, error: trabajosError } = await supabase
 		.from("trabajos")
-		.select("id")
-		.eq("current_stage", "venta");
+		.select(`
+			id,
+			intake_name,
+			client_id,
+			clients (
+				full_name
+			),
+			trabajo_sale_stage (
+				id,
+				confirmed_on,
+				agreed_amount,
+				completed_at
+			)
+		`)
+		.eq("current_stage", "venta")
+		.order("created_at", { ascending: false });
 
 	if (trabajosError) {
 		console.error("Error fetching trabajos en etapa venta:", trabajosError);
 		return [];
 	}
 
-	const trabajoIds = (trabajosData ?? []).map((t) => t.id);
-
-	if (trabajoIds.length === 0) {
-		return [];
-	}
-
-	let saleQuery = supabase
-		.from("trabajo_sale_stage")
-		.select(`
-			id,
-			trabajo_id,
-			confirmed_on,
-			agreed_amount,
-			completed_at,
-			trabajos!inner (
-				intake_name,
-				client_id,
-				clients (
-					full_name
-				)
-			)
-		`)
-		.in("trabajo_id", trabajoIds)
-		.order("created_at", { ascending: false });
-
-	const { data, error } = await saleQuery;
-
-	if (error) {
-		console.error("Error fetching sales:", error);
-		return [];
-	}
-
-	const sales: SaleListItem[] = (data || []).map((row: SaleRow) => {
-		const trabajo = row.trabajos?.[0];
-		const client = trabajo?.clients?.[0];
+	const sales: SaleListItem[] = (trabajosData || []).map((row: any) => {
+		const client = row.clients?.[0];
+		const saleStage = row.trabajo_sale_stage?.[0];
+		
 		return {
-			id: row.id,
-			trabajo_id: row.trabajo_id,
-			client_name: client?.full_name || trabajo?.intake_name || "Sin nombre",
-			quotation_amount: row.agreed_amount,
-			confirmed_on: row.confirmed_on,
-			completed: !!row.completed_at,
+			id: saleStage?.id || row.id,
+			trabajo_id: row.id,
+			client_name: client?.full_name || row.intake_name || "Sin nombre",
+			quotation_amount: saleStage?.agreed_amount || 0,
+			confirmed_on: saleStage?.confirmed_on || null,
+			completed: !!saleStage?.completed_at,
 		};
 	});
 
