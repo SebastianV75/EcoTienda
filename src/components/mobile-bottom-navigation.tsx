@@ -50,13 +50,12 @@ type SecondaryItem = {
 const primaryMobileNavigationByRole: Record<AppRole, PrimaryItem[]> = {
 	admin: [
 		{ href: "/admin", label: "Tablero", icon: Home, exact: true },
-		{ href: "/agenda", label: "Agenda", icon: Calendar },
-		{ href: "/admin/visits", label: "Visitas", icon: Location },
 		{ href: "/admin/trabajos", label: "Trabajos", icon: Briefcase },
+		{ href: "/agenda", label: "Agenda", icon: Calendar },
+		{ href: "/admin/quotations", label: "Cotización", icon: Clipboard },
 	],
 	technician: [
-		{ href: "/technician", label: "Inicio", icon: Home, exact: true },
-		{ href: "/agenda", label: "Agenda", icon: Calendar },
+		{ href: "/technician", label: "Visitas técnicas", icon: Location, exact: true },
 	],
 };
 
@@ -65,7 +64,7 @@ const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
 		{ href: "/admin/documents", label: "Documentos", icon: DocumentText },
 		{ href: "/admin/clients", label: "Clientes", icon: Users },
 		{ href: "/admin/workers", label: "Trabajadores", icon: Profile },
-		{ href: "/admin/quotations", label: "Cotizaciones", icon: Clipboard },
+		{ href: "/admin/visits", label: "Visitas", icon: Location },
 		{ href: "/admin/settings", label: "Configuración", icon: Settings },
 	],
 	technician: [],

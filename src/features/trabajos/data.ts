@@ -856,7 +856,8 @@ export const getActiveTrabajosForDashboard = cache(
 				"id, current_stage, intake_name, agenda:trabajo_agenda_stage(appointment_at, assignee_name, assignee_worker:workers(full_name))",
 			)
 			.eq("status", "open")
-			.order("updated_at", { ascending: false });
+			.order("updated_at", { ascending: false })
+			.limit(5);
 
 		if (activeTrabajosError) {
 			throw new Error(
@@ -898,5 +899,46 @@ export const getActiveTrabajosForDashboard = cache(
 				titleByTrabajoId.get(trabajo.id) ?? null,
 			),
 		);
+	},
+);
+
+export type StageStats = {
+	agenda: number;
+	visita: number;
+	cotizacion: number;
+	venta: number;
+	descargables: number;
+};
+
+export const getTrabajoStageStats = cache(
+	async (): Promise<StageStats> => {
+		const supabase = await createSupabaseServerClient();
+		const { data, error } = await supabase
+			.from("trabajos")
+			.select("current_stage")
+			.eq("status", "open");
+
+		if (error) {
+			throw new Error(
+				`No se pudieron cargar las estadísticas por etapa. ${error.message}`,
+			);
+		}
+
+		const stats: StageStats = {
+			agenda: 0,
+			visita: 0,
+			cotizacion: 0,
+			venta: 0,
+			descargables: 0,
+		};
+
+		(data ?? []).forEach((trabajo) => {
+			const stage = trabajo.current_stage as keyof StageStats;
+			if (stage in stats) {
+				stats[stage]++;
+			}
+		});
+
+		return stats;
 	},
 );

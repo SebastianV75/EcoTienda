@@ -10,8 +10,11 @@ import {
 import { DashboardActiveList } from "@/features/trabajos/dashboard-active-list";
 import {
 	getActiveTrabajosForDashboard,
+	getTrabajoStageStats,
 	type ActiveTrabajoDashboardItem,
+	type StageStats,
 } from "@/features/trabajos/data";
+import { trabajoStageLabels, trabajoStages, type TrabajoStage } from "@/types/trabajo";
 import { hasSupabaseEnv } from "@/lib/env";
 
 const emptyActivitySummary: ClientActivitySummary = {
@@ -21,19 +24,29 @@ const emptyActivitySummary: ClientActivitySummary = {
 
 const emptyActiveTrabajos: ActiveTrabajoDashboardItem[] = [];
 
+const emptyStageStats: StageStats = {
+	agenda: 0,
+	visita: 0,
+	cotizacion: 0,
+	venta: 0,
+	descargables: 0,
+};
+
 export default async function AdminPage() {
 	const user = hasSupabaseEnv()
 		? await requireRole(["admin"])
 		: await getCurrentUser();
 
-	const [activitySummaryResult, activeTrabajosResult] = hasSupabaseEnv()
+	const [activitySummaryResult, activeTrabajosResult, stageStatsResult] = hasSupabaseEnv()
 		? await Promise.allSettled([
 				getClientActivitySummary(),
 				getActiveTrabajosForDashboard(),
+				getTrabajoStageStats(),
 			])
 		: [
 				{ status: "fulfilled", value: emptyActivitySummary } as const,
 				{ status: "fulfilled", value: emptyActiveTrabajos } as const,
+				{ status: "fulfilled", value: emptyStageStats } as const,
 			];
 	const activitySummary =
 		activitySummaryResult.status === "fulfilled"
@@ -43,9 +56,14 @@ export default async function AdminPage() {
 		activeTrabajosResult.status === "fulfilled"
 			? activeTrabajosResult.value
 			: emptyActiveTrabajos;
+	const stageStats =
+		stageStatsResult.status === "fulfilled"
+			? stageStatsResult.value
+			: emptyStageStats;
 	const loadingNotice =
 		activitySummaryResult.status === "rejected" ||
-		activeTrabajosResult.status === "rejected"
+		activeTrabajosResult.status === "rejected" ||
+		stageStatsResult.status === "rejected"
 			? "Parte del tablero no cargó. Mostramos lo disponible para no cortar el flujo operativo."
 			: null;
 
@@ -62,6 +80,30 @@ export default async function AdminPage() {
 						{loadingNotice}
 					</section>
 				) : null}
+
+				{/* Botones de estadísticas por etapa */}
+				<section className="rounded-[24px] border border-[var(--border-soft)] bg-white p-4">
+					<p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-strong)]">
+						Trabajos por etapa
+					</p>
+					<div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+						{trabajoStages.map((stage) => (
+							<Link
+								key={stage}
+								href={`/admin/trabajos?stage=${stage}`}
+								className="group flex flex-col items-center justify-center rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] px-3 py-3 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[rgba(13,79,46,0.18)] hover:bg-[rgba(243,247,243,0.92)] hover:shadow-[0_8px_20px_rgba(10,44,21,0.04)] active:scale-[0.96]"
+							>
+								<span className="text-2xl font-bold tabular-nums text-[var(--brand-deep)]">
+									{stageStats[stage]}
+								</span>
+								<span className="mt-1 text-xs font-medium text-[var(--muted)] group-hover:text-[var(--brand-deep)]">
+									{trabajoStageLabels[stage]}
+								</span>
+							</Link>
+						))}
+					</div>
+				</section>
+
 				<DashboardActiveList items={activeTrabajos} />
 
 				<section className="rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface)] p-4">
@@ -101,7 +143,7 @@ export default async function AdminPage() {
 								Trabajos en marcha
 							</dt>
 							<dd className="text-lg font-semibold tracking-[-0.04em] tabular-nums text-[var(--brand-deep)]">
-								{activeTrabajos.length}
+								{Object.values(stageStats).reduce((sum, count) => sum + count, 0)}
 							</dd>
 						</div>
 						<div className="flex items-center justify-between gap-4 py-3">
