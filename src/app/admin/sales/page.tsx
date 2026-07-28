@@ -19,7 +19,7 @@ export default async function SalesPage({
 		<AppShell
 			role="admin"
 			title="Ventas"
-			description="Gestiona las ventas confirmadas y avanza al flujo de descargables."
+			description="Trabajos en etapa de venta. Confirma las ventas para avanzar a descargables."
 			email={user.email}
 		>
 			<div className="space-y-3">
@@ -28,12 +28,12 @@ export default async function SalesPage({
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div className="min-w-0 flex-1">
 							<h1 className="text-xl font-semibold tracking-display text-[var(--brand-deep)] sm:text-2xl">
-								Ventas
+								Ventas pendientes
 							</h1>
 							<div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--muted)]">
 								<span>
 									<strong className="font-semibold text-[var(--brand-deep)]">{sales.length}</strong>{" "}
-									ventas
+									en etapa de venta
 								</span>
 								<span>
 									<strong className="font-semibold text-[var(--brand-deep)]">
@@ -80,20 +80,40 @@ export default async function SalesPage({
 						))}
 					</section>
 				) : (
-					<section className="rounded-[26px] border border-[var(--border-soft)] bg-white p-8 text-center shadow-sm">
-						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-							Sin ventas
-						</p>
-						<h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
+					<section className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+						<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
+							<svg
+								className="h-10 w-10 text-green-400"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+						</div>
+						<h3 className="text-lg font-semibold text-gray-900">
 							{query
-								? "No se encontraron ventas con ese criterio"
-								: "Todavía no hay ventas registradas"}
+								? "No se encontraron ventas"
+								: "No hay ventas pendientes"}
 						</h3>
-						<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+						<p className="mt-2 text-sm text-gray-600">
 							{query
 								? "Intenta con otra búsqueda."
-								: "Las ventas aparecerán aquí cuando confirmes cotizaciones."}
+								: "Las ventas aparecerán aquí cuando se confirme una cotización."}
 						</p>
+						{!query && (
+							<Link
+								href="/admin/quotations"
+								className="mt-4 inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-green-700"
+							>
+								Ir a Cotizaciones
+							</Link>
+						)}
 					</section>
 				)}
 			</div>

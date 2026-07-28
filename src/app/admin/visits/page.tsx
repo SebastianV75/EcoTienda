@@ -35,8 +35,8 @@ export default async function VisitsPage() {
 	return (
 		<AppShell
 			role="admin"
-			title="Visitas"
-			description="Seguimiento de visitas desde Agenda. Abrí cada trabajo y dejá listo el siguiente paso."
+			title="Visitas Técnicas"
+			description="Trabajos en etapa de visita. Completa la visita técnica para avanzar a cotización."
 			email={user?.email}
 		>
 			<div className="space-y-4">
@@ -44,14 +44,13 @@ export default async function VisitsPage() {
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 						<div className="min-w-0">
 							<p className="text-xs font-semibold uppercase tracking-eyebrow text-[var(--brand-strong)]">
-								Desde Agenda
+								Etapa de Visita
 							</p>
 							<h1 className="mt-2 text-2xl font-semibold tracking-display text-[var(--brand-deep)] sm:text-[1.9rem]">
-								Visitas técnicas en curso
+								Visitas técnicas pendientes
 							</h1>
 							<p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-								Abrí cada trabajo, completá la visita y dejá lista la etapa que
-								sigue.
+								Trabajos que están listos para visita técnica. Completa la visita para generar la cotización automáticamente.
 							</p>
 						</div>
 
@@ -71,15 +70,8 @@ export default async function VisitsPage() {
 							<>
 								<span>{inProgressCount} en proceso</span>
 								<span>{pendingCount} pendientes</span>
-								<span>Ordenadas por avance operativo</span>
 							</>
 						)}
-					</div>
-
-					<div className="mt-5 flex flex-wrap gap-3">
-						<Link href="/agenda" className="ui-secondary-action">
-							Abrir agenda
-						</Link>
 					</div>
 				</section>
 
@@ -104,16 +96,35 @@ export default async function VisitsPage() {
 						))}
 					</section>
 				) : hasVisitsError ? null : (
-					<EmptyState
-						eyebrow="Sin visitas programadas"
-						title="No hay visitas para mostrar"
-						description="Cuando registres una visita técnica en Agenda, aparecerá aquí sin separar el flujo de trabajo."
-						action={
-							<Link href="/agenda" className="ui-secondary-action">
-								Abrir agenda
-							</Link>
-						}
-					/>
+					<section className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+						<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-blue-50">
+							<svg
+								className="h-10 w-10 text-blue-400"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+								/>
+							</svg>
+						</div>
+						<h3 className="text-lg font-semibold text-gray-900">
+							No hay visitas técnicas pendientes
+						</h3>
+						<p className="mt-2 text-sm text-gray-600">
+							Los trabajos aparecerán aquí cuando estén listos para visita técnica.
+						</p>
+						<Link
+							href="/agenda"
+							className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-700"
+						>
+							Ir a Agenda
+						</Link>
+					</section>
 				)}
 			</div>
 		</AppShell>

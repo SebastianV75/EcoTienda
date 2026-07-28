@@ -8,6 +8,7 @@ import {
 	trabajoStatusLabels,
 	type TrabajoStatus,
 } from "@/types/trabajo";
+import { StageProgressIndicator } from "@/components/stage-progress-indicator";
 
 type TrabajoCardProps = {
 	trabajo: TrabajoListItem;
@@ -143,6 +144,11 @@ export function TrabajoCard({ trabajo }: TrabajoCardProps) {
 			<p className="mt-3 line-clamp-2 text-sm leading-6 text-[var(--muted)]">
 				{briefDescription}
 			</p>
+
+			{/* Indicador de progreso de etapas */}
+			<div className="mt-4">
+				<StageProgressIndicator currentStage={trabajo.current_stage} size="sm" />
+			</div>
 
 			{assignedWorkerName || appointmentLabel ? (
 				<dl className="mt-4 space-y-2 text-sm text-[var(--muted)]">

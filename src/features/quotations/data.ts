@@ -88,11 +88,25 @@ export const getSupplierById = cache(async (id: string) => {
 
 export const getQuotations = cache(async (query?: string) => {
 	const supabase = await createSupabaseServerClient();
+	
+	// Primero obtener los trabajos en etapa cotizacion
+	const { data: trabajosData, error: trabajosError } = await supabase
+		.from("trabajos")
+		.select("id")
+		.eq("current_stage", "cotizacion");
+
+	if (trabajosError) {
+		throw new Error("No se pudieron cargar los trabajos en etapa de cotización.");
+	}
+
+	const trabajoIds = (trabajosData ?? []).map((t) => t.id);
+
 	let request = supabase
 		.from("quotations")
 		.select(
 			"id, quotation_number, trabajo_id, supplier_name, project, subtotal, total, status, created_at, pdf_url",
 		)
+		.in("trabajo_id", trabajoIds.length > 0 ? trabajoIds : ["00000000-0000-0000-0000-000000000000"])
 		.order("created_at", { ascending: false });
 
 	if (query) {

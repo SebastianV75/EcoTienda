@@ -228,9 +228,26 @@ export const getAgendaItemsForMonth = cache(async (year: number, month: number) 
 	return mergeAgendaSources(
 		(async () => {
 			const supabase = await createSupabaseServerClient();
+			// Primero obtener los trabajos en etapa agenda
+			const { data: trabajosData, error: trabajosError } = await supabase
+				.from("trabajos")
+				.select("id")
+				.eq("current_stage", "agenda");
+
+			if (trabajosError) {
+				throw new Error(`No se pudieron cargar los trabajos de agenda. ${trabajosError.message}`);
+			}
+
+			const trabajoIds = (trabajosData ?? []).map((t) => t.id);
+
+			if (trabajoIds.length === 0) {
+				return [];
+			}
+
 			const { data, error } = await supabase
 				.from("trabajo_agenda_stage")
 				.select(workflowAgendaSelect)
+				.in("trabajo_id", trabajoIds)
 				.gte("appointment_at", firstDayIso)
 				.lte("appointment_at", lastDayIso)
 				.order("appointment_at", { ascending: true })
@@ -265,9 +282,26 @@ export const getPendingAgendaItems = cache(async () => {
 	return mergeAgendaSources(
 		(async () => {
 			const supabase = await createSupabaseServerClient();
+			// Primero obtener los trabajos en etapa agenda
+			const { data: trabajosData, error: trabajosError } = await supabase
+				.from("trabajos")
+				.select("id")
+				.eq("current_stage", "agenda");
+
+			if (trabajosError) {
+				throw new Error(`No se pudieron cargar los trabajos de agenda. ${trabajosError.message}`);
+			}
+
+			const trabajoIds = (trabajosData ?? []).map((t) => t.id);
+
+			if (trabajoIds.length === 0) {
+				return [];
+			}
+
 			const { data, error } = await supabase
 				.from("trabajo_agenda_stage")
 				.select(workflowAgendaSelect)
+				.in("trabajo_id", trabajoIds)
 				.is("completed_at", null)
 				.order("appointment_at", { ascending: true })
 				.order("created_at", { ascending: true });
@@ -319,9 +353,26 @@ export const getAgendaItemsByType = cache(async (tipo: AgendaItemType) => {
 
 	const workflow = (async () => {
 		const supabase = await createSupabaseServerClient();
+		// Primero obtener los trabajos en etapa visita
+		const { data: trabajosData, error: trabajosError } = await supabase
+			.from("trabajos")
+			.select("id")
+			.eq("current_stage", "visita");
+
+		if (trabajosError) {
+			throw new Error(`No se pudieron cargar los trabajos de visita. ${trabajosError.message}`);
+		}
+
+		const trabajoIds = (trabajosData ?? []).map((t) => t.id);
+
+		if (trabajoIds.length === 0) {
+			return [];
+		}
+
 		const { data, error } = await supabase
 			.from("trabajo_agenda_stage")
 			.select(workflowAgendaSelect)
+			.in("trabajo_id", trabajoIds)
 			.is("completed_at", null)
 			.order("appointment_at", { ascending: true })
 			.order("created_at", { ascending: true });

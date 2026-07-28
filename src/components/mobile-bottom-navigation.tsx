@@ -62,6 +62,7 @@ const primaryMobileNavigationByRole: Record<AppRole, PrimaryItem[]> = {
 const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
 	admin: [
 		{ href: "/admin/sales", label: "Ventas", icon: Clipboard },
+		{ href: "/admin/descargables", label: "Descargables", icon: DocumentText },
 		{ href: "/admin/documents", label: "Documentos", icon: DocumentText },
 		{ href: "/admin/clients", label: "Clientes", icon: Users },
 		{ href: "/admin/workers", label: "Trabajadores", icon: Profile },

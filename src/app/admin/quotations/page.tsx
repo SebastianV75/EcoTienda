@@ -21,7 +21,7 @@ export default async function QuotationsPage({
 		<AppShell
 			role="admin"
 			title="Cotizaciones"
-			description="Gestiona solicitudes de cotización, productos y exportación profesional."
+			description="Trabajos en etapa de cotización. Revisa y confirma las cotizaciones generadas automáticamente."
 			email={user.email}
 		>
 			<div className="space-y-3">
@@ -30,12 +30,12 @@ export default async function QuotationsPage({
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div className="min-w-0 flex-1">
 							<h1 className="text-xl font-semibold tracking-display text-[var(--brand-deep)] sm:text-2xl">
-								Cotizaciones
+								Cotizaciones pendientes
 							</h1>
 							<div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--muted)]">
 								<span>
 									<strong className="font-semibold text-[var(--brand-deep)]">{quotations.length}</strong>{" "}
-									totales
+									en etapa de cotización
 								</span>
 								{statusSummary.map((item) => (
 									<span key={item.status}>
@@ -92,20 +92,40 @@ export default async function QuotationsPage({
 						))}
 					</section>
 				) : (
-					<section className="rounded-[26px] border border-[var(--border-soft)] bg-white p-8 text-center shadow-sm">
-						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-							Sin cotizaciones
-						</p>
-						<h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
+					<section className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+						<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-orange-50">
+							<svg
+								className="h-10 w-10 text-orange-400"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+								/>
+							</svg>
+						</div>
+						<h3 className="text-lg font-semibold text-gray-900">
 							{query
-								? "No se encontraron cotizaciones con ese criterio"
-								: "Todavía no hay cotizaciones registradas"}
+								? "No se encontraron cotizaciones"
+								: "No hay cotizaciones pendientes"}
 						</h3>
-						<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+						<p className="mt-2 text-sm text-gray-600">
 							{query
-								? "Intenta con otra búsqueda o crea una nueva cotización."
-								: "Empieza creando tu primera solicitud de cotización para gestionar proveedores, productos y términos."}
+								? "Intenta con otra búsqueda."
+								: "Las cotizaciones aparecerán aquí automáticamente cuando se complete una visita técnica."}
 						</p>
+						{!query && (
+							<Link
+								href="/admin/visits"
+								className="mt-4 inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-orange-700"
+							>
+								Ir a Visitas Técnicas
+							</Link>
+						)}
 					</section>
 				)}
 			</div>

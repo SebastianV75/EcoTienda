@@ -11,7 +11,7 @@ const stageRoutes: Record<string, string> = {
 	visita: "/admin/visits",
 	cotizacion: "/admin/quotations",
 	venta: "/admin/sales",
-	descargables: "/admin/documents",
+	descargables: "/admin/descargables",
 };
 
 const stageIcons: Record<string, React.ReactNode> = {
