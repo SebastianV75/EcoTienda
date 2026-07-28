@@ -3,9 +3,11 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { AgendaItemForm } from "@/features/agenda/agenda-item-form";
 import { requireRole } from "@/features/auth/session";
-import { getClients } from "@/features/clients/data";
 import { getActiveWorkers } from "@/features/workers/data";
-import type { AgendaItemFormValues } from "@/types/agenda";
+import {
+	agendaWorkTypeLabels,
+	type AgendaItemFormValues,
+} from "@/types/agenda";
 
 function buildAgendaTitle(workType: string, contactName: string) {
 	const baseTitle = workType.trim() || "Visita técnica";
@@ -23,16 +25,20 @@ function buildDefaultValues(date?: string): AgendaItemFormValues {
 		hora: "08:00",
 		tipo: "visita_tecnica",
 		estado: "pendiente",
-		work_type: "Visita técnica",
+		work_type: agendaWorkTypeLabels.paneles_solares,
+		work_type_choice: "paneles_solares",
+		work_type_other: "",
 		assignee_worker_id: "",
 		assignee_name: "",
+		first_name: "",
+		paternal_last_name: "",
+		maternal_last_name: "",
 		contact_name: "",
 		contact_phone: "",
 		address_text: "",
 		latitude: "",
 		longitude: "",
 		descripcion: "",
-		client_id: "",
 	} satisfies Omit<AgendaItemFormValues, "title">;
 
 	return {
@@ -56,17 +62,8 @@ export default async function NewAgendaItemPage({
 	const fromDashboard = resolvedSearchParams?.source === "admin-dashboard";
 	const defaultValues = buildDefaultValues(resolvedSearchParams?.date);
 
-	let clients: Awaited<ReturnType<typeof getClients>> = [];
-	let clientsNotice: string | null = null;
 	let workers: Awaited<ReturnType<typeof getActiveWorkers>> = [];
 	let workersNotice: string | null = null;
-
-	try {
-		clients = await getClients();
-	} catch {
-		clientsNotice =
-			"No pudimos cargar la lista de clientes en este momento. Puedes crear el trabajo y vincular el cliente más tarde.";
-	}
 
 	try {
 		workers = await getActiveWorkers();
@@ -104,18 +101,11 @@ export default async function NewAgendaItemPage({
 					</h1>
 					<p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
 						Captura el trabajo en una sola pasada. El título se arma con tipo de
-						trabajo y contacto mientras no lo cambies a mano, y el cliente sigue
-						siendo opcional.
+						trabajo y nombre completo mientras no lo cambies a mano.
 					</p>
 				</section>
 
 				<div className="space-y-3">
-					{clientsNotice ? (
-						<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-							{clientsNotice}
-						</section>
-					) : null}
-
 					{fromDashboard ? (
 						<section className="rounded-[22px] border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
 							Abriste este ingreso desde el tablero. Revisa el título antes de
@@ -139,11 +129,6 @@ export default async function NewAgendaItemPage({
 				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-5 shadow-sm sm:p-6">
 					<AgendaItemForm
 						mode="create"
-						clients={clients.map((client) => ({
-							id: client.id,
-							full_name: client.full_name,
-							rpu: client.rpu,
-						}))}
 						workers={workers}
 						defaultValues={defaultValues}
 					/>

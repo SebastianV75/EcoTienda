@@ -39,10 +39,14 @@ export type Trabajo = {
 	current_stage: TrabajoStage;
 	status: TrabajoStatus;
 	intake_name: string;
+	intake_first_name: string | null;
+	intake_paternal_last_name: string | null;
+	intake_maternal_last_name: string | null;
 	intake_phone: string;
 	intake_address_text: string;
 	intake_latitude: number | null;
 	intake_longitude: number | null;
+	work_type: string | null;
 	client_id: string | null;
 	agenda_completed_at: string | null;
 	visita_completed_at: string | null;
@@ -57,6 +61,9 @@ export type TrabajoAgendaStage = {
 	trabajo_id: string;
 	appointment_at: string;
 	work_type: string;
+	first_name: string | null;
+	paternal_last_name: string | null;
+	maternal_last_name: string | null;
 	assignee_worker_id: string | null;
 	assignee_name: string;
 	assignee_worker: WorkerSummary | null;

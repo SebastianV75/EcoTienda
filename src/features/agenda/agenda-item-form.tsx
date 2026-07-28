@@ -7,19 +7,16 @@ import {
 	updateAgendaItemAction,
 	type AgendaActionState,
 } from "@/features/agenda/actions";
-import type { AgendaItemFormValues } from "@/types/agenda";
+import {
+	agendaWorkTypeLabels,
+	type AgendaItemFormValues,
+	type AgendaWorkTypeOption,
+} from "@/types/agenda";
 import { workerRoleLabels, type WorkerSummary } from "@/types/worker";
-
-type AgendaFormClientOption = {
-	id: string;
-	full_name: string;
-	rpu: string;
-};
 
 type AgendaItemFormProps = {
 	mode: "create" | "edit";
 	agendaItemId?: string;
-	clients: AgendaFormClientOption[];
 	workers: WorkerSummary[];
 	defaultValues: AgendaItemFormValues;
 };
@@ -33,9 +30,23 @@ type LocationMessage = {
 	text: string;
 };
 
-function buildAgendaTitle(workType: string, contactName: string) {
-	const baseTitle = workType.trim() || "Visita técnica";
-	const contactLabel = contactName.trim() || "Nuevo trabajo";
+function buildFullName(firstName: string, paternalLastName: string, maternalLastName: string) {
+	return [firstName.trim(), paternalLastName.trim(), maternalLastName.trim()]
+		.filter(Boolean)
+		.join(" ");
+}
+
+function resolveWorkTypeLabel(choice: AgendaWorkTypeOption, otherValue: string) {
+	if (choice === "otro") {
+		return otherValue.trim() || agendaWorkTypeLabels.otro;
+	}
+
+	return agendaWorkTypeLabels[choice];
+}
+
+function buildAgendaTitle(workTypeLabel: string, fullName: string) {
+	const baseTitle = workTypeLabel.trim() || "Visita técnica";
+	const contactLabel = fullName.trim() || "Nuevo trabajo";
 
 	return `${baseTitle} · ${contactLabel}`;
 }
@@ -43,7 +54,6 @@ function buildAgendaTitle(workType: string, contactName: string) {
 export function AgendaItemForm({
 	mode,
 	agendaItemId,
-	clients,
 	workers,
 	defaultValues,
 }: AgendaItemFormProps) {
@@ -59,17 +69,34 @@ export function AgendaItemForm({
 	}, [defaultValues.assignee_name, defaultValues.assignee_worker_id, workers]);
 	const [selectedWorkerId, setSelectedWorkerId] = useState(initialWorkerId);
 	const [title, setTitle] = useState(defaultValues.title);
-	const [workType, setWorkType] = useState(defaultValues.work_type);
-	const [contactName, setContactName] = useState(defaultValues.contact_name);
+	const [workTypeChoice, setWorkTypeChoice] = useState<AgendaWorkTypeOption>(
+		defaultValues.work_type_choice,
+	);
+	const [workTypeOther, setWorkTypeOther] = useState(defaultValues.work_type_other);
+	const [firstName, setFirstName] = useState(defaultValues.first_name);
+	const [paternalLastName, setPaternalLastName] = useState(
+		defaultValues.paternal_last_name,
+	);
+	const [maternalLastName, setMaternalLastName] = useState(
+		defaultValues.maternal_last_name,
+	);
 	const [addressText, setAddressText] = useState(defaultValues.address_text);
 	const [latitude, setLatitude] = useState(defaultValues.latitude);
 	const [longitude, setLongitude] = useState(defaultValues.longitude);
 	const [isLocating, setIsLocating] = useState(false);
 	const [locationMessage, setLocationMessage] =
 		useState<LocationMessage | null>(null);
+	const workTypeLabel = useMemo(
+		() => resolveWorkTypeLabel(workTypeChoice, workTypeOther),
+		[workTypeChoice, workTypeOther],
+	);
+	const contactName = useMemo(
+		() => buildFullName(firstName, paternalLastName, maternalLastName),
+		[firstName, maternalLastName, paternalLastName],
+	);
 	const generatedTitle = useMemo(
-		() => buildAgendaTitle(workType, contactName),
-		[workType, contactName],
+		() => buildAgendaTitle(workTypeLabel, contactName),
+		[workTypeLabel, contactName],
 	);
 	const [isTitleManuallyEdited, setIsTitleManuallyEdited] = useState(
 		defaultValues.title.trim() !==
@@ -81,12 +108,25 @@ export function AgendaItemForm({
 	);
 	const assigneeSnapshot = selectedWorker?.full_name ?? defaultValues.assignee_name;
 
-	function syncGeneratedTitle(nextWorkType: string, nextContactName: string) {
+	function syncGeneratedTitle(nextWorkTypeLabel: string, nextContactName: string) {
 		if (isTitleManuallyEdited) {
 			return;
 		}
 
-		setTitle(buildAgendaTitle(nextWorkType, nextContactName));
+		setTitle(buildAgendaTitle(nextWorkTypeLabel, nextContactName));
+	}
+
+	function syncGeneratedTitleWithInputs(
+		nextChoice: AgendaWorkTypeOption,
+		nextOther: string,
+		nextFirstName: string,
+		nextPaternalLastName: string,
+		nextMaternalLastName: string,
+	) {
+		syncGeneratedTitle(
+			resolveWorkTypeLabel(nextChoice, nextOther),
+			buildFullName(nextFirstName, nextPaternalLastName, nextMaternalLastName),
+		);
 	}
 
 	function handleTitleChange(nextTitle: string) {
@@ -94,14 +134,59 @@ export function AgendaItemForm({
 		setIsTitleManuallyEdited(nextTitle.trim() !== generatedTitle);
 	}
 
-	function handleWorkTypeChange(nextWorkType: string) {
-		setWorkType(nextWorkType);
-		syncGeneratedTitle(nextWorkType, contactName);
+	function handleWorkTypeChoiceChange(nextChoice: AgendaWorkTypeOption) {
+		setWorkTypeChoice(nextChoice);
+		syncGeneratedTitleWithInputs(
+			nextChoice,
+			workTypeOther,
+			firstName,
+			paternalLastName,
+			maternalLastName,
+		);
 	}
 
-	function handleContactNameChange(nextContactName: string) {
-		setContactName(nextContactName);
-		syncGeneratedTitle(workType, nextContactName);
+	function handleWorkTypeOtherChange(nextOther: string) {
+		setWorkTypeOther(nextOther);
+		syncGeneratedTitleWithInputs(
+			workTypeChoice,
+			nextOther,
+			firstName,
+			paternalLastName,
+			maternalLastName,
+		);
+	}
+
+	function handleFirstNameChange(nextFirstName: string) {
+		setFirstName(nextFirstName);
+		syncGeneratedTitleWithInputs(
+			workTypeChoice,
+			workTypeOther,
+			nextFirstName,
+			paternalLastName,
+			maternalLastName,
+		);
+	}
+
+	function handlePaternalLastNameChange(nextLastName: string) {
+		setPaternalLastName(nextLastName);
+		syncGeneratedTitleWithInputs(
+			workTypeChoice,
+			workTypeOther,
+			firstName,
+			nextLastName,
+			maternalLastName,
+		);
+	}
+
+	function handleMaternalLastNameChange(nextLastName: string) {
+		setMaternalLastName(nextLastName);
+		syncGeneratedTitleWithInputs(
+			workTypeChoice,
+			workTypeOther,
+			firstName,
+			paternalLastName,
+			nextLastName,
+		);
 	}
 
 	function handleUseMyLocation() {
@@ -149,6 +234,8 @@ export function AgendaItemForm({
 			<input type="hidden" name="tipo" value={defaultValues.tipo} />
 			<input type="hidden" name="estado" value={defaultValues.estado} />
 			<input type="hidden" name="assignee_name" value={assigneeSnapshot} />
+			<input type="hidden" name="work_type" value={workTypeLabel} />
+			<input type="hidden" name="contact_name" value={contactName} />
 
 			<div className="rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-4 sm:px-5">
 				<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
@@ -225,20 +312,29 @@ export function AgendaItemForm({
 
 				<div className="space-y-2.5">
 					<label
-						htmlFor="work_type"
+						htmlFor="work_type_choice"
 						className="text-sm font-medium text-[var(--brand-deep)]"
 					>
 						Tipo de trabajo
 					</label>
-					<input
-						id="work_type"
-						name="work_type"
-						value={workType}
-						onChange={(event) => handleWorkTypeChange(event.target.value)}
+					<select
+						id="work_type_choice"
+						name="work_type_choice"
+						value={workTypeChoice}
+						onChange={(event) =>
+							handleWorkTypeChoiceChange(
+								event.target.value as AgendaWorkTypeOption,
+							)
+						}
 						required
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-						placeholder="Visita técnica, revisión, instalación pendiente"
-					/>
+					>
+						{Object.entries(agendaWorkTypeLabels).map(([value, label]) => (
+							<option key={value} value={value}>
+								{label}
+							</option>
+						))}
+					</select>
 				</div>
 
 				<div className="space-y-2.5">
@@ -268,21 +364,75 @@ export function AgendaItemForm({
 					</p>
 				</div>
 
-				<div className="space-y-2.5 md:col-span-2">
+				{workTypeChoice === "otro" ? (
+					<div className="space-y-2.5 md:col-span-2">
+						<label
+							htmlFor="work_type_other"
+							className="text-sm font-medium text-[var(--brand-deep)]"
+						>
+							Otro tipo de trabajo
+						</label>
+						<input
+							id="work_type_other"
+							name="work_type_other"
+							value={workTypeOther}
+							onChange={(event) => handleWorkTypeOtherChange(event.target.value)}
+							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+							placeholder="Describe el tipo de trabajo si hace falta"
+						/>
+					</div>
+				) : null}
+
+				<div className="space-y-2.5">
 					<label
-						htmlFor="contact_name"
+						htmlFor="first_name"
 						className="text-sm font-medium text-[var(--brand-deep)]"
 					>
-						Nombre de contacto
+						Nombre
 					</label>
 					<input
-						id="contact_name"
-						name="contact_name"
-						value={contactName}
-						onChange={(event) => handleContactNameChange(event.target.value)}
+						id="first_name"
+						name="first_name"
+						value={firstName}
+						onChange={(event) => handleFirstNameChange(event.target.value)}
 						required
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-						placeholder="Nombre de quien recibe"
+						placeholder="Nombre"
+					/>
+				</div>
+
+				<div className="space-y-2.5">
+					<label
+						htmlFor="paternal_last_name"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
+						Apellido paterno
+					</label>
+					<input
+						id="paternal_last_name"
+						name="paternal_last_name"
+						value={paternalLastName}
+						onChange={(event) => handlePaternalLastNameChange(event.target.value)}
+						required
+						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						placeholder="Apellido paterno"
+					/>
+				</div>
+
+				<div className="space-y-2.5 md:col-span-2">
+					<label
+						htmlFor="maternal_last_name"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
+						Apellido materno
+					</label>
+					<input
+						id="maternal_last_name"
+						name="maternal_last_name"
+						value={maternalLastName}
+						onChange={(event) => handleMaternalLastNameChange(event.target.value)}
+						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						placeholder="Apellido materno (opcional)"
 					/>
 				</div>
 
@@ -375,28 +525,6 @@ export function AgendaItemForm({
 						Captura las coordenadas del dispositivo y luego ajusta la dirección
 						si hace falta.
 					</p>
-				</div>
-
-				<div className="space-y-2.5 md:col-span-2">
-					<label
-						htmlFor="client_id"
-						className="text-sm font-medium text-[var(--brand-deep)]"
-					>
-						Cliente vinculado
-					</label>
-					<select
-						id="client_id"
-						name="client_id"
-						defaultValue={defaultValues.client_id}
-						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-					>
-						<option value="">Sin cliente asociado</option>
-						{clients.map((client) => (
-							<option key={client.id} value={client.id}>
-								{client.full_name} · {client.rpu}
-							</option>
-						))}
-					</select>
 				</div>
 
 				<div className="space-y-2.5 md:col-span-2">

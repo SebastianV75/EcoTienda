@@ -5,10 +5,14 @@ create table if not exists public.trabajos (
   current_stage text not null default 'agenda' check (current_stage in ('agenda', 'visita', 'cotizacion', 'venta', 'descargables')),
   status text not null default 'open' check (status in ('open', 'won', 'lost', 'archived')),
   intake_name text not null,
+  intake_first_name text,
+  intake_paternal_last_name text,
+  intake_maternal_last_name text,
   intake_phone text not null,
   intake_address_text text not null,
   intake_latitude double precision,
   intake_longitude double precision,
+  work_type text,
   client_id uuid references public.clients (id) on delete set null,
   agenda_completed_at timestamptz,
   visita_completed_at timestamptz,
@@ -27,6 +31,9 @@ create index if not exists trabajos_status_idx
 
 create index if not exists trabajos_client_id_idx
   on public.trabajos (client_id);
+
+create index if not exists trabajos_work_type_idx
+  on public.trabajos (work_type);
 
 create or replace function public.set_trabajos_updated_at()
 returns trigger
@@ -69,6 +76,9 @@ create table if not exists public.trabajo_agenda_stage (
   trabajo_id uuid primary key references public.trabajos (id) on delete cascade,
   appointment_at timestamptz not null,
   work_type text not null,
+  first_name text,
+  paternal_last_name text,
+  maternal_last_name text,
   assignee_name text not null,
   note text not null,
   contact_name text not null,

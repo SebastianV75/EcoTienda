@@ -22,7 +22,7 @@ function formatAgendaTimestamp(value: string) {
 }
 
 export function AgendaItemDetail({ item, role }: AgendaItemDetailProps) {
-	const hasWorkflowBridge = Boolean(item.trabajo_id && item.estado === "pendiente");
+	const hasWorkflowBridge = Boolean(item.trabajo_id);
 
 	return (
 		<div className="space-y-4">

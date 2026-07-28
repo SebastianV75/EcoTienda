@@ -9,7 +9,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
 	agendaItemStates,
 	agendaItemTypes,
+	agendaWorkTypeLabels,
 	type AgendaItemFormValues,
+	type AgendaWorkTypeOption,
 } from "@/types/agenda";
 
 import { buildAppointmentAt } from "./appointment-utils";
@@ -38,10 +40,14 @@ type TrabajoSnapshot = {
 	current_stage?: string;
 	status?: string;
 	intake_name: string | null;
+	intake_first_name: string | null;
+	intake_paternal_last_name: string | null;
+	intake_maternal_last_name: string | null;
 	intake_phone: string | null;
 	intake_address_text: string | null;
 	intake_latitude: number | null;
 	intake_longitude: number | null;
+	work_type: string | null;
 	client_id: string | null;
 	agenda_completed_at?: string | null;
 	visita_completed_at?: string | null;
@@ -53,6 +59,9 @@ type AgendaStageSnapshot = {
 	trabajo_id: string;
 	appointment_at: string;
 	work_type: string;
+	first_name: string;
+	paternal_last_name: string;
+	maternal_last_name: string | null;
 	assignee_worker_id: string | null;
 	assignee_name: string | null;
 	note: string;
@@ -92,6 +101,28 @@ function isAgendaState(value: string): value is AgendaItemFormValues["estado"] {
 	return agendaItemStates.includes(value as AgendaItemFormValues["estado"]);
 }
 
+function isAgendaWorkTypeOption(value: string): value is AgendaWorkTypeOption {
+	return Object.prototype.hasOwnProperty.call(agendaWorkTypeLabels, value);
+}
+
+function resolveWorkTypeLabel(choice: AgendaWorkTypeOption, otherValue: string) {
+	if (choice === "otro") {
+		return otherValue.trim() || agendaWorkTypeLabels.otro;
+	}
+
+	return agendaWorkTypeLabels[choice];
+}
+
+function buildFullName(
+	firstName: string,
+	paternalLastName: string,
+	maternalLastName: string,
+) {
+	return [firstName.trim(), paternalLastName.trim(), maternalLastName.trim()]
+		.filter(Boolean)
+		.join(" ");
+}
+
 function parseFiniteNumber(value: string) {
 	if (!value) {
 		return null;
@@ -107,16 +138,19 @@ function validateAgendaItemInput(formData: FormData) {
 	const tipo = getString(formData, "tipo");
 	const estado = getString(formData, "estado");
 	const title = getString(formData, "title");
-	const workType = getString(formData, "work_type");
+	const workTypeChoice = getString(formData, "work_type_choice");
+	const workTypeOther = getString(formData, "work_type_other");
 	const assigneeWorkerId = getString(formData, "assignee_worker_id");
 	const assigneeName = getString(formData, "assignee_name");
-	const contactName = getString(formData, "contact_name");
+	const firstName = getString(formData, "first_name");
+	const paternalLastName = getString(formData, "paternal_last_name");
+	const maternalLastName = getString(formData, "maternal_last_name");
+	const contactName = buildFullName(firstName, paternalLastName, maternalLastName);
 	const contactPhone = getString(formData, "contact_phone");
 	const addressText = getString(formData, "address_text");
 	const latitude = getString(formData, "latitude");
 	const longitude = getString(formData, "longitude");
 	const descripcion = getString(formData, "descripcion");
-	const clientId = getString(formData, "client_id");
 
 	const missing: string[] = [];
 
@@ -124,9 +158,10 @@ function validateAgendaItemInput(formData: FormData) {
 	if (!hora) missing.push("hora");
 	if (!tipo) missing.push("tipo");
 	if (!estado) missing.push("estado");
-	if (!workType) missing.push("tipo de trabajo");
+	if (!workTypeChoice) missing.push("tipo de trabajo");
 	if (!assigneeWorkerId) missing.push("trabajador asignado");
-	if (!contactName) missing.push("nombre de contacto");
+	if (!firstName) missing.push("nombre");
+	if (!paternalLastName) missing.push("apellido paterno");
 	if (!contactPhone) missing.push("teléfono");
 	if (!addressText) missing.push("dirección");
 	if (!latitude) missing.push("latitud");
@@ -154,6 +189,10 @@ function validateAgendaItemInput(formData: FormData) {
 
 	if (!isAgendaState(estado)) {
 		return { error: "El estado de agenda no es válido.", values: null };
+	}
+
+	if (!isAgendaWorkTypeOption(workTypeChoice)) {
+		return { error: "El tipo de trabajo no es válido.", values: null };
 	}
 
 	if (!title) {
@@ -187,16 +226,20 @@ function validateAgendaItemInput(formData: FormData) {
 			tipo,
 			estado,
 			title,
-			workType,
+			work_type: resolveWorkTypeLabel(workTypeChoice, workTypeOther),
+			work_type_choice: workTypeChoice,
+			work_type_other: workTypeOther,
 			assigneeWorkerId,
 			assigneeName,
+			first_name: firstName,
+			paternal_last_name: paternalLastName,
+			maternal_last_name: maternalLastName,
 			contactName,
 			contactPhone,
 			addressText,
 			latitude: latitudeValue,
 			longitude: longitudeValue,
 			descripcion,
-			clientId: clientId || null,
 		},
 	};
 }
@@ -207,7 +250,10 @@ function getWorkflowStagePayload(
 ) {
 	return {
 		appointment_at: values.appointmentAt,
-		work_type: values.workType,
+		work_type: values.work_type,
+		first_name: values.first_name,
+		paternal_last_name: values.paternal_last_name,
+		maternal_last_name: values.maternal_last_name || null,
 		assignee_worker_id: values.assigneeWorkerId,
 		assignee_name: assigneeName,
 		note: values.descripcion,
@@ -216,7 +262,7 @@ function getWorkflowStagePayload(
 		address_text: values.addressText,
 		latitude: values.latitude,
 		longitude: values.longitude,
-		client_id: values.clientId,
+		client_id: null,
 		completed_at: null,
 	};
 }
@@ -298,11 +344,15 @@ export async function createAgendaItemAction(
 		current_stage: "agenda",
 		status: "open",
 		intake_name: values.contactName,
+		intake_first_name: values.first_name,
+		intake_paternal_last_name: values.paternal_last_name,
+		intake_maternal_last_name: values.maternal_last_name || null,
 		intake_phone: values.contactPhone,
 		intake_address_text: values.addressText,
 		intake_latitude: values.latitude,
 		intake_longitude: values.longitude,
-		client_id: values.clientId,
+		work_type: values.work_type,
+		client_id: null,
 	});
 
 	if (trabajoError) {
@@ -328,7 +378,7 @@ export async function createAgendaItemAction(
 		tipo: values.tipo,
 		estado: values.estado,
 		descripcion: values.descripcion,
-		client_id: values.clientId,
+		client_id: null,
 		visit_id: trabajoId,
 		assignee_worker_id: values.assigneeWorkerId,
 		assignee_name: assigneeWorker.full_name,
@@ -386,7 +436,7 @@ export async function updateAgendaItemAction(
 		tipo: values.tipo,
 		estado: values.estado,
 		descripcion: values.descripcion,
-		client_id: values.clientId,
+		client_id: null,
 		visit_id: agendaItemId,
 		assignee_worker_id: values.assigneeWorkerId,
 		assignee_name: assigneeWorker.full_name,
@@ -403,14 +453,14 @@ export async function updateAgendaItemAction(
 				supabase
 					.from("trabajos")
 					.select(
-						"id, current_stage, status, intake_name, intake_phone, intake_address_text, intake_latitude, intake_longitude, client_id, agenda_completed_at, visita_completed_at",
+						"id, current_stage, status, intake_name, intake_first_name, intake_paternal_last_name, intake_maternal_last_name, intake_phone, intake_address_text, intake_latitude, intake_longitude, work_type, client_id, agenda_completed_at, visita_completed_at",
 					)
 					.eq("id", agendaItemId)
 					.maybeSingle(),
 				supabase
 					.from("trabajo_agenda_stage")
 					.select(
-						"trabajo_id, appointment_at, work_type, assignee_worker_id, assignee_name, note, contact_name, contact_phone, address_text, latitude, longitude, client_id, completed_at",
+						"trabajo_id, appointment_at, work_type, first_name, paternal_last_name, maternal_last_name, assignee_worker_id, assignee_name, note, contact_name, contact_phone, address_text, latitude, longitude, client_id, completed_at",
 					)
 					.eq("trabajo_id", agendaItemId)
 					.maybeSingle(),
@@ -442,11 +492,15 @@ export async function updateAgendaItemAction(
 			.from("trabajos")
 			.update({
 				intake_name: values.contactName,
+				intake_first_name: values.first_name,
+				intake_paternal_last_name: values.paternal_last_name,
+				intake_maternal_last_name: values.maternal_last_name || null,
 				intake_phone: values.contactPhone,
 				intake_address_text: values.addressText,
 				intake_latitude: values.latitude,
 				intake_longitude: values.longitude,
-				client_id: values.clientId,
+				work_type: values.work_type,
+				client_id: null,
 			})
 			.eq("id", agendaItemId);
 

@@ -32,6 +32,9 @@ export type AgendaItem = {
 	assignee_worker_id: string | null;
 	assignee_name: string | null;
 	assignee_worker?: WorkerSummary | null;
+	first_name: string | null;
+	paternal_last_name: string | null;
+	maternal_last_name: string | null;
 	contact_name: string | null;
 	contact_phone: string | null;
 	address_text: string | null;
@@ -49,6 +52,22 @@ export type AgendaItemClientSummary = {
 	rpu: string;
 };
 
+export const agendaWorkTypeOptions = [
+	"minisplit",
+	"paneles_solares",
+	"extension_sistema",
+	"otro",
+] as const;
+
+export type AgendaWorkTypeOption = (typeof agendaWorkTypeOptions)[number];
+
+export const agendaWorkTypeLabels: Record<AgendaWorkTypeOption, string> = {
+	minisplit: "Minisplit",
+	paneles_solares: "Paneles solares",
+	extension_sistema: "Extensión de sistema",
+	otro: "Otro",
+};
+
 export type AgendaItemFormValues = {
 	fecha: string;
 	hora: string;
@@ -56,15 +75,19 @@ export type AgendaItemFormValues = {
 	estado: AgendaItemState;
 	title: string;
 	work_type: string;
+	work_type_choice: AgendaWorkTypeOption;
+	work_type_other: string;
 	assignee_worker_id: string;
 	assignee_name: string;
+	first_name: string;
+	paternal_last_name: string;
+	maternal_last_name: string;
 	contact_name: string;
 	contact_phone: string;
 	address_text: string;
 	latitude: string;
 	longitude: string;
 	descripcion: string;
-	client_id: string;
 };
 
 export const agendaItemTypeLabels: Record<AgendaItemType, string> = {

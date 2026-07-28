@@ -5,8 +5,66 @@ import { AppShell } from "@/components/app-shell";
 import { AgendaItemForm } from "@/features/agenda/agenda-item-form";
 import { getAgendaItemById } from "@/features/agenda/data";
 import { requireRole } from "@/features/auth/session";
-import { getClients } from "@/features/clients/data";
 import { getActiveWorkers } from "@/features/workers/data";
+import {
+	agendaWorkTypeLabels,
+	type AgendaWorkTypeOption,
+} from "@/types/agenda";
+
+function splitFullName(fullName: string | null | undefined) {
+	const parts = (fullName ?? "")
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean);
+
+	if (parts.length === 0) {
+		return {
+			firstName: "",
+			paternalLastName: "",
+			maternalLastName: "",
+		};
+	}
+
+	if (parts.length === 1) {
+		return {
+			firstName: parts[0],
+			paternalLastName: "",
+			maternalLastName: "",
+		};
+	}
+
+	if (parts.length === 2) {
+		return {
+			firstName: parts[0],
+			paternalLastName: parts[1],
+			maternalLastName: "",
+		};
+	}
+
+	return {
+		firstName: parts.slice(0, -2).join(" "),
+		paternalLastName: parts.at(-2) ?? "",
+		maternalLastName: parts.at(-1) ?? "",
+	};
+}
+
+function inferWorkTypeChoice(workType: string | null): {
+	choice: AgendaWorkTypeOption;
+	other: string;
+} {
+	switch ((workType ?? "").trim()) {
+		case agendaWorkTypeLabels.minisplit:
+			return { choice: "minisplit", other: "" };
+		case agendaWorkTypeLabels.paneles_solares:
+			return { choice: "paneles_solares", other: "" };
+		case agendaWorkTypeLabels.extension_sistema:
+			return { choice: "extension_sistema", other: "" };
+		case "":
+			return { choice: "paneles_solares", other: "" };
+		default:
+			return { choice: "otro", other: workType ?? "" };
+	}
+}
 
 export default async function EditAgendaItemPage({
 	params,
@@ -21,17 +79,8 @@ export default async function EditAgendaItemPage({
 		notFound();
 	}
 
-	let clients: Awaited<ReturnType<typeof getClients>> = [];
-	let clientsNotice: string | null = null;
 	let workers: Awaited<ReturnType<typeof getActiveWorkers>> = [];
 	let workersNotice: string | null = null;
-
-	try {
-		clients = await getClients();
-	} catch {
-		clientsNotice =
-			"No pudimos cargar la lista de clientes en este momento. Puedes ajustar el resto del ingreso y reintentar la vinculación más tarde.";
-	}
 
 	try {
 		workers = await getActiveWorkers();
@@ -44,6 +93,9 @@ export default async function EditAgendaItemPage({
 		workersNotice =
 			"No hay trabajadores activos disponibles en este momento. Necesitas al menos uno para guardar estos cambios.";
 	}
+
+	const splitName = splitFullName(item.contact_name ?? item.titulo);
+	const workTypeSelection = inferWorkTypeChoice(item.work_type ?? "");
 
 	return (
 		<AppShell
@@ -68,16 +120,10 @@ export default async function EditAgendaItemPage({
 						Mantén la Agenda alineada con el Trabajo
 					</h1>
 					<p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-						Corrige título, contacto y ubicación desde la misma superficie de
-						intake. El siguiente paso operativo no cambia aquí.
+						Corrige el nombre, la ubicación y el tipo de trabajo desde la misma
+						superficie de intake. El siguiente paso operativo no cambia aquí.
 					</p>
 				</section>
-
-				{clientsNotice ? (
-					<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-						{clientsNotice}
-					</section>
-				) : null}
 
 				{workersNotice ? (
 					<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -89,11 +135,6 @@ export default async function EditAgendaItemPage({
 					<AgendaItemForm
 						mode="edit"
 						agendaItemId={item.id}
-						clients={clients.map((client) => ({
-							id: client.id,
-							full_name: client.full_name,
-							rpu: client.rpu,
-						}))}
 						workers={workers}
 						defaultValues={{
 							fecha: item.fecha,
@@ -104,16 +145,22 @@ export default async function EditAgendaItemPage({
 							estado: item.estado,
 							title: item.titulo,
 							work_type: item.work_type ?? "",
+							work_type_choice: workTypeSelection.choice,
+							work_type_other: workTypeSelection.other,
 							assignee_worker_id: item.assignee_worker_id ?? "",
-							assignee_name: item.assignee_worker?.full_name ?? item.assignee_name ?? "",
-							contact_name:
-								item.contact_name ?? item.client?.full_name ?? item.titulo,
+							assignee_name:
+								item.assignee_worker?.full_name ?? item.assignee_name ?? "",
+							first_name: item.first_name ?? splitName.firstName,
+							paternal_last_name:
+								item.paternal_last_name ?? splitName.paternalLastName,
+							maternal_last_name:
+								item.maternal_last_name ?? splitName.maternalLastName,
+							contact_name: item.contact_name ?? item.titulo,
 							contact_phone: item.contact_phone ?? item.client?.phone ?? "",
 							address_text: item.address_text ?? "",
 							latitude: item.latitude?.toString() ?? "",
 							longitude: item.longitude?.toString() ?? "",
 							descripcion: item.descripcion ?? "",
-							client_id: item.client_id ?? "",
 						}}
 					/>
 				</section>

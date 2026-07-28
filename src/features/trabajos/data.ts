@@ -198,6 +198,7 @@ const trabajoVisitaSelect = `
 	intake_address_text,
 	intake_latitude,
 	intake_longitude,
+	work_type,
 	client_id,
 	agenda_completed_at,
 	visita_completed_at,
@@ -262,6 +263,7 @@ const trabajoListSelect = `
 	status,
 	intake_name,
 	intake_address_text,
+	work_type,
 	created_at,
 	agenda:trabajo_agenda_stage (
 		work_type,
@@ -285,6 +287,7 @@ const trabajoDocumentSelect = `
 	intake_address_text,
 	intake_latitude,
 	intake_longitude,
+	work_type,
 	client_id,
 	agenda_completed_at,
 	visita_completed_at,
@@ -495,6 +498,7 @@ type TrabajoListRow = {
 	status: TrabajoStatus;
 	intake_name: string;
 	intake_address_text: string;
+	work_type: string | null;
 	created_at: string;
 	agenda: TrabajoListAgendaRow | TrabajoListAgendaRow[] | null;
 	client: { full_name: string } | { full_name: string }[] | null;
@@ -520,7 +524,7 @@ function normalizeTrabajoListRow(row: TrabajoListRow): TrabajoListItem {
 		intake_address_text: row.intake_address_text,
 		created_at: row.created_at,
 		client_name: client?.full_name ?? null,
-		agenda_work_type: agenda?.work_type ?? null,
+		agenda_work_type: row.work_type ?? agenda?.work_type ?? null,
 		assigned_worker_name:
 			agendaWorker?.full_name ?? agenda?.assignee_name?.trim() ?? null,
 		appointment_at: agenda?.appointment_at ?? null,

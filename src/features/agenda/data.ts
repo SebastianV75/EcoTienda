@@ -33,6 +33,9 @@ type WorkflowAgendaItemRow = {
 	trabajo_id: string;
 	appointment_at: string;
 	work_type: string;
+	first_name: string | null;
+	paternal_last_name: string | null;
+	maternal_last_name: string | null;
 	assignee_worker_id: string | null;
 	assignee_name: string | null;
 	assignee_worker: AgendaWorkerSummaryRow;
@@ -80,6 +83,9 @@ const workflowAgendaSelect = `
 	trabajo_id,
 	appointment_at,
 	work_type,
+	first_name,
+	paternal_last_name,
+	maternal_last_name,
 	assignee_worker_id,
 	assignee_name,
 	assignee_worker:workers (
@@ -146,6 +152,9 @@ function normalizeAgendaItem(row: AgendaItemRow): AgendaItem {
 		assignee_worker_id: row.assignee_worker_id,
 		assignee_name: row.assignee_name,
 		assignee_worker: normalizeWorker(row.assignee_worker),
+		first_name: null,
+		paternal_last_name: null,
+		maternal_last_name: null,
 		contact_name: null,
 		contact_phone: null,
 		address_text: null,
@@ -160,7 +169,7 @@ function normalizeAgendaItem(row: AgendaItemRow): AgendaItem {
 function normalizeWorkflowAgendaItem(row: WorkflowAgendaItemRow): AgendaItem {
 	return {
 		id: row.trabajo_id,
-		fecha: row.appointment_at.slice(0, 10),
+		fecha: row.appointment_at?.slice(0, 10) ?? "",
 		appointment_at: row.appointment_at,
 		titulo: row.contact_name || row.work_type,
 		tipo: "visita_tecnica",
@@ -173,6 +182,9 @@ function normalizeWorkflowAgendaItem(row: WorkflowAgendaItemRow): AgendaItem {
 		assignee_worker_id: row.assignee_worker_id,
 		assignee_name: row.assignee_name,
 		assignee_worker: normalizeWorker(row.assignee_worker),
+		first_name: row.first_name,
+		paternal_last_name: row.paternal_last_name,
+		maternal_last_name: row.maternal_last_name,
 		contact_name: row.contact_name,
 		contact_phone: row.contact_phone,
 		address_text: row.address_text,
