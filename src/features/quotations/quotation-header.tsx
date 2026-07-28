@@ -1,11 +1,14 @@
 "use client";
 
+import { DatePicker } from "./date-picker";
+
 type QuotationHeaderProps = {
 	quotationNumber?: string | null;
 	status?: string | null;
 	orderDeadline?: string | null;
 	project?: string | null;
 	isEditing?: boolean;
+	onFieldChange?: () => void;
 };
 
 export function QuotationHeader({
@@ -14,6 +17,7 @@ export function QuotationHeader({
 	orderDeadline,
 	project,
 	isEditing,
+	onFieldChange,
 }: QuotationHeaderProps) {
 	return (
 		<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
@@ -39,6 +43,7 @@ export function QuotationHeader({
 							defaultValue=""
 							required
 							placeholder="Nombre del cliente"
+							onChange={onFieldChange}
 							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						/>
 					)}
@@ -55,10 +60,10 @@ export function QuotationHeader({
 						<select
 							id="status"
 							name="status"
-							defaultValue={status ?? ""}
+							defaultValue={status ?? "draft"}
+							onChange={onFieldChange}
 							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						>
-							<option value="">Selecciona un estado</option>
 							<option value="draft">Borrador</option>
 							<option value="sent">Enviada</option>
 							<option value="accepted">Aceptada</option>
@@ -68,17 +73,17 @@ export function QuotationHeader({
 
 					<div className="space-y-2.5">
 						<label
-							htmlFor="order_deadline"
+							htmlFor="order_deadline_display"
 							className="text-sm font-medium text-[var(--brand-deep)]"
 						>
 							Cotización válida hasta
 						</label>
-						<input
-							id="order_deadline"
+						<DatePicker
+							id="order_deadline_display"
 							name="order_deadline"
-							type="date"
-							defaultValue={orderDeadline ?? ""}
-							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+							value={orderDeadline}
+							onChange={onFieldChange}
+							placeholder="Seleccionar fecha"
 						/>
 					</div>
 

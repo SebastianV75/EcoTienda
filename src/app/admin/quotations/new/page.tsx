@@ -10,6 +10,10 @@ export default async function NewQuotationPage({
 	const user = await requireRole(["admin"]);
 	const params = searchParams ? await searchParams : undefined;
 
+	// Establecer fecha actual como valor por defecto
+	const today = new Date();
+	const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
 	return (
 		<AppShell
 			role="admin"
@@ -17,7 +21,18 @@ export default async function NewQuotationPage({
 			description="Crea una nueva solicitud de cotización con datos del proveedor, productos y términos."
 			email={user.email}
 		>
-			<QuotationForm initialData={{ quotation_number: null, trabajo_id: params?.trabajoId ?? null, supplier_name: "", project: null, status: null, terms_and_conditions: null, order_deadline: null, expected_delivery: null, items: [] }} />
+			<QuotationForm initialData={{
+				quotation_number: null,
+				quotation_id: null,
+				trabajo_id: params?.trabajoId ?? null,
+				supplier_name: "",
+				project: null,
+				status: "draft",
+				terms_and_conditions: null,
+				order_deadline: todayString,
+				expected_delivery: null,
+				items: []
+			}} />
 		</AppShell>
 	);
 }

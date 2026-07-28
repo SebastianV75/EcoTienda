@@ -11,6 +11,13 @@ import type { QuotationItem } from "@/types/quotation";
 export type QuotationActionState = {
 	error: string | null;
 	success?: boolean;
+	quotationId?: string;
+};
+
+export type DraftSaveState = {
+	success: boolean;
+	quotationId?: string;
+	error?: string;
 };
 
 function getString(formData: FormData, key: string) {
@@ -267,4 +274,121 @@ export async function updateQuotationAction(
 		revalidatePath(`/admin/visits/${trabajoId}`);
 	}
 	redirect(`/admin/quotations/${quotation.id}`);
+}
+
+export async function saveDraftAction(
+	data: {
+		quotationId?: string;
+		trabajoId?: string;
+		supplierName?: string;
+		project?: string;
+		status?: string;
+		termsAndConditions?: string;
+		orderDeadline?: string;
+		expectedDelivery?: string;
+		items?: QuotationItem[];
+	},
+): Promise<DraftSaveState> {
+	const supabase = await createSupabaseServerClient();
+
+	const items = data.items ?? [];
+	const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
+	const total = items.reduce((sum, item) => {
+		const taxAmount = item.amount * (item.tax_rate / 100);
+		return sum + item.amount + taxAmount;
+	}, 0);
+
+	// Si ya existe una cotización, actualizarla
+	if (data.quotationId) {
+		const { error: quotationError } = await supabase
+			.from("quotations")
+			.update({
+				trabajo_id: data.trabajoId || null,
+				supplier_name: data.supplierName || null,
+				project: data.project || null,
+				status: data.status || "draft",
+				terms_and_conditions: data.termsAndConditions || null,
+				order_deadline: data.orderDeadline || null,
+				expected_delivery: data.expectedDelivery || null,
+				subtotal,
+				total,
+			})
+			.eq("id", data.quotationId);
+
+		if (quotationError) {
+			return { success: false, error: "No se pudo guardar el borrador." };
+		}
+
+		// Eliminar items existentes
+		await supabase
+			.from("quotation_items")
+			.delete()
+			.eq("quotation_id", data.quotationId);
+
+		// Insertar nuevos items
+		if (items.length > 0) {
+			const itemsWithQuotationId = items.map((item, index) => ({
+				quotation_id: data.quotationId,
+				type: item.type || "product",
+				product_name: item.product_name,
+				quantity: item.quantity,
+				unit: item.unit,
+				unit_price: item.unit_price,
+				tax_rate: item.tax_rate,
+				amount: item.amount,
+				sort_order: index,
+			}));
+
+			await supabase
+				.from("quotation_items")
+				.insert(itemsWithQuotationId);
+		}
+
+		return { success: true, quotationId: data.quotationId };
+	}
+
+	// Crear nueva cotización como borrador
+	const quotationNumber = await generateQuotationNumber();
+
+	const { data: quotation, error: quotationError } = await supabase
+		.from("quotations")
+		.insert({
+			quotation_number: quotationNumber,
+			trabajo_id: data.trabajoId || null,
+			supplier_name: data.supplierName || null,
+			project: data.project || null,
+			terms_and_conditions: data.termsAndConditions || null,
+			order_deadline: data.orderDeadline || null,
+			expected_delivery: data.expectedDelivery || null,
+			subtotal,
+			total,
+			status: "draft",
+		})
+		.select("id")
+		.single();
+
+	if (quotationError || !quotation) {
+		return { success: false, error: "No se pudo crear el borrador." };
+	}
+
+	// Guardar items si existen
+	if (items.length > 0) {
+		const itemsWithQuotationId = items.map((item, index) => ({
+			quotation_id: quotation.id,
+			type: item.type || "product",
+			product_name: item.product_name,
+			quantity: item.quantity,
+			unit: item.unit,
+			unit_price: item.unit_price,
+			tax_rate: item.tax_rate,
+			amount: item.amount,
+			sort_order: index,
+		}));
+
+		await supabase
+			.from("quotation_items")
+			.insert(itemsWithQuotationId);
+	}
+
+	return { success: true, quotationId: quotation.id };
 }
