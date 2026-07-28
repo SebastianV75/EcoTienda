@@ -32,20 +32,20 @@ export function VisitaAttributeGroup({ group, attributes, title }: VisitaAttribu
 	const keys = [...knownKeys, ...unknownKeys];
 
 	return (
-		<div className="space-y-2 md:col-span-2">
-			<p className="text-xs font-medium text-[var(--brand-strong)]">{title}</p>
+		<div className="space-y-3 md:col-span-2">
+			<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">{title}</p>
 			<div className="grid gap-4 md:grid-cols-2">
 				{keys.map((key) => {
 					const label = getVisitaAttributeLabel(group, key);
 					const value = getVisitaAttributeValue(attributes[key], key);
 
 					return (
-						<div key={key} className="space-y-2">
-							<p className="text-xs font-medium text-[var(--brand-strong)]">{label}</p>
+						<div key={key} className="space-y-1.5">
+							<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">{label}</p>
 							{value.kind === "media" ? (
 								<VisitaAttributeImage src={value.text} alt={label} />
 							) : (
-								<p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">
+								<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
 									{value.text}
 								</p>
 							)}

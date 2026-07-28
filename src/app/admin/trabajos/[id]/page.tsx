@@ -70,11 +70,11 @@ export default async function TrabajoDetailPage({
 			description="Vista unificada del trabajo"
 			email={user.email}
 		>
-			<div className="space-y-4">
+			<div className="space-y-4 overflow-hidden">
 				<section className="rounded-panel border border-[var(--border-soft)] bg-white p-5 shadow-panel sm:p-6">
 					<div className="flex flex-col gap-5">
 						<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-							<div className="min-w-0">
+							<div className="min-w-0 flex-1">
 								<p className="text-xs font-semibold uppercase tracking-eyebrow text-[var(--brand-strong)]">
 									Trabajo en curso
 								</p>
@@ -95,7 +95,7 @@ export default async function TrabajoDetailPage({
 								</div>
 							</div>
 
-							<Link href="/admin/trabajos" className="ui-secondary-action">
+							<Link href="/admin/trabajos" className="ui-secondary-action shrink-0">
 								Volver a Trabajos
 							</Link>
 						</div>
@@ -180,8 +180,12 @@ export default async function TrabajoDetailPage({
 											href={`https://maps.google.com/?q=${trabajo.agenda.latitude},${trabajo.agenda.longitude}`}
 											target="_blank"
 											rel="noopener noreferrer"
-											className="inline-flex items-center gap-1.5 text-sm text-[var(--brand)] hover:underline"
+											className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-[var(--brand-deep)] transition-colors hover:bg-emerald-100"
 										>
+											<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+											</svg>
 											Ver en Google Maps
 										</a>
 									</div>
@@ -202,59 +206,59 @@ export default async function TrabajoDetailPage({
 							</p>
 						) : (
 							<div className="grid gap-4 md:grid-cols-2">
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Fecha de ejecución
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{formatDate(trabajo.visita.execution_date)}
 									</p>
 								</div>
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Contacto
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{getDisplayValue(trabajo.visita.contact_name)}
 									</p>
 								</div>
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Teléfono
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{getDisplayValue(trabajo.visita.contact_phone)}
 									</p>
 								</div>
-								<div className="space-y-2 md:col-span-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5 md:col-span-2">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Dirección confirmada
 									</p>
-									<p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">
+									<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
 										{getDisplayValue(trabajo.visita.confirmed_address)}
 									</p>
 								</div>
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Paquete de interés
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{getDisplayValue(trabajo.visita.interest_package)}
 									</p>
 								</div>
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Tipo de cotización
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{getDisplayValue(trabajo.visita.quotation_type)}
 									</p>
 								</div>
-								<div className="space-y-2 md:col-span-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5 md:col-span-2">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Notas
 									</p>
-									<p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">
+									<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
 										{getDisplayValue(trabajo.visita.notes)}
 									</p>
 								</div>
@@ -426,10 +430,10 @@ export default async function TrabajoDetailPage({
 								{trabajo.media_assets.map((asset) => (
 									<div
 										key={asset.id}
-										className="flex items-center justify-between rounded-soft border border-[var(--border-soft)] bg-white p-4"
+										className="flex flex-col gap-3 rounded-soft border border-[var(--border-soft)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
 									>
 										<div className="flex items-center gap-3 min-w-0">
-											<div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface)]">
+											<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--surface)]">
 												<svg
 													className="h-5 w-5 text-[var(--brand)]"
 													fill="none"
@@ -444,8 +448,8 @@ export default async function TrabajoDetailPage({
 													/>
 												</svg>
 											</div>
-											<div>
-												<p className="text-sm font-medium text-[var(--foreground)]">
+											<div className="min-w-0">
+												<p className="text-sm font-medium text-[var(--foreground)] truncate">
 													{asset.kind || "Documento"}
 												</p>
 												<p className="text-xs text-[var(--muted)]">
@@ -458,7 +462,7 @@ export default async function TrabajoDetailPage({
 											href={asset.storage_path}
 											target="_blank"
 											rel="noopener noreferrer"
-											className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-strong)]"
+											className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-strong)]"
 										>
 											Descargar
 										</a>
