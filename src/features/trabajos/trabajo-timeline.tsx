@@ -98,9 +98,9 @@ export function TrabajoTimeline({
 
 	return (
 		<>
-			{/* Mobile: Compact Vertical Timeline */}
+			{/* Mobile: Ultra-Compact Vertical Timeline */}
 			<div className="block sm:hidden">
-				<div className="space-y-2">
+				<div className="space-y-1">
 					{stages.map((stage, index) => {
 						const label = trabajoStageLabels[stage as TrabajoStage];
 						const isCompleted = completedStages.includes(stage);
@@ -110,13 +110,13 @@ export function TrabajoTimeline({
 							<div key={stage} className="flex items-center gap-2">
 								<div className="flex flex-col items-center">
 									<div
-										className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border transition-[background-color,border-color,color] duration-200 ease-out ${getNodeStyles({ isCompleted, isCurrent })}`}
+										className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border transition-[background-color,border-color,color] duration-200 ease-out ${getNodeStyles({ isCompleted, isCurrent })}`}
 									>
 										{getStageIcon(stage, isCompleted)}
 									</div>
 									{index < stages.length - 1 && (
 										<div
-											className={`w-px h-4 mt-1 ${getConnectorStyles({ isCompleted, isCurrent })}`}
+											className={`w-px h-3 mt-0.5 ${getConnectorStyles({ isCompleted, isCurrent })}`}
 										/>
 									)}
 								</div>
@@ -146,22 +146,22 @@ export function TrabajoTimeline({
 							return (
 								<div
 									key={stage}
-									className={`flex items-start ${isLast ? "" : "pr-3 sm:pr-4"}`}
+									className={`flex items-start ${isLast ? "" : "pr-2 sm:pr-3"}`}
 								>
-									<div className="flex w-[80px] flex-col items-center text-center sm:w-[96px]">
+									<div className="flex w-[70px] flex-col items-center text-center sm:w-[80px]">
 										<div
-											className={`grid h-9 w-9 place-items-center rounded-full border text-sm font-semibold transition-[background-color,border-color,color,box-shadow] duration-200 ease-out ${getNodeStyles({ isCompleted, isCurrent })}`}
+											className={`grid h-8 w-8 place-items-center rounded-full border text-sm font-semibold transition-[background-color,border-color,color,box-shadow] duration-200 ease-out ${getNodeStyles({ isCompleted, isCurrent })}`}
 										>
 											{getStageIcon(stage, isCompleted)}
 										</div>
 										<p
-											className={`mt-1.5 text-xs font-medium leading-tight ${isCurrent ? "text-[var(--brand-deep)]" : "text-[var(--muted)]"}`}
+											className={`mt-1 text-xs font-medium leading-tight ${isCurrent ? "text-[var(--brand-deep)]" : "text-[var(--muted)]"}`}
 										>
 											{label}
 										</p>
 									</div>
 									{!isLast ? (
-										<div className="mt-4.5 flex min-w-[12px] flex-1 items-center">
+										<div className="mt-4 flex min-w-[10px] flex-1 items-center">
 											<div
 												aria-hidden="true"
 												className={`h-px w-full rounded-full ${getConnectorStyles({ isCompleted, isCurrent })}`}

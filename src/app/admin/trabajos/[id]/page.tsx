@@ -122,58 +122,58 @@ export default async function TrabajoDetailPage({
 							</p>
 						) : (
 							<div className="grid gap-4 md:grid-cols-2">
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Cita programada
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{formatDateTime(trabajo.agenda.appointment_at)}
 									</p>
 								</div>
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Tipo de trabajo
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{getDisplayValue(trabajo.agenda.work_type)}
 									</p>
 								</div>
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Asignado a
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{getDisplayValue(trabajo.agenda.assignee_name)}
 									</p>
 								</div>
-								<div className="space-y-2 md:col-span-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5 md:col-span-2">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Nota
 									</p>
-									<p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">
+									<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
 										{getDisplayValue(trabajo.agenda.note)}
 									</p>
 								</div>
-								<div className="space-y-2 md:col-span-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5 md:col-span-2">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Contacto
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{getDisplayValue(trabajo.agenda.contact_name)} —{" "}
 										{getDisplayValue(trabajo.agenda.contact_phone)}
 									</p>
 								</div>
-								<div className="space-y-2 md:col-span-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5 md:col-span-2">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Dirección
 									</p>
-									<p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">
+									<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
 										{getDisplayValue(trabajo.agenda.address_text)}
 									</p>
 								</div>
 								{trabajo.agenda.latitude && trabajo.agenda.longitude && (
-									<div className="space-y-2">
-										<p className="text-xs font-medium text-[var(--brand-strong)]">
+									<div className="space-y-1.5">
+										<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 											Ubicación
 										</p>
 										<a
@@ -308,46 +308,46 @@ export default async function TrabajoDetailPage({
 							</p>
 						) : (
 							<div className="grid gap-4 md:grid-cols-2">
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Alcance
 									</p>
-									<p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">
+									<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
 										{getDisplayValue(trabajo.cotizacion.scope_summary)}
 									</p>
 								</div>
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Monto
 									</p>
-									<p className="text-sm font-semibold text-[var(--brand-deep)]">
+									<p className="text-base font-semibold text-[var(--brand-deep)]">
 										$
 										{Number(trabajo.cotizacion.amount).toLocaleString("es-MX", {
 											minimumFractionDigits: 2,
 										})}
 									</p>
 								</div>
-								<div className="space-y-2 md:col-span-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5 md:col-span-2">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Términos y condiciones
 									</p>
-									<p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">
+									<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
 										{getDisplayValue(trabajo.cotizacion.terms_and_conditions)}
 									</p>
 								</div>
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Resultado
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{getDisplayValue(trabajo.cotizacion.outcome)}
 									</p>
 								</div>
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Tipo de cotización
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{getDisplayValue(trabajo.cotizacion.quotation_type)}
 									</p>
 								</div>
@@ -383,19 +383,19 @@ export default async function TrabajoDetailPage({
 							)
 						) : (
 							<div className="grid gap-4 md:grid-cols-2">
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Fecha de confirmación
 									</p>
-									<p className="text-sm text-[var(--foreground)]">
+									<p className="text-sm font-medium text-[var(--foreground)]">
 										{formatDate(trabajo.venta.confirmed_on)}
 									</p>
 								</div>
-								<div className="space-y-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Monto acordado
 									</p>
-									<p className="text-sm font-semibold text-[var(--brand-deep)]">
+									<p className="text-base font-semibold text-[var(--brand-deep)]">
 										$
 										{Number(trabajo.venta.agreed_amount).toLocaleString(
 											"es-MX",
@@ -403,11 +403,11 @@ export default async function TrabajoDetailPage({
 										)}
 									</p>
 								</div>
-								<div className="space-y-2 md:col-span-2">
-									<p className="text-xs font-medium text-[var(--brand-strong)]">
+								<div className="space-y-1.5 md:col-span-2">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Notas
 									</p>
-									<p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">
+									<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
 										{getDisplayValue(trabajo.venta.notes)}
 									</p>
 								</div>
