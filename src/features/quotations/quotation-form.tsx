@@ -49,7 +49,7 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 		initialState,
 	);
 	const [activeTab, setActiveTab] = useState<"products" | "other">(
-		initialData.supplier_name.trim() ? "products" : "other",
+		(initialData.supplier_name ?? "").trim() ? "products" : "other",
 	);
 	const [items, setItems] = useState<QuotationItem[]>(initialData.items);
 	const [quotationId, setQuotationId] = useState<string | null>(initialData.quotation_id ?? null);
