@@ -105,12 +105,10 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 		formData.append("quotation_id", quotation.id);
 		formData.append("trabajo_id", quotation.trabajo_id || "");
 		
-		const result = await confirmAction(formData);
+		await confirmAction(formData);
 		
-		if (result.success) {
-			// Forzar recarga de la página para actualizar la lista
-			window.location.reload();
-		}
+		// Forzar recarga de la página para actualizar la lista
+		window.location.reload();
 	}
 
 	return (

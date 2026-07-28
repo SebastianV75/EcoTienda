@@ -42,6 +42,7 @@ type WorkflowAgendaItemRow = {
 	note: string;
 	contact_name: string;
 	contact_phone: string;
+	email: string | null;
 	address_text: string;
 	latitude: number | null;
 	longitude: number | null;
@@ -157,6 +158,7 @@ function normalizeAgendaItem(row: AgendaItemRow): AgendaItem {
 		maternal_last_name: null,
 		contact_name: null,
 		contact_phone: null,
+		email: null,
 		address_text: null,
 		latitude: null,
 		longitude: null,
@@ -187,6 +189,7 @@ function normalizeWorkflowAgendaItem(row: WorkflowAgendaItemRow): AgendaItem {
 		maternal_last_name: row.maternal_last_name,
 		contact_name: row.contact_name,
 		contact_phone: row.contact_phone,
+		email: row.email ?? null,
 		address_text: row.address_text,
 		latitude: row.latitude,
 		longitude: row.longitude,

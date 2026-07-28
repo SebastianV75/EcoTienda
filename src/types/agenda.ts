@@ -37,6 +37,7 @@ export type AgendaItem = {
 	maternal_last_name: string | null;
 	contact_name: string | null;
 	contact_phone: string | null;
+	email: string | null;
 	address_text: string | null;
 	latitude: number | null;
 	longitude: number | null;
@@ -84,6 +85,7 @@ export type AgendaItemFormValues = {
 	maternal_last_name: string;
 	contact_name: string;
 	contact_phone: string;
+	email: string;
 	address_text: string;
 	latitude: string;
 	longitude: string;

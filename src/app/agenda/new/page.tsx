@@ -35,6 +35,7 @@ function buildDefaultValues(date?: string): AgendaItemFormValues {
 		maternal_last_name: "",
 		contact_name: "",
 		contact_phone: "",
+		email: "",
 		address_text: "",
 		latitude: "",
 		longitude: "",

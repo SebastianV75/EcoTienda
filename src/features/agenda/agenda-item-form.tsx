@@ -83,6 +83,7 @@ export function AgendaItemForm({
 	const [addressText, setAddressText] = useState(defaultValues.address_text);
 	const [latitude, setLatitude] = useState(defaultValues.latitude);
 	const [longitude, setLongitude] = useState(defaultValues.longitude);
+	const [email, setEmail] = useState(defaultValues.email || "");
 	const [isLocating, setIsLocating] = useState(false);
 	const [locationMessage, setLocationMessage] =
 		useState<LocationMessage | null>(null);
@@ -236,6 +237,7 @@ export function AgendaItemForm({
 			<input type="hidden" name="assignee_name" value={assigneeSnapshot} />
 			<input type="hidden" name="work_type" value={workTypeLabel} />
 			<input type="hidden" name="contact_name" value={contactName} />
+			<input type="hidden" name="email" value={email} />
 
 			<div className="rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-4 sm:px-5">
 				<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
@@ -436,20 +438,56 @@ export function AgendaItemForm({
 					/>
 				</div>
 
+<div className="space-y-2.5">
+				<label
+					htmlFor="contact_phone"
+					className="text-sm font-medium text-[var(--brand-deep)]"
+				>
+					Teléfono
+				</label>
+				<input
+					id="contact_phone"
+					name="contact_phone"
+					defaultValue={defaultValues.contact_phone}
+					required
+					className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+					placeholder="Teléfono de contacto"
+				/>
+			</div>
+
+			<div className="space-y-2.5">
+				<label
+					htmlFor="email"
+					className="text-sm font-medium text-[var(--brand-deep)]"
+				>
+					Email
+				</label>
+				<input
+					id="email"
+					name="email"
+					type="email"
+					value={email}
+					onChange={(event) => setEmail(event.target.value)}
+					className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+					placeholder="email@ejemplo.com"
+				/>
+			</div>
+
 				<div className="space-y-2.5">
 					<label
-						htmlFor="contact_phone"
+						htmlFor="email"
 						className="text-sm font-medium text-[var(--brand-deep)]"
 					>
-						Teléfono
+						Email
 					</label>
 					<input
-						id="contact_phone"
-						name="contact_phone"
-						defaultValue={defaultValues.contact_phone}
-						required
+						id="email"
+						name="email"
+						type="email"
+						value={email}
+						onChange={(event) => setEmail(event.target.value)}
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-						placeholder="Teléfono de contacto"
+						placeholder="email@ejemplo.com"
 					/>
 				</div>
 
@@ -470,6 +508,20 @@ export function AgendaItemForm({
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						placeholder="Dirección completa"
 					/>
+					{/* Mini mapa de Google Maps */}
+					{(addressText || latitude || longitude) && (
+						<div className="mt-3 rounded-xl overflow-hidden border border-[var(--border-soft)]">
+							<iframe
+								width="100%"
+								height={200}
+								frameBorder="0"
+								style={{ border: 0 }}
+								src={`https://maps.google.com/maps?q=${encodeURIComponent(addressText || `${latitude},${longitude}`)}&hl=es&z=15&output=embed`}
+								allowFullScreen
+								title="Ubicación en Google Maps"
+							/>
+						</div>
+					)}
 				</div>
 
 				<div className="space-y-2.5">

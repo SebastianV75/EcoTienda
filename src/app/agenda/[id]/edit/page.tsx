@@ -157,6 +157,7 @@ export default async function EditAgendaItemPage({
 								item.maternal_last_name ?? splitName.maternalLastName,
 							contact_name: item.contact_name ?? item.titulo,
 							contact_phone: item.contact_phone ?? item.client?.phone ?? "",
+							email: item.email ?? "",
 							address_text: item.address_text ?? "",
 							latitude: item.latitude?.toString() ?? "",
 							longitude: item.longitude?.toString() ?? "",
