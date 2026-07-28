@@ -58,26 +58,46 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 	const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const hasChangesRef = useRef(false);
 
+	// Estado controlado para todos los campos del formulario
+	const [formData, setFormData] = useState({
+		supplier_name: initialData.supplier_name,
+		project: initialData.project ?? "",
+		status: initialData.status ?? "draft",
+		terms_and_conditions: initialData.terms_and_conditions ?? "",
+		order_deadline: initialData.order_deadline ?? "",
+		expected_delivery: initialData.expected_delivery ?? "",
+		trabajo_id: initialData.trabajo_id ?? "",
+	});
+
+	// Función para actualizar un campo del formulario
+	const updateField = useCallback((field: string, value: string) => {
+		setFormData(prev => ({ ...prev, [field]: value }));
+		hasChangesRef.current = true;
+		
+		if (saveTimeoutRef.current) {
+			clearTimeout(saveTimeoutRef.current);
+		}
+
+		saveTimeoutRef.current = setTimeout(() => {
+			saveDraft();
+		}, 2000);
+	}, []);
+
 	// Función para guardar borrador
 	const saveDraft = useCallback(async () => {
 		if (!hasChangesRef.current) return;
 
 		setIsSaving(true);
 		try {
-			// Obtener valores actuales del formulario
-			const form = document.querySelector("form");
-			if (!form) return;
-
-			const formData = new FormData(form);
 			const result = await saveDraftAction({
 				quotationId: quotationId ?? undefined,
-				trabajoId: formData.get("trabajo_id")?.toString() || undefined,
-				supplierName: formData.get("supplier_name")?.toString() || undefined,
-				project: formData.get("project")?.toString() || undefined,
-				status: formData.get("status")?.toString() || "draft",
-				termsAndConditions: formData.get("terms_and_conditions")?.toString() || undefined,
-				orderDeadline: formData.get("order_deadline")?.toString() || undefined,
-				expectedDelivery: formData.get("expected_delivery")?.toString() || undefined,
+				trabajoId: formData.trabajo_id || undefined,
+				supplierName: formData.supplier_name || undefined,
+				project: formData.project || undefined,
+				status: formData.status || "draft",
+				termsAndConditions: formData.terms_and_conditions || undefined,
+				orderDeadline: formData.order_deadline || undefined,
+				expectedDelivery: formData.expected_delivery || undefined,
 				items: items,
 			});
 
@@ -91,33 +111,33 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 		} finally {
 			setIsSaving(false);
 		}
-	}, [quotationId, items]);
+	}, [quotationId, items, formData]);
 
-	// Función para marcar cambios y programar autoguardado
-	const scheduleAutoSave = useCallback(() => {
-		hasChangesRef.current = true;
-
+	// Actualizar la referencia de saveDraft cuando cambien las dependencias
+	useEffect(() => {
 		if (saveTimeoutRef.current) {
 			clearTimeout(saveTimeoutRef.current);
+			saveTimeoutRef.current = setTimeout(() => {
+				saveDraft();
+			}, 2000);
 		}
-
-		saveTimeoutRef.current = setTimeout(() => {
-			saveDraft();
-		}, 2000); // 2 segundos de debounce
 	}, [saveDraft]);
 
 	// Guardar al salir de la página
 	useEffect(() => {
-		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+		const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
 			if (hasChangesRef.current) {
 				e.preventDefault();
 				e.returnValue = "";
+				
+				// Intentar guardar antes de cerrar
+				await saveDraft();
 			}
 		};
 
 		window.addEventListener("beforeunload", handleBeforeUnload);
 		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-	}, []);
+	}, [saveDraft]);
 
 	// Limpiar timeout al desmontar
 	useEffect(() => {
@@ -132,17 +152,41 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 		const updated = [...items];
 		updated[index] = item;
 		setItems(updated);
-		scheduleAutoSave();
+		hasChangesRef.current = true;
+		
+		if (saveTimeoutRef.current) {
+			clearTimeout(saveTimeoutRef.current);
+		}
+
+		saveTimeoutRef.current = setTimeout(() => {
+			saveDraft();
+		}, 2000);
 	}
 
 	function handleItemRemove(index: number) {
 		setItems(items.filter((_, i) => i !== index));
-		scheduleAutoSave();
+		hasChangesRef.current = true;
+		
+		if (saveTimeoutRef.current) {
+			clearTimeout(saveTimeoutRef.current);
+		}
+
+		saveTimeoutRef.current = setTimeout(() => {
+			saveDraft();
+		}, 2000);
 	}
 
 	function handleAddProduct() {
 		setItems([...items, createEmptyItem(items.length)]);
-		scheduleAutoSave();
+		hasChangesRef.current = true;
+		
+		if (saveTimeoutRef.current) {
+			clearTimeout(saveTimeoutRef.current);
+		}
+
+		saveTimeoutRef.current = setTimeout(() => {
+			saveDraft();
+		}, 2000);
 	}
 
 	function handleAddSection() {
@@ -155,7 +199,15 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 				unit: "",
 			},
 		]);
-		scheduleAutoSave();
+		hasChangesRef.current = true;
+		
+		if (saveTimeoutRef.current) {
+			clearTimeout(saveTimeoutRef.current);
+		}
+
+		saveTimeoutRef.current = setTimeout(() => {
+			saveDraft();
+		}, 2000);
 	}
 
 	function handleAddNote() {
@@ -171,7 +223,15 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 				amount: 0,
 			},
 		]);
-		scheduleAutoSave();
+		hasChangesRef.current = true;
+		
+		if (saveTimeoutRef.current) {
+			clearTimeout(saveTimeoutRef.current);
+		}
+
+		saveTimeoutRef.current = setTimeout(() => {
+			saveDraft();
+		}, 2000);
 	}
 
 	const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
@@ -208,11 +268,11 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 
 				<QuotationHeader
 					quotationNumber={initialData.quotation_number}
-					status={initialData.status}
-					orderDeadline={initialData.order_deadline}
+					status={formData.status}
+					orderDeadline={formData.order_deadline}
 					project={initialData.project}
 					isEditing={isEditing}
-					onFieldChange={scheduleAutoSave}
+					onFieldChange={updateField}
 				/>
 
 				<QuotationTabs activeTab={activeTab} onTabChange={setActiveTab} />
@@ -252,10 +312,10 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 									id="supplier_name"
 									name="supplier_name"
 									type="text"
-									defaultValue={initialData.supplier_name}
+									value={formData.supplier_name}
+									onChange={(e) => updateField("supplier_name", e.target.value)}
 									required
 									placeholder="Nombre del proveedor"
-									onChange={scheduleAutoSave}
 									className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 								/>
 								<p className="text-xs text-[var(--muted)]">
@@ -270,8 +330,13 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 
 				<input type="hidden" name="items" value={JSON.stringify(items)} />
 				<input type="hidden" name="quotation_number" value={initialData.quotation_number ?? ""} />
-				<input type="hidden" name="trabajo_id" value={initialData.trabajo_id ?? ""} />
-				<input type="hidden" name="status" value={initialData.status ?? "draft"} />
+				<input type="hidden" name="trabajo_id" value={formData.trabajo_id} />
+				<input type="hidden" name="supplier_name" value={formData.supplier_name} />
+				<input type="hidden" name="project" value={formData.project} />
+				<input type="hidden" name="status" value={formData.status} />
+				<input type="hidden" name="terms_and_conditions" value={formData.terms_and_conditions} />
+				<input type="hidden" name="order_deadline" value={formData.order_deadline} />
+				<input type="hidden" name="expected_delivery" value={formData.expected_delivery} />
 
 				{state.error ? (
 					<p className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">

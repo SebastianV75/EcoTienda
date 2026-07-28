@@ -8,7 +8,7 @@ type QuotationHeaderProps = {
 	orderDeadline?: string | null;
 	project?: string | null;
 	isEditing?: boolean;
-	onFieldChange?: () => void;
+	onFieldChange?: (field: string, value: string) => void;
 };
 
 export function QuotationHeader({
@@ -43,7 +43,7 @@ export function QuotationHeader({
 							defaultValue=""
 							required
 							placeholder="Nombre del cliente"
-							onChange={onFieldChange}
+							onChange={(e) => onFieldChange?.("project", e.target.value)}
 							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						/>
 					)}
@@ -60,8 +60,8 @@ export function QuotationHeader({
 						<select
 							id="status"
 							name="status"
-							defaultValue={status ?? "draft"}
-							onChange={onFieldChange}
+							value={status ?? "draft"}
+							onChange={(e) => onFieldChange?.("status", e.target.value)}
 							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						>
 							<option value="draft">Borrador</option>
@@ -82,7 +82,7 @@ export function QuotationHeader({
 							id="order_deadline_display"
 							name="order_deadline"
 							value={orderDeadline}
-							onChange={onFieldChange}
+							onChange={(value) => onFieldChange?.("order_deadline", value)}
 							placeholder="Seleccionar fecha"
 						/>
 					</div>
