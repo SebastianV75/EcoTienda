@@ -25,6 +25,8 @@ export type CotizacionFormValues = {
 	terms_and_conditions: string;
 	outcome: string;
 	quotation_type: string;
+	rfc: string;
+	rpu: string;
 };
 
 type CotizacionStagePayload = {
@@ -34,6 +36,8 @@ type CotizacionStagePayload = {
 	terms_and_conditions: string;
 	outcome: string;
 	quotation_type: string;
+	rfc: string;
+	rpu: string;
 	completed_at: string | null;
 };
 
@@ -58,6 +62,8 @@ function validateCotizacionInput(formData: FormData): ValidCotizacionInput {
 		terms_and_conditions: getString(formData, "terms_and_conditions"),
 		outcome: getString(formData, "outcome"),
 		quotation_type: getString(formData, "quotation_type"),
+		rfc: getString(formData, "rfc"),
+		rpu: getString(formData, "rpu"),
 	};
 
 	const missing: string[] = [];
@@ -68,6 +74,8 @@ function validateCotizacionInput(formData: FormData): ValidCotizacionInput {
 	if (!values.terms_and_conditions) missing.push("términos y condiciones");
 	if (!values.outcome) missing.push("resultado");
 	if (!values.quotation_type) missing.push("tipo de cotización");
+	if (!values.rfc) missing.push("RFC");
+	if (!values.rpu) missing.push("RPU");
 
 	if (missing.length > 0) {
 		return { error: `Completa ${missing.join(", ")}.`, values: null };
@@ -80,6 +88,8 @@ function validateCotizacionInput(formData: FormData): ValidCotizacionInput {
 		terms_and_conditions: values.terms_and_conditions,
 		outcome: values.outcome,
 		quotation_type: values.quotation_type,
+		rfc: values.rfc,
+		rpu: values.rpu,
 		completed_at: new Date().toISOString(),
 	};
 
@@ -184,10 +194,7 @@ type TrabajoSnapshot = {
 	descargables_completed_at: string | null;
 };
 
-type QuotationStageSnapshot = {
-	trabajo_id: string;
-	completed_at: string | null;
-};
+type QuotationStageSnapshot = CotizacionStagePayload;
 
 type SaleStageSnapshot = {
 	trabajo_id: string;
@@ -243,7 +250,7 @@ export async function saveTrabajoCotizacionAction(
 			.maybeSingle(),
 		supabase
 			.from("trabajo_quotation_stage")
-			.select("trabajo_id, completed_at")
+			.select("trabajo_id, scope_summary, amount, terms_and_conditions, outcome, quotation_type, rfc, rpu, completed_at")
 			.eq("trabajo_id", result.values.trabajo_id)
 			.maybeSingle(),
 	]);
@@ -285,6 +292,11 @@ export async function saveTrabajoCotizacionAction(
 	revalidatePath("/admin/trabajos");
 	revalidatePath(`/admin/trabajos/${result.values.trabajo_id}`);
 	revalidatePath(`/admin/visits/${result.values.trabajo_id}`);
+	revalidatePath("/admin/documents");
+	revalidatePath("/admin/documents/trabajos");
+	revalidatePath("/admin/documents/carta-poder/preview");
+	revalidatePath("/admin/documents/ubicacion-cliente/preview");
+	revalidatePath("/admin/documents/diagrama-unifilar/preview");
 
 	return { error: null, success: "Cotización guardada y trabajo avanzado a Cotización." };
 }

@@ -342,6 +342,8 @@ const trabajoDocumentSelect = `
 		terms_and_conditions,
 		outcome,
 		quotation_type,
+		rfc,
+		rpu,
 		completed_at,
 		created_at,
 		updated_at

@@ -126,6 +126,8 @@ export function isTrabajoQuotationStageComplete(
 		| "terms_and_conditions"
 		| "outcome"
 		| "quotation_type"
+		| "rfc"
+		| "rpu"
 	>,
 ): boolean {
 	return (
@@ -133,7 +135,9 @@ export function isTrabajoQuotationStageComplete(
 		stage.amount >= 0 &&
 		hasText(stage.terms_and_conditions) &&
 		hasText(stage.outcome) &&
-		hasText(stage.quotation_type)
+		hasText(stage.quotation_type) &&
+		hasText(stage.rfc) &&
+		hasText(stage.rpu)
 	);
 }
 

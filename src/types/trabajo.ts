@@ -99,6 +99,8 @@ export type TrabajoQuotationStage = {
 	terms_and_conditions: string;
 	outcome: string;
 	quotation_type: string;
+	rfc: string | null;
+	rpu: string | null;
 	completed_at: string | null;
 	created_at: string;
 	updated_at: string;

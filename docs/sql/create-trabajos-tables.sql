@@ -254,6 +254,8 @@ create table if not exists public.trabajo_quotation_stage (
   terms_and_conditions text not null default '',
   outcome text not null,
   quotation_type text not null,
+  rfc text,
+  rpu text,
   completed_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())

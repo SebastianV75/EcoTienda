@@ -34,6 +34,9 @@ export type TrabajoDocumentDefaults = {
 		amount: number | null;
 		terms_and_conditions: string;
 		outcome: string;
+		quotation_type: string;
+		rfc: string;
+		rpu: string;
 	};
 	sale: {
 		confirmed_on: string;
@@ -91,6 +94,9 @@ function getQuotationDefaults(
 		amount: pickNumber(trabajo.cotizacion?.amount),
 		terms_and_conditions: trabajo.cotizacion?.terms_and_conditions ?? "",
 		outcome: trabajo.cotizacion?.outcome ?? "",
+		quotation_type: trabajo.cotizacion?.quotation_type ?? trabajo.visita?.quotation_type ?? "",
+		rfc: trabajo.cotizacion?.rfc ?? "",
+		rpu: trabajo.cotizacion?.rpu ?? "",
 	};
 }
 

@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
 import { getDescargablesDocumentReadiness } from "@/features/documents/descargables-readiness";
+import { composeTrabajoDocumentDefaults } from "@/features/trabajos/defaults";
 import { DescargablesCompletionForm } from "@/features/trabajos/descargables-completion-form";
+import { CotizacionForm } from "@/features/trabajos/cotizacion-form";
 import { isTrabajoDescargablesReady } from "@/features/trabajos/rules";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
 
@@ -66,13 +68,15 @@ export default async function TrabajoDetailPage({
 	const completedStages = [
 		...(trabajo.agenda ? ["agenda"] : []),
 		...(trabajo.visita ? ["visita"] : []),
-		...(trabajo.cotizacion ? ["cotizacion"] : []),
+		...(trabajo.cotizacion?.completed_at ? ["cotizacion"] : []),
 		...(trabajo.venta ? ["venta"] : []),
 		...(trabajo.descargables_completed_at ? ["descargables"] : []),
 	];
 
 	const clientName = trabajo.client?.full_name ?? trabajo.intake_name;
 	const completedStageCount = completedStages.length;
+	const quotationDefaults = composeTrabajoDocumentDefaults(trabajo).quotation;
+	const isCotizacionEditable = currentStage === "cotizacion" && !trabajo.cotizacion?.completed_at;
 	const isDescargablesReady = isTrabajoDescargablesReady(trabajo);
 	const documentReadiness = getDescargablesDocumentReadiness(trabajo);
 	const descargablesDocuments = [
@@ -338,7 +342,12 @@ export default async function TrabajoDetailPage({
 						stage="cotizacion"
 						isCompleted={completedStages.includes("cotizacion")}
 					>
-						{!trabajo.cotizacion ? (
+						{isCotizacionEditable ? (
+							<CotizacionForm
+								trabajoId={trabajo.id}
+								defaultValues={quotationDefaults}
+							/>
+						) : !trabajo.cotizacion ? (
 							<p className="text-sm text-[var(--muted)]">
 								Cotización no generada.
 							</p>
@@ -385,6 +394,22 @@ export default async function TrabajoDetailPage({
 									</p>
 									<p className="text-sm font-medium text-[var(--foreground)]">
 										{getDisplayValue(trabajo.cotizacion.quotation_type)}
+									</p>
+								</div>
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
+										RFC
+									</p>
+									<p className="text-sm font-medium text-[var(--foreground)]">
+										{getDisplayValue(trabajo.cotizacion.rfc)}
+									</p>
+								</div>
+								<div className="space-y-1.5">
+									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
+										RPU
+									</p>
+									<p className="text-sm font-medium text-[var(--foreground)]">
+										{getDisplayValue(trabajo.cotizacion.rpu)}
 									</p>
 								</div>
 							</div>
