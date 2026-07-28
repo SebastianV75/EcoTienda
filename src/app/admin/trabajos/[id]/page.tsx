@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
+import { getDescargablesDocumentReadiness } from "@/features/documents/descargables-readiness";
+import { DescargablesCompletionForm } from "@/features/trabajos/descargables-completion-form";
+import { isTrabajoDescargablesReady } from "@/features/trabajos/rules";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
 
 import { trabajoStageLabels } from "@/types/trabajo";
@@ -37,6 +40,14 @@ function getDisplayValue(value: unknown, fallback = "—") {
 	return String(value);
 }
 
+function formatMissingList(missing: string[]) {
+	if (missing.length <= 3) {
+		return missing.join(", ");
+	}
+
+	return `${missing.slice(0, 3).join(", ")} y ${missing.length - 3} más`;
+}
+
 export default async function TrabajoDetailPage({
 	params,
 }: {
@@ -62,6 +73,31 @@ export default async function TrabajoDetailPage({
 
 	const clientName = trabajo.client?.full_name ?? trabajo.intake_name;
 	const completedStageCount = completedStages.length;
+	const isDescargablesReady = isTrabajoDescargablesReady(trabajo);
+	const documentReadiness = getDescargablesDocumentReadiness(trabajo);
+	const descargablesDocuments = [
+		{
+			key: "carta-poder",
+			title: "Carta poder",
+			description: "Abre la vista previa con los datos de este trabajo.",
+			href: `/admin/documents/carta-poder/preview?trabajoId=${trabajo.id}`,
+			readiness: documentReadiness["carta-poder"],
+		},
+		{
+			key: "ubicacion-cliente",
+			title: "Ubicación del cliente",
+			description: "Revisa la ubicación guardada antes de imprimir o compartir.",
+			href: `/admin/documents/ubicacion-cliente/preview?trabajoId=${trabajo.id}`,
+			readiness: documentReadiness["ubicacion-cliente"],
+		},
+		{
+			key: "diagrama-unifilar",
+			title: "Diagrama unifilar",
+			description: "Verifica el panel de datos del sistema antes de cerrar la etapa.",
+			href: `/admin/documents/diagrama-unifilar/preview?trabajoId=${trabajo.id}`,
+			readiness: documentReadiness["diagrama-unifilar"],
+		},
+	] as const;
 
 	return (
 		<AppShell
@@ -421,55 +457,70 @@ export default async function TrabajoDetailPage({
 						stage="descargables"
 						isCompleted={completedStages.includes("descargables")}
 					>
-						{!trabajo.media_assets || trabajo.media_assets.length === 0 ? (
-							<p className="text-sm text-[var(--muted)]">
-								Sin documentos descargables.
-							</p>
-						) : (
-							<div className="space-y-3">
-								{trabajo.media_assets.map((asset) => (
-									<div
-										key={asset.id}
-										className="flex flex-col gap-3 rounded-soft border border-[var(--border-soft)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
-									>
-										<div className="flex items-center gap-3 min-w-0">
-											<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--surface)]">
-												<svg
-													className="h-5 w-5 text-[var(--brand)]"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														strokeWidth={1.5}
-														d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-													/>
-												</svg>
-											</div>
-											<div className="min-w-0">
-												<p className="text-sm font-medium text-[var(--foreground)] truncate">
-													{asset.kind || "Documento"}
-												</p>
-												<p className="text-xs text-[var(--muted)]">
-													{asset.kind} · {Math.round(asset.size_bytes / 1024)}{" "}
-													KB
-												</p>
-											</div>
-										</div>
-										<a
-											href={asset.storage_path}
+						<div className="space-y-4">
+							<div className="grid gap-3 md:grid-cols-3">
+								{descargablesDocuments.map((document) => {
+									const isReady = document.readiness.ready;
+									const statusText = isReady
+										? "Listo para abrir"
+										: `Pendiente: ${formatMissingList(document.readiness.missing)}`;
+
+									return (
+										<Link
+											key={document.key}
+											href={document.href}
 											target="_blank"
 											rel="noopener noreferrer"
-											className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-strong)]"
+											className="group flex h-full flex-col justify-between rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] p-4 transition duration-200 ease-out hover:border-emerald-200 hover:bg-white"
 										>
-											Descargar
-										</a>
-									</div>
-								))}
+											<div className="space-y-3">
+												<div className="space-y-1">
+													<p className="text-sm font-semibold text-[var(--brand-deep)]">
+														{document.title}
+													</p>
+													<p
+														className={`text-xs font-medium ${isReady ? "text-emerald-700" : "text-amber-700"}`}
+													>
+														{statusText}
+													</p>
+												</div>
+												<p className="text-sm text-[var(--muted)]">
+													{document.description}
+												</p>
+											</div>
+											<span className="mt-4 text-sm font-medium text-[var(--brand)]">
+												Abrir vista previa
+											</span>
+										</Link>
+									);
+								})}
 							</div>
-						)}
+
+							{trabajo.descargables_completed_at ? (
+								<div className="rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-4">
+									<p className="text-sm font-medium text-emerald-900">Descargables completado</p>
+									<p className="mt-1 text-sm text-emerald-800">
+										Se marcó el {formatDateTime(trabajo.descargables_completed_at)}.
+									</p>
+								</div>
+							) : (
+								<div className="rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-4">
+									<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+										<div className="space-y-1">
+											<p className="text-sm font-medium text-[var(--brand-deep)]">
+												{isDescargablesReady ? "Listo para completar" : "Aún no se puede completar"}
+											</p>
+											<p className="text-sm text-[var(--muted)]">
+												{isDescargablesReady
+													? "Revisa los tres documentos y marca la etapa cuando estén correctos."
+													: "La etapa se habilita cuando Venta esté completada."}
+											</p>
+										</div>
+										{isDescargablesReady ? <DescargablesCompletionForm trabajoId={trabajo.id} /> : null}
+									</div>
+								</div>
+							)}
+						</div>
 					</TrabajoStageSection>
 				</div>
 			</div>

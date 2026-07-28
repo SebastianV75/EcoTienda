@@ -35,13 +35,48 @@ function toNullableNumber(value: unknown): number | null {
 	return null;
 }
 
-function coercePreviewValue(value: unknown) {
-	if (typeof value === "string" || typeof value === "number" || value === null) {
-		return value;
+const numericPreviewFields = new Set<keyof DocumentPreviewSubject>([
+	"latitude",
+	"longitude",
+]);
+
+function coercePreviewValue(
+	fieldKey: keyof DocumentPreviewSubject,
+	value: unknown,
+): string | number | null {
+	if (value === null) {
+		return null;
 	}
 
 	if (typeof value === "boolean") {
 		return value ? "true" : "false";
+	}
+
+	if (numericPreviewFields.has(fieldKey)) {
+		if (typeof value === "number" && Number.isFinite(value)) {
+			return value;
+		}
+
+		if (typeof value === "string") {
+			const trimmed = value.trim();
+			if (!trimmed) {
+				return null;
+			}
+
+			const parsed = Number(trimmed);
+			return Number.isFinite(parsed) ? parsed : null;
+		}
+
+		return null;
+	}
+
+	if (typeof value === "string") {
+		const trimmed = value.trim();
+		return trimmed.length > 0 ? trimmed : null;
+	}
+
+	if (typeof value === "number" && Number.isFinite(value)) {
+		return String(value);
 	}
 
 	return null;
@@ -58,12 +93,13 @@ function applyOverrides(
 			continue;
 		}
 
-		const value = coercePreviewValue(override.field_value);
+		const fieldKey = override.field_key as keyof DocumentPreviewSubject;
+		const value = coercePreviewValue(fieldKey, override.field_value);
 		if (value === null) {
 			continue;
 		}
 
-		(next as Record<string, string | number | null>)[override.field_key] = value as string | number | null;
+		(next as Record<string, string | number | null>)[fieldKey] = value;
 	}
 
 	return next;

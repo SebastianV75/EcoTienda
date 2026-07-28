@@ -1,13 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 import { requireRole } from "@/features/auth/session";
 import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-import { isTrabajoQuotationStageComplete, isTrabajoSaleStageComplete, canAdvanceTrabajoStage } from "./rules";
+import {
+	canAdvanceTrabajoStage,
+	isTrabajoDescargablesReady,
+	isTrabajoQuotationStageComplete,
+	isTrabajoSaleStageComplete,
+} from "./rules";
 
 export type CotizacionActionState = {
 	error: string | null;
@@ -102,6 +106,15 @@ export type VentaFormValues = {
 	notes: string;
 };
 
+export type DescargablesActionState = {
+	error: string | null;
+	success: string | null;
+};
+
+export type DescargablesFormValues = {
+	trabajo_id: string;
+};
+
 type VentaStagePayload = {
 	trabajo_id: string;
 	quotation_trabajo_id: string;
@@ -164,9 +177,11 @@ function validateVentaInput(formData: FormData): ValidVentaInput {
 
 type TrabajoSnapshot = {
 	id: string;
-	current_stage: string;
+	current_stage: "agenda" | "visita" | "cotizacion" | "venta" | "descargables";
 	visita_completed_at: string | null;
 	cotizacion_completed_at: string | null;
+	venta_completed_at: string | null;
+	descargables_completed_at: string | null;
 };
 
 type QuotationStageSnapshot = {
@@ -223,7 +238,7 @@ export async function saveTrabajoCotizacionAction(
 	const [trabajoSnapshotResult, quotationStageSnapshotResult] = await Promise.all([
 		supabase
 			.from("trabajos")
-			.select("id, current_stage, visita_completed_at, cotizacion_completed_at")
+			.select("id, current_stage, visita_completed_at, cotizacion_completed_at, venta_completed_at, descargables_completed_at")
 			.eq("id", result.values.trabajo_id)
 			.maybeSingle(),
 		supabase
@@ -240,7 +255,7 @@ export async function saveTrabajoCotizacionAction(
 	const trabajoSnapshot = (trabajoSnapshotResult.data as TrabajoSnapshot | null) ?? null;
 	const quotationStageSnapshot = (quotationStageSnapshotResult.data as QuotationStageSnapshot | null) ?? null;
 
-	if (!canAdvanceTrabajoStage(trabajoSnapshot?.current_stage as any, "cotizacion", !!trabajoSnapshot?.visita_completed_at)) {
+	if (!trabajoSnapshot || !canAdvanceTrabajoStage(trabajoSnapshot.current_stage, "cotizacion", !!trabajoSnapshot.visita_completed_at)) {
 		return { error: "La etapa anterior (Visita) debe estar completada antes de avanzar.", success: null };
 	}
 
@@ -294,7 +309,7 @@ export async function saveTrabajoVentaAction(
 	const [trabajoSnapshotResult, saleStageSnapshotResult] = await Promise.all([
 		supabase
 			.from("trabajos")
-			.select("id, current_stage, cotizacion_completed_at, venta_completed_at")
+			.select("id, current_stage, visita_completed_at, cotizacion_completed_at, venta_completed_at, descargables_completed_at")
 			.eq("id", result.values.trabajo_id)
 			.maybeSingle(),
 		supabase
@@ -311,7 +326,7 @@ export async function saveTrabajoVentaAction(
 	const trabajoSnapshot = (trabajoSnapshotResult.data as TrabajoSnapshot | null) ?? null;
 	const saleStageSnapshot = (saleStageSnapshotResult.data as SaleStageSnapshot | null) ?? null;
 
-	if (!canAdvanceTrabajoStage(trabajoSnapshot?.current_stage as any, "venta", !!trabajoSnapshot?.cotizacion_completed_at)) {
+	if (!trabajoSnapshot || !canAdvanceTrabajoStage(trabajoSnapshot.current_stage, "venta", !!trabajoSnapshot.cotizacion_completed_at)) {
 		return { error: "La etapa anterior (Cotización) debe estar completada antes de avanzar.", success: null };
 	}
 
@@ -343,4 +358,90 @@ export async function saveTrabajoVentaAction(
 	revalidatePath(`/admin/visits/${result.values.trabajo_id}`);
 
 	return { error: null, success: "Venta confirmada y trabajo avanzado a Venta." };
+}
+
+function validateDescargablesInput(formData: FormData):
+	| { error: null; values: DescargablesFormValues; stagePayload: { trabajo_id: string; completed_at: string | null } }
+	| { error: string; values: null; stagePayload?: never } {
+	const values: DescargablesFormValues = {
+		trabajo_id: getString(formData, "trabajo_id"),
+	};
+
+	if (!values.trabajo_id) {
+		return { error: "Selecciona un trabajo.", values: null };
+	}
+
+	return {
+		error: null,
+		values,
+		stagePayload: {
+			trabajo_id: values.trabajo_id,
+			completed_at: new Date().toISOString(),
+		},
+	};
+}
+
+export async function saveTrabajoDescargablesAction(
+	_previousState: DescargablesActionState,
+	formData: FormData,
+): Promise<DescargablesActionState> {
+	if (hasSupabaseEnv()) {
+		await requireRole(["admin"]);
+	}
+
+	const result = validateDescargablesInput(formData);
+
+	if (result.error || !result.values) {
+		return { error: result.error, success: null };
+	}
+
+	const supabase = await createSupabaseServerClient();
+	const completionIso = result.stagePayload.completed_at;
+
+	const { data: trabajoData, error: trabajoSnapshotError } = await supabase
+		.from("trabajos")
+		.select("id, current_stage, visita_completed_at, cotizacion_completed_at, venta_completed_at, descargables_completed_at")
+		.eq("id", result.values.trabajo_id)
+		.maybeSingle();
+
+	if (trabajoSnapshotError) {
+		return { error: "No se pudo preparar Descargables para guardarse.", success: null };
+	}
+
+	const trabajoSnapshot = (trabajoData as TrabajoSnapshot | null) ?? null;
+
+	if (!trabajoSnapshot || !isTrabajoDescargablesReady(trabajoSnapshot)) {
+		return { error: "La etapa anterior (Venta) debe estar completada antes de avanzar.", success: null };
+	}
+
+	if (trabajoSnapshot.descargables_completed_at) {
+		return { error: null, success: "Descargables ya estaba completado." };
+	}
+
+	if (!canAdvanceTrabajoStage(trabajoSnapshot.current_stage, "descargables", !!trabajoSnapshot.venta_completed_at)) {
+		return { error: "La etapa anterior (Venta) debe estar completada antes de avanzar.", success: null };
+	}
+
+	const { error: trabajoError } = await supabase
+		.from("trabajos")
+		.update({
+			current_stage: "descargables",
+			descargables_completed_at: completionIso,
+		})
+		.eq("id", result.values.trabajo_id);
+
+	if (trabajoError) {
+		await restoreTrabajo(supabase, trabajoSnapshot);
+		return { error: "No se pudo completar Descargables.", success: null };
+	}
+
+	revalidatePath("/admin/trabajos");
+	revalidatePath(`/admin/trabajos/${result.values.trabajo_id}`);
+	revalidatePath("/admin/documents");
+	revalidatePath("/admin/documents/trabajos");
+	revalidatePath("/admin/documents/carta-poder/preview");
+	revalidatePath("/admin/documents/ubicacion-cliente/preview");
+	revalidatePath("/admin/documents/diagrama-unifilar/preview");
+
+	return { error: null, success: "Descargables completado y trabajo avanzado a Descargables." };
 }

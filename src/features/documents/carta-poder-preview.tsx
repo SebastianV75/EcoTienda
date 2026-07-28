@@ -4,11 +4,14 @@ import type { DocumentPreviewSubject } from "./preview-data";
 
 type CartaPoderPreviewProps = {
 	client: DocumentPreviewSubject;
+	powerAcceptorName: string;
+	witnessOneName: string;
+	witnessTwoName: string;
 };
 
-const POWER_ACCEPTOR = "ANA VICTORIA SALCIDO MARQUEZ";
-const WITNESS_ONE = "GUILLERMO ORPINEL AGUIRRE";
-const WITNESS_TWO = "RICARDO LOPEZ BEALL";
+export const DEFAULT_POWER_ACCEPTOR = "";
+export const DEFAULT_WITNESS_ONE = "GUILLERMO ORPINEL AGUIRRE";
+export const DEFAULT_WITNESS_TWO = "RICARDO LOPEZ BEALL";
 
 function formatField(value: string | null | undefined) {
 	const trimmed = (value ?? "").trim();
@@ -31,7 +34,16 @@ function InlineField({
 	);
 }
 
-export function CartaPoderPreview({ client }: CartaPoderPreviewProps) {
+export function CartaPoderPreview({
+	client,
+	powerAcceptorName,
+	witnessOneName,
+	witnessTwoName,
+}: CartaPoderPreviewProps) {
+	const powerAcceptor = formatField(powerAcceptorName);
+	const witnessOne = formatField(witnessOneName);
+	const witnessTwo = formatField(witnessTwoName);
+
 	return (
 		<article className="mx-auto w-full max-w-[900px] rounded-[18px] border border-neutral-300 bg-white p-6 text-[15px] leading-8 text-black shadow-sm sm:p-10 print:rounded-none print:border-0 print:p-0 print:shadow-none">
 			<div className="flex items-start justify-between gap-6 border-b border-neutral-200 pb-6 print:pb-5">
@@ -61,7 +73,7 @@ export function CartaPoderPreview({ client }: CartaPoderPreviewProps) {
 
 				<p>
 					POR LA PRESENTE OTORGO AL SR(A){" "}
-					<InlineField value={POWER_ACCEPTOR} widthClass="min-w-[260px]" />{" "}
+					<InlineField value={powerAcceptor} widthClass="min-w-[260px]" />{" "}
 					PODER AMPLIO, CUMPLIDO Y BASTANTE PARA QUE A MI NOMBRE Y
 					REPRESENTACIÓN, BAJO MI AUTORIZACIÓN PLENA Y CONSCIENTE DEL TRÁMITE A
 					CAMBIO DE MEDIDOR BIDIRECCIONAL ANTE LA COMISIÓN FEDERAL DE
@@ -88,19 +100,19 @@ export function CartaPoderPreview({ client }: CartaPoderPreviewProps) {
 					<p className="mt-3 text-lg uppercase tracking-[0.04em]">
 						ACEPTO EL PODER
 					</p>
-					<p className="mt-12 text-lg uppercase">{POWER_ACCEPTOR}</p>
+					<p className="mt-12 text-lg uppercase">{powerAcceptor}</p>
 				</div>
 			</div>
 
 			<div className="mt-24 grid gap-16 sm:grid-cols-2">
 				<div className="text-center">
 					<div className="mx-auto h-px w-full max-w-[260px] bg-black" />
-					<p className="mt-3 text-lg uppercase">{WITNESS_ONE}</p>
+					<p className="mt-3 text-lg uppercase">{witnessOne}</p>
 					<p className="text-lg uppercase tracking-[0.04em]">TESTIGO</p>
 				</div>
 				<div className="text-center">
 					<div className="mx-auto h-px w-full max-w-[260px] bg-black" />
-					<p className="mt-3 text-lg uppercase">{WITNESS_TWO}</p>
+					<p className="mt-3 text-lg uppercase">{witnessTwo}</p>
 					<p className="text-lg uppercase tracking-[0.04em]">TESTIGO</p>
 				</div>
 			</div>

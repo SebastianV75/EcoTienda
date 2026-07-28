@@ -1,4 +1,5 @@
 import type {
+	Trabajo,
 	TrabajoAgendaStage,
 	TrabajoQuotationStage,
 	TrabajoSaleStage,
@@ -145,4 +146,10 @@ export function isTrabajoSaleStageComplete(
 		stage.agreed_amount >= 0 &&
 		hasText(stage.notes)
 	);
+}
+
+export function isTrabajoDescargablesReady(
+	trabajo: Pick<Trabajo, "current_stage" | "venta_completed_at">,
+): boolean {
+	return trabajo.current_stage === "venta" && hasText(trabajo.venta_completed_at);
 }
