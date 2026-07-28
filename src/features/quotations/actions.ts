@@ -52,6 +52,39 @@ export async function deleteQuotationAction(
 	return { error: null, success: true };
 }
 
+export async function confirmQuotationAction(
+	_previousState: QuotationActionState,
+	formData: FormData,
+): Promise<QuotationActionState> {
+	const quotationId = formData.get("quotation_id")?.toString();
+	const trabajoId = formData.get("trabajo_id")?.toString();
+
+	if (!quotationId || !trabajoId) {
+		return { error: "Faltan datos para confirmar la cotización." };
+	}
+
+	const supabase = await createSupabaseServerClient();
+
+	// Actualizar el trabajo para avanzar a la etapa de venta
+	const { error: trabajoError } = await supabase
+		.from("trabajos")
+		.update({
+			current_stage: "venta",
+			cotizacion_completed_at: new Date().toISOString(),
+		})
+		.eq("id", trabajoId);
+
+	if (trabajoError) {
+		return { error: "No se pudo avanzar el trabajo a la etapa de venta." };
+	}
+
+	revalidatePath("/admin/quotations");
+	revalidatePath("/admin/sales");
+	revalidatePath("/admin/trabajos");
+
+	return { error: null, success: true };
+}
+
 export async function createQuotationAction(
 	_previousState: QuotationActionState,
 	formData: FormData,
