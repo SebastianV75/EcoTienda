@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
-import { getClients } from "@/features/clients/data";
 
 const templates = [
 	{
@@ -15,21 +14,21 @@ const templates = [
 	{
 		title: "Carta poder",
 		description:
-			"Autollenado con datos del cliente o del trabajo. Testigos y aceptación del poder se mantienen fijos por ahora.",
+			"Autollenado desde un trabajo en curso. Testigos y aceptación del poder se mantienen fijos por ahora.",
 		href: "/admin/documents/carta-poder",
 		status: "Activo",
 	},
 	{
 		title: "Ubicación del cliente",
 		description:
-			"Vista previa con datos del cliente y mapa centrado en las coordenadas guardadas. Pendiente de integrar impresión y descarga.",
+			"Vista previa con datos del trabajo y mapa centrado en las coordenadas guardadas. Pendiente de integrar impresión y descarga.",
 		href: "/admin/documents/ubicacion-cliente",
 		status: "Activo",
 	},
 	{
 		title: "Diagrama unifilar",
 		description:
-			"Panel de datos del cliente y del equipo de generación solar. La vista previa actual muestra los datos que acompañarán al diagrama eléctrico.",
+			"Panel de datos del trabajo y del equipo de generación solar. La vista previa actual muestra los datos que acompañarán al diagrama eléctrico.",
 		href: "/admin/documents/diagrama-unifilar",
 		status: "Activo",
 	},
@@ -44,13 +43,12 @@ const templates = [
 
 export default async function DocumentsPage() {
 	const user = await requireRole(["admin"]);
-	const clients = await getClients();
 
 	return (
 		<AppShell
 			role="admin"
 			title="Documentos"
-			description="Selecciona una plantilla, elige un cliente o un trabajo y genera documentos con datos ya registrados dentro del sistema."
+			description="Selecciona una plantilla y elige un trabajo para generar documentos con datos ya registrados dentro del sistema."
 			email={user.email}
 		>
 			<div className="space-y-4">
@@ -63,28 +61,28 @@ export default async function DocumentsPage() {
 							Genera documentos con datos reales del trabajo
 						</h2>
 						<p className="mt-4 max-w-2xl text-sm leading-7 text-emerald-50/90 sm:text-base">
-							Ya puedes trabajar Carta Poder, Ubicación del cliente y el panel
-							de trabajo con datos reales. El siguiente paso será sumar impresión,
+							Ya puedes trabajar Carta Poder, Ubicación del cliente y el panel de
+							trabajo con datos reales. El siguiente paso será sumar impresión,
 							descarga y el formato CFE con más campos específicos.
 						</p>
 					</div>
 
 					<div className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
 						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-							Clientes disponibles
+							Flujo activo
 						</p>
 						<p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)]">
-							{clients.length}
+							Trabajos
 						</p>
-					<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-						Cada plantilla usa los datos del cliente o del trabajo como base para
-						autollenado.
-					</p>
+						<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+							Las plantillas se abren desde el trabajo en curso para mantener el
+							autollenado alineado con Agenda, Visita y Descargables.
+						</p>
 						<Link
-							href="/agenda"
+							href="/admin/documents/trabajos"
 							className="mt-5 inline-flex rounded-full bg-[var(--surface-strong)] px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:bg-emerald-100"
 						>
-							Ir a Agenda
+							Elegir trabajo
 						</Link>
 					</div>
 				</section>

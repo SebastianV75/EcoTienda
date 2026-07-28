@@ -198,7 +198,46 @@ export default async function CartaPoderPreviewPage({
 		);
 	}
 
-	const client = await getClientById(clientId);
+	let client;
+	try {
+		client = await getClientById(clientId);
+	} catch {
+		client = null;
+	}
+
+	if (!client) {
+		return (
+			<AppShell
+				role="admin"
+				title="Carta poder"
+				description="No fue posible cargar el cliente solicitado."
+				email={user.email}
+			>
+				<DocumentsPreviewEmptyState
+					eyebrow="Cliente no disponible"
+					title="No fue posible cargar el cliente solicitado"
+					description="El cliente solicitado no existe o ya no está disponible."
+					action={
+						<>
+							<Link
+								href="/admin/documents/carta-poder"
+								className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
+							>
+								Elegir otro cliente
+							</Link>
+							<Link
+								href="/admin/documents/trabajos?template=carta-poder"
+								className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
+							>
+								Elegir trabajo
+							</Link>
+						</>
+					}
+				/>
+			</AppShell>
+		);
+	}
+
 	const previewClient = buildClientPreviewSubject(client);
 
 	return (
