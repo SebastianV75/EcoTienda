@@ -19,7 +19,6 @@ import {
 	Location,
 	Profile,
 	Settings,
-	Users,
 } from "reicon-react";
 
 import { AuthStatus } from "@/components/auth-status";
@@ -67,7 +66,6 @@ const supportNavigation: NavigationItem[] = [
 		roles: ["admin"],
 		icon: DocumentText,
 	},
-	{ href: "/admin/clients", label: "Clientes", roles: ["admin"], icon: Users },
 	{
 		href: "/admin/workers",
 		label: "Trabajadores",

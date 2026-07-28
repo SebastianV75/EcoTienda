@@ -85,7 +85,6 @@ export default async function AdminPage() {
 					</p>
 					<div className="mt-3 flex flex-wrap gap-2">
 						{[
-							{ href: "/admin/clients", label: "Clientes" },
 							{ href: "/admin/workers", label: "Trabajadores" },
 							{ href: "/admin/documents", label: "Documentos" },
 							{ href: "/admin/quotations", label: "Cotizaciones" },

@@ -73,9 +73,10 @@ export default async function TrabajoDetailPage({
 		...(trabajo.descargables_completed_at ? ["descargables"] : []),
 	];
 
-	const clientName = trabajo.client?.full_name ?? trabajo.intake_name;
+	const documentDefaults = composeTrabajoDocumentDefaults(trabajo);
+	const clientName = documentDefaults.client_name;
 	const completedStageCount = completedStages.length;
-	const quotationDefaults = composeTrabajoDocumentDefaults(trabajo).quotation;
+	const quotationDefaults = documentDefaults.quotation;
 	const isCotizacionEditable = currentStage === "cotizacion" && !trabajo.cotizacion?.completed_at;
 	const isDescargablesReady = isTrabajoDescargablesReady(trabajo);
 	const documentReadiness = getDescargablesDocumentReadiness(trabajo);

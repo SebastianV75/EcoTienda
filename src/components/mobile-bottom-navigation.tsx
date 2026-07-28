@@ -22,7 +22,6 @@ import {
 	More,
 	Profile,
 	Settings,
-	Users,
 } from "reicon-react";
 
 import type { AppRole } from "@/types/auth";
@@ -64,7 +63,6 @@ const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
 		{ href: "/admin/sales", label: "Ventas", icon: Clipboard },
 		{ href: "/admin/descargables", label: "Descargables", icon: DocumentText },
 		{ href: "/admin/documents", label: "Documentos", icon: DocumentText },
-		{ href: "/admin/clients", label: "Clientes", icon: Users },
 		{ href: "/admin/workers", label: "Trabajadores", icon: Profile },
 		{ href: "/admin/visits", label: "Visitas", icon: Location },
 		{ href: "/admin/settings", label: "Configuración", icon: Settings },
