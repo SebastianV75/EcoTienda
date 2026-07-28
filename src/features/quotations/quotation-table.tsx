@@ -57,17 +57,17 @@ export function QuotationTable({
 						</tr>
 					</thead>
 					<tbody>
-					{items.length > 0 ? (
-						items.map((item, index) => (
-							<ProductRow
-								key={item.id || index}
-								item={item}
-								index={index}
-								onChange={onItemChange}
-								onRemove={onItemRemove}
-								variant="table"
-							/>
-						))
+						{items.length > 0 ? (
+							items.map((item, index) => (
+								<ProductRow
+									key={item.id || index}
+									item={item}
+									index={index}
+									onChange={onItemChange}
+									onRemove={onItemRemove}
+									variant="table"
+								/>
+							))
 						) : (
 							<tr>
 								<td
@@ -124,12 +124,6 @@ export function QuotationTable({
 					className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-[var(--brand-deep)] shadow-sm transition duration-200 ease-out hover:bg-emerald-50"
 				>
 					+ Agregar nota
-				</button>
-				<button
-					type="button"
-					className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-[var(--muted)] shadow-sm transition duration-200 ease-out hover:bg-emerald-50"
-				>
-					Catálogo
 				</button>
 			</div>
 		</section>

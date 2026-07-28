@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
+import { QuotationStatusBadge } from "@/features/quotations/quotation-status";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Quotation, QuotationItem } from "@/types/quotation";
 
@@ -46,6 +47,32 @@ export default async function QuotationDetailPage({
 
 	const quotationData = quotation as Quotation;
 	const itemsData = (items ?? []) as QuotationItem[];
+	const overviewCards = [
+		{
+			label: "Proveedor",
+			value: quotationData.supplier_name,
+		},
+		{
+			label: "Proyecto",
+			value: quotationData.project || "No especificado",
+		},
+		{
+			label: "Fecha límite",
+			value: quotationData.order_deadline
+				? new Date(quotationData.order_deadline).toLocaleString("es-MX")
+				: "No especificada",
+		},
+		{
+			label: "Entrega esperada",
+			value: quotationData.expected_delivery
+				? new Date(quotationData.expected_delivery).toLocaleDateString("es-MX")
+				: "No especificada",
+		},
+		{
+			label: "Total",
+			value: `$ ${quotationData.total.toFixed(2)}`,
+		},
+	];
 
 	return (
 		<AppShell
@@ -70,94 +97,56 @@ export default async function QuotationDetailPage({
 					</a>
 				</div>
 
-				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
-					<div className="grid gap-6 lg:grid-cols-2">
-						<div className="space-y-4">
-							<div>
-								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-									Proveedor
+				<section className="rounded-panel border border-[var(--border-soft)] bg-white p-5 shadow-panel sm:p-6">
+					<div className="flex flex-col gap-5">
+						<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+							<div className="min-w-0">
+								<p className="text-xs font-semibold uppercase tracking-eyebrow text-[var(--brand-strong)]">
+									Cotización
 								</p>
-								<p className="mt-2 text-lg font-semibold text-[var(--brand-deep)]">
+								<h1 className="mt-2 text-2xl font-semibold tracking-display text-[var(--brand-deep)] sm:text-[1.9rem]">
+									{quotationData.quotation_number ?? "Sin número"}
+								</h1>
+								<p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
 									{quotationData.supplier_name}
+									{quotationData.project ? ` · ${quotationData.project}` : ""}
 								</p>
-								{quotationData.supplier_reference && (
-									<p className="mt-1 text-sm text-[var(--muted)]">
-										Ref: {quotationData.supplier_reference}
+							</div>
+							<QuotationStatusBadge status={quotationData.status} className="mt-1" />
+						</div>
+
+						<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+							{overviewCards.map((card) => (
+								<div
+									key={card.label}
+									className="rounded-card border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3"
+								>
+									<p className="text-[11px] font-semibold uppercase tracking-eyebrow text-[var(--brand-strong)]">
+										{card.label}
 									</p>
-								)}
-							</div>
-
-					<div>
-						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-							Cliente / Proyecto
-						</p>
-						<p className="mt-2 text-sm text-[var(--foreground)]">
-							{quotationData.project || "No especificado"}
-						</p>
-					</div>
-
-					{quotationData.trabajo_id ? (
-						<div>
-							<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-								Trabajo asociado
-							</p>
-							<Link
-								href={`/agenda/${quotationData.trabajo_id}`}
-								className="mt-2 inline-flex rounded-full border border-[var(--border-soft)] bg-white px-3 py-1.5 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
-							>
-								Abrir trabajo vinculado
-							</Link>
-						</div>
-					) : null}
-
-					<div>
-								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-									Entregar a
-								</p>
-								<p className="mt-2 text-sm text-[var(--foreground)]">
-									{quotationData.deliver_to}
-								</p>
-							</div>
+									<p className="mt-2 text-sm leading-6 text-[var(--brand-deep)]">{card.value}</p>
+								</div>
+							))}
 						</div>
 
-						<div className="space-y-4">
-							<div>
-								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-									Fecha límite
-								</p>
-								<p className="mt-2 text-sm text-[var(--foreground)]">
-									{quotationData.order_deadline
-										? new Date(quotationData.order_deadline).toLocaleString(
-												"es-MX",
-											)
-										: "No especificada"}
-								</p>
+						{quotationData.trabajo_id ? (
+							<div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3">
+								<div>
+									<p className="text-[11px] font-semibold uppercase tracking-eyebrow text-[var(--brand-strong)]">
+										Trabajo asociado
+									</p>
+									<p className="mt-2 text-sm text-[var(--muted)]">
+										Esta cotización está vinculada a un trabajo operativo.
+									</p>
+								</div>
+								<Link
+									href={`/agenda/${quotationData.trabajo_id}`}
+									className="text-sm font-medium text-[var(--brand-strong)] underline-offset-4 hover:underline"
+								>
+									Abrir trabajo vinculado
+								</Link>
 							</div>
-
-							<div>
-								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-									Entrega esperada
-								</p>
-								<p className="mt-2 text-sm text-[var(--foreground)]">
-									{quotationData.expected_delivery
-										? new Date(
-												quotationData.expected_delivery,
-											).toLocaleDateString("es-MX")
-										: "No especificada"}
-								</p>
-							</div>
-
-							<div>
-								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-									Estado
-								</p>
-								<p className="mt-2 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-[var(--brand-deep)]">
-									{quotationData.status === "draft"
-										? "Borrador"
-										: quotationData.status}
-								</p>
-							</div>
-						</div>
+						) : null}
 					</div>
 				</section>
 

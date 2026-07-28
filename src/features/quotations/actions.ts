@@ -50,10 +50,15 @@ export async function createQuotationAction(
 	formData: FormData,
 ): Promise<QuotationActionState> {
 	const trabajoId = getString(formData, "trabajo_id");
+	const supplierName = getString(formData, "supplier_name");
 	const project = getString(formData, "project");
 	const termsAndConditions = getString(formData, "terms_and_conditions");
 	const orderDeadline = getString(formData, "order_deadline");
 	const expectedDelivery = getString(formData, "expected_delivery");
+
+	if (!supplierName) {
+		return { error: "El proveedor es obligatorio." };
+	}
 
 	if (!project) {
 		return { error: "El cliente es obligatorio." };
@@ -85,6 +90,7 @@ export async function createQuotationAction(
 		.insert({
 			quotation_number: quotationNumber,
 			trabajo_id: trabajoId || null,
+			supplier_name: supplierName,
 			project: project || null,
 			terms_and_conditions: termsAndConditions || null,
 			order_deadline: orderDeadline || null,
@@ -149,11 +155,16 @@ export async function updateQuotationAction(
 ): Promise<QuotationActionState> {
 	const quotationNumber = getString(formData, "quotation_number");
 	const trabajoId = getString(formData, "trabajo_id");
+	const supplierName = getString(formData, "supplier_name");
 	const project = getString(formData, "project");
 	const status = getString(formData, "status");
 	const termsAndConditions = getString(formData, "terms_and_conditions");
 	const orderDeadline = getString(formData, "order_deadline");
 	const expectedDelivery = getString(formData, "expected_delivery");
+
+	if (!supplierName) {
+		return { error: "El proveedor es obligatorio." };
+	}
 
 	if (!project) {
 		return { error: "El cliente es obligatorio." };
@@ -188,6 +199,7 @@ export async function updateQuotationAction(
 		.update({
 			quotation_number: newQuotationNumber,
 			trabajo_id: trabajoId || null,
+			supplier_name: supplierName,
 			project: project || null,
 			status: status || null,
 			terms_and_conditions: termsAndConditions || null,

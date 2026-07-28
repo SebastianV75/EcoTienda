@@ -8,10 +8,9 @@ import { QuotationHeader } from "@/features/quotations/quotation-header";
 import { QuotationTabs } from "@/features/quotations/quotation-tabs";
 import { QuotationTable } from "@/features/quotations/quotation-table";
 import { QuotationFooter } from "@/features/quotations/quotation-footer";
-import type { Supplier, QuotationItem } from "@/types/quotation";
+import type { QuotationItem } from "@/types/quotation";
 
 type EditQuotationFormProps = {
-	suppliers?: Supplier[];
 	initialData?: {
 		quotation_number: string | null;
 		trabajo_id: string | null;
@@ -48,9 +47,10 @@ export function EditQuotationForm({ initialData = { quotation_number: null, trab
 		isEditing ? updateQuotationAction : createQuotationAction,
 		initialState,
 	);
-	const [activeTab, setActiveTab] = useState<"products" | "other">("products");
+	const [activeTab, setActiveTab] = useState<"products" | "other">(
+		initialData.supplier_name.trim() ? "products" : "other",
+	);
 	const [items, setItems] = useState<QuotationItem[]>(initialData.items);
-	const [showSupplierModal, setShowSupplierModal] = useState(false);
 
 	function handleItemChange(index: number, item: QuotationItem) {
 		const updated = [...items];
@@ -120,13 +120,13 @@ export function EditQuotationForm({ initialData = { quotation_number: null, trab
 					</div>
 				</div>
 
-			<QuotationHeader
-				quotationNumber={initialData.quotation_number}
-				status={initialData.status}
-				orderDeadline={initialData.order_deadline}
-				project={initialData.project}
-				isEditing={isEditing}
-			/>
+				<QuotationHeader
+					quotationNumber={initialData.quotation_number}
+					status={initialData.status}
+					orderDeadline={initialData.order_deadline}
+					project={initialData.project}
+					isEditing={isEditing}
+				/>
 
 				<QuotationTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -141,10 +141,40 @@ export function EditQuotationForm({ initialData = { quotation_number: null, trab
 					/>
 				) : (
 					<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
-						<p className="text-sm text-[var(--muted)]">
-							Información adicional de la cotización se agregará aquí en futuras
-							iteraciones.
-						</p>
+						<div className="space-y-5">
+							<div className="space-y-1.5">
+								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
+									Proveedor
+								</p>
+								<h3 className="text-xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
+									Datos de origen
+								</h3>
+								<p className="text-sm text-[var(--muted)]">
+									Este dato acompaña la cotización y el PDF final.
+								</p>
+							</div>
+
+							<div className="space-y-2.5 max-w-xl">
+								<label
+									htmlFor="supplier_name"
+									className="text-sm font-medium text-[var(--brand-deep)]"
+								>
+									Nombre del proveedor
+								</label>
+								<input
+									id="supplier_name"
+									name="supplier_name"
+									type="text"
+									defaultValue={initialData.supplier_name}
+									required
+									placeholder="Nombre del proveedor"
+									className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+								/>
+								<p className="text-xs text-[var(--muted)]">
+									Se guarda junto con la cotización.
+								</p>
+							</div>
+						</div>
 					</section>
 				)}
 
@@ -171,150 +201,6 @@ export function EditQuotationForm({ initialData = { quotation_number: null, trab
 					</button>
 				</div>
 			</form>
-
-			{showSupplierModal && (
-				<SupplierModal onClose={() => setShowSupplierModal(false)} />
-			)}
 		</>
-	);
-}
-
-function SupplierModal({ onClose }: { onClose: () => void }) {
-	const [formData, setFormData] = useState({
-		supplier_name: "",
-		supplier_nif: "",
-		supplier_email: "",
-		supplier_phone: "",
-		supplier_reference: "",
-	});
-
-	async function handleSubmit(e: React.FormEvent) {
-		e.preventDefault();
-		const fd = new FormData();
-		Object.entries(formData).forEach(([key, value]) => {
-			fd.append(key, value);
-		});
-
-		const response = await fetch("/api/suppliers", {
-			method: "POST",
-			body: fd,
-		});
-
-		if (response.ok) {
-			onClose();
-		}
-	}
-
-	return (
-		<div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
-			<div className="w-full max-h-[90vh] overflow-y-auto rounded-t-[28px] bg-white p-6 shadow-xl sm:max-w-lg sm:rounded-[28px] sm:max-h-none sm:overflow-y-visible sm:p-8">
-				<div className="flex items-center justify-between">
-					<h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
-						Nuevo proveedor
-					</h3>
-					<button
-						type="button"
-						onClick={onClose}
-						className="rounded-full bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--muted)] transition hover:bg-emerald-100"
-					>
-						Cerrar
-					</button>
-				</div>
-
-				<form onSubmit={handleSubmit} className="mt-6 space-y-4">
-					<div className="space-y-2.5">
-						<label className="text-sm font-medium text-[var(--brand-deep)]">
-							Nombre *
-						</label>
-						<input
-							type="text"
-							value={formData.supplier_name}
-							onChange={(e) =>
-								setFormData({ ...formData, supplier_name: e.target.value })
-							}
-							required
-							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition focus:border-emerald-300"
-						/>
-					</div>
-
-					<div className="grid gap-4 sm:grid-cols-2">
-						<div className="space-y-2.5">
-							<label className="text-sm font-medium text-[var(--brand-deep)]">
-								NIF
-							</label>
-							<input
-								type="text"
-								value={formData.supplier_nif}
-								onChange={(e) =>
-									setFormData({ ...formData, supplier_nif: e.target.value })
-								}
-								className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition focus:border-emerald-300"
-							/>
-						</div>
-
-						<div className="space-y-2.5">
-							<label className="text-sm font-medium text-[var(--brand-deep)]">
-								Teléfono
-							</label>
-							<input
-								type="text"
-								value={formData.supplier_phone}
-								onChange={(e) =>
-									setFormData({ ...formData, supplier_phone: e.target.value })
-								}
-								className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition focus:border-emerald-300"
-							/>
-						</div>
-					</div>
-
-					<div className="space-y-2.5">
-						<label className="text-sm font-medium text-[var(--brand-deep)]">
-							Correo electrónico
-						</label>
-						<input
-							type="email"
-							value={formData.supplier_email}
-							onChange={(e) =>
-								setFormData({ ...formData, supplier_email: e.target.value })
-							}
-							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition focus:border-emerald-300"
-						/>
-					</div>
-
-					<div className="space-y-2.5">
-						<label className="text-sm font-medium text-[var(--brand-deep)]">
-							Referencia
-						</label>
-						<input
-							type="text"
-							value={formData.supplier_reference}
-							onChange={(e) =>
-								setFormData({
-									...formData,
-									supplier_reference: e.target.value,
-								})
-							}
-							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition focus:border-emerald-300"
-						/>
-					</div>
-
-					<div className="flex justify-end gap-3 pt-4">
-						<button
-							type="button"
-							onClick={onClose}
-							className="rounded-full bg-white px-5 py-3 text-sm font-medium text-[var(--brand-deep)] shadow-sm transition hover:bg-emerald-50"
-						>
-							Cancelar
-						</button>
-						<button
-							type="submit"
-							className="rounded-full bg-[var(--brand)] px-5 py-3 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition hover:bg-[var(--brand-strong)]"
-						>
-							Crear proveedor
-						</button>
-					</div>
-				</form>
-			</div>
-		</div>
 	);
 }

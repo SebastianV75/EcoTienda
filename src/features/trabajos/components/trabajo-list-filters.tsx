@@ -13,10 +13,10 @@ import {
 import type { WorkerSummary } from "@/types/worker";
 
 const inputClassName =
-	"w-full rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition duration-200 ease-out placeholder:text-[var(--muted)]/70 focus:border-emerald-300";
+	"w-full rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition-[border-color,background-color,opacity,box-shadow] duration-200 ease-out placeholder:text-[var(--muted)]/70 focus:border-emerald-300 disabled:cursor-wait disabled:opacity-75";
 
 const buttonClassName =
-	"rounded-full bg-[var(--surface-strong)] px-4 py-3 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:bg-emerald-100";
+	"rounded-full bg-[var(--surface-strong)] px-4 py-3 text-sm font-medium text-[var(--brand-deep)] transition-[background-color,opacity,transform] duration-200 ease-out hover:bg-emerald-100 disabled:cursor-wait disabled:opacity-75";
 
 type TrabajoListFiltersProps = {
 	initialFilters: TrabajoListFilters;
@@ -72,8 +72,30 @@ export function TrabajoListFilters({
 	}
 
 	return (
-		<section className="flex flex-col gap-3 rounded-[26px] border border-[var(--border-soft)] bg-white p-5 shadow-sm">
-			<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+		<section
+			aria-busy={isPending}
+			className="flex flex-col gap-3 rounded-[26px] border border-[var(--border-soft)] bg-white p-5 shadow-sm transition-[opacity,box-shadow,border-color] duration-200 ease-out"
+		>
+			<div className="flex items-center justify-between gap-3">
+				<div>
+					<p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+						Filtros
+					</p>
+					<p className="mt-1 text-sm text-[var(--muted)]">
+						Refiná la lista por etapa, estado, responsable o fecha.
+					</p>
+				</div>
+				<p
+					aria-live="polite"
+					className={`text-xs font-medium text-[var(--brand-strong)] transition-opacity duration-200 ease-out ${isPending ? "opacity-100" : "opacity-0"}`}
+				>
+					Actualizando filtros...
+				</p>
+			</div>
+
+			<div
+				className={`flex flex-col gap-3 transition-opacity duration-200 ease-out sm:flex-row sm:flex-wrap sm:items-end ${isPending ? "pointer-events-none opacity-75" : "opacity-100"}`}
+			>
 				<div className="flex-1 sm:min-w-[200px]">
 					<label
 						htmlFor="trabajo-search"
@@ -87,6 +109,7 @@ export function TrabajoListFilters({
 						defaultValue={initialFilters.q ?? ""}
 						placeholder="Cliente, dirección o número"
 						className={inputClassName}
+						disabled={isPending}
 						onChange={(event) =>
 							updateFilters({ q: event.target.value.trim() || undefined })
 						}
@@ -104,6 +127,7 @@ export function TrabajoListFilters({
 						id="trabajo-stage"
 						value={initialFilters.stage ?? ""}
 						className={inputClassName}
+						disabled={isPending}
 						onChange={(event) =>
 							updateFilters({
 								stage: (event.target.value || undefined) as
@@ -132,6 +156,7 @@ export function TrabajoListFilters({
 						id="trabajo-status"
 						value={initialFilters.status ?? ""}
 						className={inputClassName}
+						disabled={isPending}
 						onChange={(event) =>
 							updateFilters({
 								status: (event.target.value || undefined) as
@@ -160,6 +185,7 @@ export function TrabajoListFilters({
 						id="trabajo-assignee-worker"
 						value={initialFilters.assignee_worker_id ?? ""}
 						className={inputClassName}
+						disabled={isPending}
 						onChange={(event) =>
 							updateFilters({
 								assignee_worker_id: event.target.value || undefined,
@@ -187,6 +213,7 @@ export function TrabajoListFilters({
 						type="date"
 						value={initialFilters.from ?? ""}
 						className={inputClassName}
+						disabled={isPending}
 						onChange={(event) =>
 							updateFilters({ from: event.target.value || undefined })
 						}
@@ -205,6 +232,7 @@ export function TrabajoListFilters({
 						type="date"
 						value={initialFilters.to ?? ""}
 						className={inputClassName}
+						disabled={isPending}
 						onChange={(event) =>
 							updateFilters({ to: event.target.value || undefined })
 						}

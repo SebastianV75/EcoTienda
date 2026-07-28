@@ -18,17 +18,31 @@ export function QuotationHeader({
 	return (
 		<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
 			<div className="space-y-5">
-				{project && (
-					<div className="space-y-2.5">
-						<label className="text-sm font-medium text-[var(--brand-deep)]">
-							Cliente
-						</label>
-						<div className="w-full rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface-strong)] px-4 py-3 text-[var(--foreground)]">
-							{project}
-						</div>
-						<input type="hidden" name="project" value={project} />
-					</div>
-				)}
+				<div className="space-y-2.5">
+					<label htmlFor="project" className="text-sm font-medium text-[var(--brand-deep)]">
+						Cliente
+					</label>
+					{project ? (
+						<input
+							id="project"
+							name="project"
+							type="text"
+							readOnly
+							value={project}
+							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface-strong)] px-4 py-3 text-[var(--foreground)] outline-none"
+						/>
+					) : (
+						<input
+							id="project"
+							name="project"
+							type="text"
+							defaultValue=""
+							required
+							placeholder="Nombre del cliente"
+							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						/>
+					)}
+				</div>
 
 				<div className="space-y-5">
 					<div className="space-y-2.5">

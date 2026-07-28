@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
+import { EmptyState } from "@/components/empty-state";
 import { AgendaItemCard } from "@/features/agenda/agenda-item-card";
 import { getAgendaItemsByType } from "@/features/agenda/data";
 import type { AgendaItem } from "@/types/agenda";
@@ -29,6 +30,7 @@ export default async function VisitsPage() {
 	const pendingCount = visitItems.filter(
 		(item) => item.estado === "pendiente",
 	).length;
+	const hasVisitsError = Boolean(visitsNotice);
 
 	return (
 		<AppShell
@@ -38,13 +40,13 @@ export default async function VisitsPage() {
 			email={user?.email}
 		>
 			<div className="space-y-4">
-				<section className="rounded-[24px] border border-[var(--border-soft)] bg-white p-4 shadow-sm sm:p-5">
+				<section className="rounded-panel border border-[var(--border-soft)] bg-white p-4 shadow-panel sm:p-5">
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 						<div className="min-w-0">
-							<p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
+							<p className="text-xs font-semibold uppercase tracking-eyebrow text-[var(--brand-strong)]">
 								Desde Agenda
 							</p>
-							<h1 className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)] sm:text-[1.9rem]">
+							<h1 className="mt-2 text-2xl font-semibold tracking-display text-[var(--brand-deep)] sm:text-[1.9rem]">
 								Visitas técnicas en curso
 							</h1>
 							<p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
@@ -54,29 +56,39 @@ export default async function VisitsPage() {
 						</div>
 
 						<p className="text-sm font-medium text-[var(--muted)]">
-							{visitItems.length} visitas
+							{hasVisitsError
+								? "Visitas no disponibles"
+								: `${visitItems.length} visitas`}
 						</p>
 					</div>
 
 					<div className="mt-4 flex flex-wrap gap-3 text-sm text-[var(--muted)]">
-						<span>{inProgressCount} en proceso</span>
-						<span>{pendingCount} pendientes</span>
-						<span>Ordenadas por avance operativo</span>
+						{hasVisitsError ? (
+							<span>
+								Intentá de nuevo desde Agenda o recargando esta vista.
+							</span>
+						) : (
+							<>
+								<span>{inProgressCount} en proceso</span>
+								<span>{pendingCount} pendientes</span>
+								<span>Ordenadas por avance operativo</span>
+							</>
+						)}
 					</div>
 
 					<div className="mt-5 flex flex-wrap gap-3">
-						<Link
-							href="/agenda"
-							className="inline-flex min-h-[40px] items-center rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition-[transform,background-color,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-[rgba(13,79,46,0.18)] hover:bg-[rgba(239,246,239,0.96)] hover:shadow-[0_8px_20px_rgba(10,44,21,0.05)] active:scale-[0.96]"
-						>
+						<Link href="/agenda" className="ui-secondary-action">
 							Abrir agenda
 						</Link>
 					</div>
 				</section>
 
-				{visitsNotice ? (
-					<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-						{visitsNotice}
+				{hasVisitsError ? (
+					<section className="rounded-card border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+						<p className="text-xs font-semibold uppercase tracking-eyebrow text-amber-800">
+							Carga pendiente
+						</p>
+						<p className="mt-3 leading-6">{visitsNotice}</p>
 					</section>
 				) : null}
 
@@ -91,17 +103,17 @@ export default async function VisitsPage() {
 							/>
 						))}
 					</section>
-				) : (
-					<section className="rounded-[26px] border border-[var(--border-soft)] bg-white p-6 shadow-sm">
-						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-							{visitsNotice ? "Carga pendiente" : "Sin visitas programadas"}
-						</p>
-						<p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-							{visitsNotice
-								? "Cuando la conexión vuelva a responder, esta vista va a mostrar las visitas técnicas sin romper la continuidad operativa."
-								: "Cuando registres una visita técnica en Agenda, aparecerá aquí sin separar el flujo de trabajo."}
-						</p>
-					</section>
+				) : hasVisitsError ? null : (
+					<EmptyState
+						eyebrow="Sin visitas programadas"
+						title="No hay visitas para mostrar"
+						description="Cuando registres una visita técnica en Agenda, aparecerá aquí sin separar el flujo de trabajo."
+						action={
+							<Link href="/agenda" className="ui-secondary-action">
+								Abrir agenda
+							</Link>
+						}
+					/>
 				)}
 			</div>
 		</AppShell>

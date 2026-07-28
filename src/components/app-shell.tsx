@@ -123,7 +123,7 @@ export function AppShell({
 				className={`mx-auto grid min-h-[calc(100vh-24px)] w-full max-w-7xl gap-4 transition-[grid-template-columns] duration-300 ease-out lg:max-w-none lg:min-h-screen lg:gap-0 ${isSidebarCollapsed ? "lg:grid-cols-[88px_minmax(0,1fr)]" : "lg:grid-cols-[272px_minmax(0,1fr)]"} print:min-h-0 print:grid-cols-1 print:gap-0`}
 			>
 				<aside
-					className={`hidden border-r border-[rgba(13,79,46,0.10)] bg-[rgba(248,250,247,0.98)] transition-[border-radius] duration-300 ease-out lg:flex lg:min-h-screen lg:flex-col ${isSidebarCollapsed ? "lg:rounded-r-[22px]" : "lg:rounded-r-[28px]"} print:hidden`}
+					className={`hidden border-r border-[rgba(13,79,46,0.10)] bg-[rgba(250,251,248,0.98)] transition-[border-radius] duration-300 ease-out lg:flex lg:min-h-screen lg:flex-col ${isSidebarCollapsed ? "lg:rounded-r-[22px]" : "lg:rounded-r-[28px]"} print:hidden`}
 				>
 					<div
 						className={`relative border-b border-[rgba(13,79,46,0.08)] ${isSidebarCollapsed ? "px-3 py-3" : "px-4 py-4 pr-12"}`}
@@ -161,9 +161,11 @@ export function AppShell({
 								type="button"
 								onClick={() => setIsSidebarCollapsed((value) => !value)}
 								aria-label={
-									isSidebarCollapsed ? "Expandir sidebar" : "Colapsar sidebar"
+									isSidebarCollapsed
+										? "Expandir navegación"
+										: "Contraer navegación"
 								}
-								className={`absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-[10px] border border-[rgba(13,79,46,0.08)] bg-white text-[var(--muted)] shadow-[0_4px_12px_rgba(10,44,21,0.06)] transition-[transform,background-color,color,box-shadow,right,top] duration-300 ease-out hover:bg-[rgba(13,79,46,0.05)] hover:text-[var(--brand-deep)] active:scale-[0.96] ${isSidebarCollapsed ? "right-3 top-3" : "right-4 top-4"}`}
+								className="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-[10px] border border-[rgba(13,79,46,0.08)] bg-white text-[var(--muted)] shadow-[0_4px_12px_rgba(10,44,21,0.06)] transition-[transform,background-color,color,box-shadow] duration-300 ease-out hover:bg-[rgba(13,79,46,0.05)] hover:text-[var(--brand-deep)] active:scale-[0.96]"
 							>
 								<span
 									className={`transition-transform duration-300 ease-out ${isSidebarCollapsed ? "rotate-180" : "rotate-0"}`}
@@ -182,7 +184,7 @@ export function AppShell({
 								<p
 									className={`px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] transition-[opacity,max-height] duration-200 ease-out ${isSidebarCollapsed ? "max-h-0 overflow-hidden pb-0 opacity-0" : "max-h-8 opacity-100"}`}
 								>
-									Flujo
+									Operación
 								</p>
 								<nav className="flex flex-col gap-1.5">
 									{visibleWorkflowNavigation.map((item) => {
@@ -215,7 +217,7 @@ export function AppShell({
 								<p
 									className={`px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] transition-[opacity,max-height] duration-200 ease-out ${isSidebarCollapsed ? "max-h-0 overflow-hidden pb-0 opacity-0" : "max-h-8 opacity-100"}`}
 								>
-									Secundario
+									Administración
 								</p>
 								<nav className="flex flex-col gap-1">
 									{visibleSupportNavigation.map((item) => {
@@ -280,7 +282,7 @@ export function AppShell({
 								<form action={signOutAction} className="shrink-0">
 									<button
 										type="submit"
-										className="inline-flex min-h-[40px] items-center rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-300 hover:bg-emerald-50 active:scale-[0.96]"
+										className="ui-secondary-action"
 									>
 										Cerrar sesión
 									</button>

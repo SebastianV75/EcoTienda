@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { AppShell } from "@/components/app-shell";
+import { EmptyState } from "@/components/empty-state";
 import { TrabajoCard } from "@/features/trabajos/components/trabajo-card";
 import { TrabajoListFilters } from "@/features/trabajos/components/trabajo-list-filters";
 import { getTrabajosForList } from "@/features/trabajos/data";
@@ -47,21 +50,27 @@ export default async function TrabajosPage({
 						))}
 					</section>
 				) : (
-					<section className="rounded-[26px] border border-[var(--border-soft)] bg-white p-8 text-center shadow-sm">
-						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-							Sin resultados
-						</p>
-						<h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
-							{activeFilterCount > 0
+					<EmptyState
+						eyebrow="Sin resultados"
+						title={
+							activeFilterCount > 0
 								? "No hay trabajos que coincidan con los filtros"
-								: "Todavía no hay trabajos registrados"}
-						</h3>
-						<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-							{activeFilterCount > 0
-								? "Probá ajustando el trabajador, la etapa, el estado, el rango de fechas o la búsqueda."
-								: "Cuando crees trabajos desde Agenda, aparecerán aquí para seguir todo el flujo."}
-						</p>
-					</section>
+								: "Todavía no hay trabajos registrados"
+						}
+						description={
+							activeFilterCount > 0
+								? "Probá ajustar el trabajador, la etapa, el estado, el rango de fechas o la búsqueda."
+								: "Cuando crees trabajos desde Agenda, aparecerán aquí para seguir todo el flujo."
+						}
+						action={
+							<Link
+								href={activeFilterCount > 0 ? "/admin/trabajos" : "/agenda"}
+								className="ui-secondary-action"
+							>
+								{activeFilterCount > 0 ? "Limpiar filtros" : "Abrir agenda"}
+							</Link>
+						}
+					/>
 				)}
 			</div>
 		</AppShell>

@@ -6,20 +6,20 @@ type AuthStatusProps = {
 
 export function AuthStatus({ email }: AuthStatusProps) {
 	return (
-		<div className="mx-4 mb-4 rounded-[24px] border border-white/10 bg-white/8 p-4 text-white backdrop-blur-sm sm:mx-5 sm:mb-5">
-			<p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100/70">
-				Sesión
+		<div className="mx-4 mb-4 rounded-[24px] border border-[var(--border-soft)] bg-white/85 p-4 text-[var(--foreground)] shadow-[0_12px_28px_rgba(10,44,21,0.05)] backdrop-blur-sm sm:mx-5 sm:mb-5">
+			<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
+				Sesión activa
 			</p>
-			<p className="mt-2 text-sm leading-6 text-emerald-50/90">
+			<p className="mt-2 text-sm font-medium text-[var(--brand-deep)]">
 				Conectado como
 			</p>
-			<p className="mt-1 break-all text-sm font-medium text-white">
+			<p className="mt-1 break-all text-sm leading-6 text-[var(--foreground)]">
 				{email ?? "Usuario desconocido"}
 			</p>
 			<form action={signOutAction} className="mt-4">
 				<button
 					type="submit"
-					className="w-full rounded-full border border-white/15 bg-white/6 px-4 py-2.5 text-sm font-medium text-white transition duration-200 ease-out hover:border-emerald-300/40 hover:bg-white/10"
+					className="ui-secondary-action w-full"
 				>
 					Cerrar sesión
 				</button>

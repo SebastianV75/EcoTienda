@@ -11,6 +11,18 @@
   --brand-deep: #0d4f2e;
   --muted: #5e716b;
   --shadow: 0 24px 80px rgba(10, 44, 21, 0.12);
+  --shadow-panel: 0 24px 64px rgba(10, 44, 21, 0.08);
+  --shadow-card: 0 12px 28px rgba(10, 44, 21, 0.05);
+  --shadow-card-hover: 0 18px 40px rgba(10, 44, 21, 0.08);
+  --shadow-secondary: 0 8px 20px rgba(10, 44, 21, 0.05);
+  --shadow-secondary-hover: 0 10px 24px rgba(10, 44, 21, 0.06);
+  --radius-panel: 28px;
+  --radius-card: 24px;
+  --radius-soft: 18px;
+  --tracking-eyebrow: 0.22em;
+  --tracking-label: 0.18em;
+  --tracking-display: -0.04em;
+  --tracking-action: -0.01em;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
@@ -76,6 +88,81 @@ button:active {
 ::selection {
   background: rgba(47, 179, 20, 0.18);
   color: var(--brand-deep);
+}
+
+@layer utilities {
+  .rounded-panel {
+    border-radius: var(--radius-panel);
+  }
+
+  .rounded-card {
+    border-radius: var(--radius-card);
+  }
+
+  .rounded-soft {
+    border-radius: var(--radius-soft);
+  }
+
+  .shadow-panel {
+    box-shadow: var(--shadow-panel);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-card-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .tracking-eyebrow {
+    letter-spacing: var(--tracking-eyebrow);
+  }
+
+  .tracking-label {
+    letter-spacing: var(--tracking-label);
+  }
+
+  .tracking-display {
+    letter-spacing: var(--tracking-display);
+  }
+
+  .ui-secondary-action {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 1px solid var(--border-soft);
+    background: var(--surface);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: var(--tracking-action);
+    color: var(--brand-deep);
+    box-shadow: var(--shadow-secondary);
+    transition:
+      background-color 180ms var(--ease-out),
+      border-color 180ms var(--ease-out),
+      color 180ms var(--ease-out),
+      box-shadow 180ms var(--ease-out),
+      transform 160ms var(--ease-out);
+  }
+
+  .ui-secondary-action:hover {
+    border-color: rgba(13, 79, 46, 0.16);
+    background: rgba(243, 247, 243, 0.96);
+    box-shadow: var(--shadow-secondary-hover);
+  }
+
+  .ui-secondary-action:active {
+    transform: scale(0.98);
+  }
+
+  .ui-secondary-action:focus-visible {
+    outline: 2px solid rgba(47, 179, 20, 0.22);
+    outline-offset: 2px;
+  }
 }
 
 @media print {
