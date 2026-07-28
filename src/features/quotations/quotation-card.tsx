@@ -101,12 +101,16 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 	}
 
 	async function handleConfirmQuotation() {
-		startTransition(() => {
-			const formData = new FormData();
-			formData.append("quotation_id", quotation.id);
-			formData.append("trabajo_id", quotation.trabajo_id || "");
-			confirmAction(formData);
-		});
+		const formData = new FormData();
+		formData.append("quotation_id", quotation.id);
+		formData.append("trabajo_id", quotation.trabajo_id || "");
+		
+		const result = await confirmAction(formData);
+		
+		if (result.success) {
+			// Forzar recarga de la página para actualizar la lista
+			window.location.reload();
+		}
 	}
 
 	return (

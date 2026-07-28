@@ -28,6 +28,8 @@ type SaleRow = {
 export const getSales = cache(async (query?: string): Promise<SaleListItem[]> => {
 	const supabase = await createSupabaseServerClient();
 
+	console.log("[getSales] Iniciando consulta de ventas...");
+
 	// Obtener todos los trabajos en etapa venta con sus datos de venta (si existen)
 	const { data: trabajosData, error: trabajosError } = await supabase
 		.from("trabajos")
@@ -48,8 +50,10 @@ export const getSales = cache(async (query?: string): Promise<SaleListItem[]> =>
 		.eq("current_stage", "venta")
 		.order("created_at", { ascending: false });
 
+	console.log("[getSales] Resultado de consulta:", { trabajosData, trabajosError });
+
 	if (trabajosError) {
-		console.error("Error fetching trabajos en etapa venta:", trabajosError);
+		console.error("[getSales] Error al obtener trabajos en etapa venta:", trabajosError);
 		return [];
 	}
 
@@ -66,6 +70,8 @@ export const getSales = cache(async (query?: string): Promise<SaleListItem[]> =>
 			completed: !!saleStage?.completed_at,
 		};
 	});
+
+	console.log("[getSales] Ventas procesadas:", sales);
 
 	if (query) {
 		const normalized = query.toLowerCase().trim();

@@ -59,22 +59,29 @@ export async function confirmQuotationAction(
 	const quotationId = formData.get("quotation_id")?.toString();
 	const trabajoId = formData.get("trabajo_id")?.toString();
 
+	console.log("[confirmQuotationAction] Datos recibidos:", { quotationId, trabajoId });
+
 	if (!quotationId || !trabajoId) {
+		console.error("[confirmQuotationAction] Faltan datos");
 		return { error: "Faltan datos para confirmar la cotización." };
 	}
 
 	const supabase = await createSupabaseServerClient();
 
 	// Actualizar el trabajo para avanzar a la etapa de venta
-	const { error: trabajoError } = await supabase
+	const { data: updateData, error: trabajoError } = await supabase
 		.from("trabajos")
 		.update({
 			current_stage: "venta",
 			cotizacion_completed_at: new Date().toISOString(),
 		})
-		.eq("id", trabajoId);
+		.eq("id", trabajoId)
+		.select();
+
+	console.log("[confirmQuotationAction] Resultado de actualización:", { updateData, trabajoError });
 
 	if (trabajoError) {
+		console.error("[confirmQuotationAction] Error al actualizar:", trabajoError);
 		return { error: "No se pudo avanzar el trabajo a la etapa de venta." };
 	}
 
