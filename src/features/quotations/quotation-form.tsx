@@ -60,7 +60,7 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 
 	// Estado controlado para todos los campos del formulario
 	const [formData, setFormData] = useState({
-		supplier_name: initialData.supplier_name,
+		supplier_name: initialData.supplier_name ?? "",
 		project: initialData.project ?? "",
 		status: initialData.status ?? "draft",
 		terms_and_conditions: initialData.terms_and_conditions ?? "",
