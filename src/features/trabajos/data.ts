@@ -673,6 +673,29 @@ export const getTrabajoDocumentById = cache(async (id: string) => {
 	return normalizeTrabajoDocumentRow(data as unknown as TrabajoDocumentRow);
 });
 
+export const getLatestTrabajoDocumentByClientId = cache(async (clientId: string) => {
+	const supabase = await createSupabaseServerClient();
+	const { data, error } = await supabase
+		.from("trabajos")
+		.select(trabajoDocumentSelect)
+		.eq("client_id", clientId)
+		.order("updated_at", { ascending: false })
+		.limit(1);
+
+	if (error) {
+		throw new Error(
+			`No se pudo cargar el trabajo para documentos desde clientId. ${error.message}`,
+		);
+	}
+
+	const row = data?.[0];
+	if (!row) {
+		return null;
+	}
+
+	return normalizeTrabajoDocumentRow(row as unknown as TrabajoDocumentRow);
+});
+
 export const getTrabajosForDocumentSelection = cache(async () => {
 	const supabase = await createSupabaseServerClient();
 	const { data, error } = await supabase

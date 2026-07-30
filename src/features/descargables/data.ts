@@ -8,6 +8,13 @@ export type DescargableItem = {
 	created_at: string;
 };
 
+type DescargableRow = {
+	id: string;
+	descargables_completed_at: string | null;
+	created_at: string;
+	intake_name: string | null;
+};
+
 export const getDescargables = cache(async (): Promise<DescargableItem[]> => {
 	const supabase = await createSupabaseServerClient();
 
@@ -17,11 +24,7 @@ export const getDescargables = cache(async (): Promise<DescargableItem[]> => {
 			id,
 			descargables_completed_at,
 			created_at,
-			intake_name,
-			client_id,
-			clients (
-				full_name
-			)
+			intake_name
 		`)
 		.eq("current_stage", "descargables")
 		.order("created_at", { ascending: false });
@@ -31,9 +34,9 @@ export const getDescargables = cache(async (): Promise<DescargableItem[]> => {
 		return [];
 	}
 
-	return (data || []).map((row: any) => ({
+	return ((data || []) as DescargableRow[]).map((row) => ({
 		id: row.id,
-		client_name: row.clients?.[0]?.full_name || row.intake_name || "Sin nombre",
+		client_name: row.intake_name || "Sin nombre",
 		completed_at: row.descargables_completed_at,
 		created_at: row.created_at,
 	}));

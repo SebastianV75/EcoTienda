@@ -46,7 +46,7 @@ function getStageActions(project: Project) {
 						</Link>
 					) : null}
 					<Link
-						href={`/admin/quotations/new?clientId=${encodeURIComponent(project.client_id)}`}
+						href={`/admin/quotations/new?trabajoId=${encodeURIComponent(project.id)}`}
 						className="text-sm font-medium text-[var(--brand-strong)] underline-offset-4 hover:underline"
 					>
 						Crear cotización
@@ -97,7 +97,7 @@ export function ProjectCard({ project, followUpReason }: ProjectCardProps) {
 						<p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-strong)]">
 							Descargables
 						</p>
-						<DownloadShortcuts clientId={project.client_id} />
+						<DownloadShortcuts trabajoId={project.id} />
 					</div>
 				) : null}
 

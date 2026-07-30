@@ -89,12 +89,14 @@ export default async function QuotationDetailPage({
 					>
 						Volver a cotizaciones
 					</Link>
-					<a
+					<Link
 						href={`/api/quotations/${id}/pdf`}
+						target="_blank"
+						prefetch={false}
 						className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
 					>
 						Descargar PDF
-					</a>
+					</Link>
 				</div>
 
 				<section className="rounded-panel border border-[var(--border-soft)] bg-white p-5 shadow-panel sm:p-6">
@@ -140,7 +142,7 @@ export default async function QuotationDetailPage({
 									</p>
 								</div>
 								<Link
-									href={`/agenda/${quotationData.trabajo_id}`}
+									href={`/admin/trabajos/${quotationData.trabajo_id}`}
 									className="text-sm font-medium text-[var(--brand-strong)] underline-offset-4 hover:underline"
 								>
 									Abrir trabajo vinculado

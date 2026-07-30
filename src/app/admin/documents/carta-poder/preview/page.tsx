@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
-import { getClientById } from "@/features/clients/data";
 import {
 	CartaPoderPreview,
 	DEFAULT_POWER_ACCEPTOR,
@@ -10,7 +9,8 @@ import {
 	DEFAULT_WITNESS_TWO,
 } from "@/features/documents/carta-poder-preview";
 import { DocumentsPreviewEmptyState } from "@/features/documents/preview-empty-states";
-import { buildClientPreviewSubject, buildTrabajoPreviewSubject } from "@/features/documents/preview-data";
+import { resolveTrabajoPreviewId } from "@/features/documents/preview-routing";
+import { buildTrabajoPreviewSubject } from "@/features/documents/preview-data";
 import { PrintButton } from "@/features/documents/print-button";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
 
@@ -18,8 +18,8 @@ export default async function CartaPoderPreviewPage({
 	searchParams,
 }: {
 	searchParams?: Promise<{
-		clientId?: string;
 		trabajoId?: string;
+		clientId?: string;
 		powerAcceptorName?: string;
 		witnessOneName?: string;
 		witnessTwoName?: string;
@@ -27,15 +27,13 @@ export default async function CartaPoderPreviewPage({
 }) {
 	const user = await requireRole(["admin"]);
 	const params = searchParams ? await searchParams : undefined;
-	const clientId = params?.clientId;
-	const trabajoId = params?.trabajoId;
+	const trabajoId = await resolveTrabajoPreviewId(params);
 	const powerAcceptorName = params?.powerAcceptorName?.trim() ?? DEFAULT_POWER_ACCEPTOR;
 	const witnessOneName = params?.witnessOneName?.trim() ?? DEFAULT_WITNESS_ONE;
 	const witnessTwoName = params?.witnessTwoName?.trim() ?? DEFAULT_WITNESS_TWO;
 
 	const signatureEditor = (
 		<form method="get" className="rounded-card border border-[var(--border-soft)] bg-white p-4 print:hidden">
-			{clientId ? <input type="hidden" name="clientId" value={clientId} /> : null}
 			{trabajoId ? <input type="hidden" name="trabajoId" value={trabajoId} /> : null}
 			<div className="grid gap-3 md:grid-cols-3">
 				<label className="space-y-2 text-sm text-[var(--muted)]">
@@ -72,194 +70,74 @@ export default async function CartaPoderPreviewPage({
 		</form>
 	);
 
-	if (!clientId && !trabajoId) {
+	if (!trabajoId) {
 		return (
 			<AppShell
 				role="admin"
 				title="Carta poder"
-				description="Selecciona primero un cliente o un trabajo para generar la vista previa del documento."
+				description="Selecciona un trabajo para generar la vista previa del documento."
 				email={user.email}
 			>
 				<DocumentsPreviewEmptyState
-					eyebrow="Sin origen seleccionado"
-					title="Selecciona un cliente o un trabajo"
-					description="Elige desde dónde quieres completar la vista previa de Carta poder."
+					eyebrow="Trabajo no seleccionado"
+					title="Selecciona un trabajo"
+					description="Elige el trabajo desde el que quieres completar la vista previa de Carta poder."
 					action={
-						<>
-							<Link
-								href="/admin/documents/carta-poder"
-								className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
-							>
-								Elegir cliente
-							</Link>
-							<Link
-								href="/admin/documents/trabajos?template=carta-poder"
-								className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
-							>
-								Elegir trabajo
-							</Link>
-						</>
-					}
-				/>
-			</AppShell>
-		);
-	}
-
-	if (trabajoId) {
-		const trabajo = await getTrabajoDocumentById(trabajoId);
-
-		if (!trabajo) {
-			return (
-				<AppShell
-					role="admin"
-					title="Carta poder"
-					description="No fue posible cargar el trabajo solicitado."
-					email={user.email}
-				>
-					<DocumentsPreviewEmptyState
-						eyebrow="Trabajo no disponible"
-						title="No fue posible cargar el trabajo solicitado"
-						description="El trabajo solicitado no existe o ya no está disponible."
-						action={
-							<Link
-								href="/admin/documents/trabajos?template=carta-poder"
-								className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
-							>
-								Elegir otro trabajo
-							</Link>
-						}
-					/>
-				</AppShell>
-			);
-		}
-
-		const previewClient = buildTrabajoPreviewSubject(trabajo, "carta-poder");
-
-		return (
-			<AppShell
-				role="admin"
-				title="Vista previa · Carta poder"
-				description="Revisa el documento autollenado desde el trabajo y descárgalo o imprímelo cuando esté correcto."
-				email={user.email}
-			>
-				<div className="space-y-4">
-					<div className="flex flex-wrap gap-3 print:hidden">
 						<Link
 							href="/admin/documents/trabajos?template=carta-poder"
-							className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
+							className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
 						>
-							Cambiar trabajo
+							Elegir trabajo
 						</Link>
-						<PrintButton />
-					</div>
-
-					{signatureEditor}
-					<CartaPoderPreview
-						client={previewClient}
-						powerAcceptorName={powerAcceptorName}
-						witnessOneName={witnessOneName}
-						witnessTwoName={witnessTwoName}
-					/>
-				</div>
-			</AppShell>
-		);
-	}
-
-	if (!clientId) {
-		return (
-			<AppShell
-				role="admin"
-				title="Carta poder"
-				description="Selecciona primero un cliente para generar la vista previa del documento."
-				email={user.email}
-			>
-				<DocumentsPreviewEmptyState
-					eyebrow="Cliente no seleccionado"
-					title="Selecciona un cliente"
-					description="Elige el cliente desde el que quieres generar la vista previa de Carta poder."
-					action={
-						<>
-							<Link
-								href="/admin/documents/carta-poder"
-								className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
-							>
-								Elegir cliente
-							</Link>
-							<Link
-								href="/admin/documents/trabajos?template=carta-poder"
-								className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
-							>
-								Elegir trabajo
-							</Link>
-						</>
 					}
 				/>
 			</AppShell>
 		);
 	}
 
-	let client;
-	try {
-		client = await getClientById(clientId);
-	} catch {
-		client = null;
-	}
+	const trabajo = await getTrabajoDocumentById(trabajoId);
 
-	if (!client) {
+	if (!trabajo) {
 		return (
 			<AppShell
 				role="admin"
 				title="Carta poder"
-				description="No fue posible cargar el cliente solicitado."
+				description="No fue posible cargar el trabajo solicitado."
 				email={user.email}
 			>
 				<DocumentsPreviewEmptyState
-					eyebrow="Cliente no disponible"
-					title="No fue posible cargar el cliente solicitado"
-					description="El cliente solicitado no existe o ya no está disponible."
+					eyebrow="Trabajo no disponible"
+					title="No fue posible cargar el trabajo solicitado"
+					description="El trabajo solicitado no existe o ya no está disponible."
 					action={
-						<>
-							<Link
-								href="/admin/documents/carta-poder"
-								className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
-							>
-								Elegir otro cliente
-							</Link>
-							<Link
-								href="/admin/documents/trabajos?template=carta-poder"
-								className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
-							>
-								Elegir trabajo
-							</Link>
-						</>
+						<Link
+							href="/admin/documents/trabajos?template=carta-poder"
+							className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
+						>
+							Elegir otro trabajo
+						</Link>
 					}
 				/>
 			</AppShell>
 		);
 	}
 
-	const previewClient = buildClientPreviewSubject(client);
+	const previewClient = buildTrabajoPreviewSubject(trabajo, "carta-poder");
 
 	return (
 		<AppShell
 			role="admin"
 			title="Vista previa · Carta poder"
-			description="Revisa el documento autollenado y descárgalo o imprímelo cuando esté correcto."
+			description="Revisa el documento autollenado desde el trabajo y descárgalo o imprímelo cuando esté correcto."
 			email={user.email}
 		>
 			<div className="space-y-4">
 				<div className="flex flex-wrap gap-3 print:hidden">
 					<Link
-						href={`/admin/documents/carta-poder?clientId=${client.id}`}
-						className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
-					>
-						Cambiar cliente
-					</Link>
-					<Link
 						href="/admin/documents/trabajos?template=carta-poder"
 						className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
 					>
-						Elegir trabajo
+						Cambiar trabajo
 					</Link>
 					<PrintButton />
 				</div>

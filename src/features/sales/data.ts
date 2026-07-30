@@ -10,36 +10,27 @@ export type SaleListItem = {
 	completed: boolean;
 };
 
-type SaleRow = {
+type SaleTrabajoRow = {
 	id: string;
-	trabajo_id: string;
-	confirmed_on: string | null;
-	agreed_amount: number;
-	completed_at: string | null;
-	trabajos: Array<{
-		intake_name: string | null;
-		client_id: string | null;
-		clients: Array<{
-			full_name: string | null;
-		}> | null;
+	intake_name: string | null;
+	trabajo_sale_stage: Array<{
+		id: string;
+		confirmed_on: string | null;
+		agreed_amount: number | null;
+		completed_at: string | null;
 	}> | null;
 };
 
-export const getSales = cache(async (query?: string): Promise<SaleListItem[]> => {
-	const supabase = await createSupabaseServerClient();
+export const getSales = cache(
+	async (query?: string): Promise<SaleListItem[]> => {
+		const supabase = await createSupabaseServerClient();
 
-	console.log("[getSales] Iniciando consulta de ventas...");
-
-	// Obtener todos los trabajos en etapa venta con sus datos de venta (si existen)
-	const { data: trabajosData, error: trabajosError } = await supabase
-		.from("trabajos")
-		.select(`
+		// Obtener todos los trabajos en etapa venta con sus datos de venta (si existen)
+		const { data: trabajosData, error: trabajosError } = await supabase
+			.from("trabajos")
+			.select(`
 			id,
 			intake_name,
-			client_id,
-			clients (
-				full_name
-			),
 			trabajo_sale_stage (
 				id,
 				confirmed_on,
@@ -47,40 +38,41 @@ export const getSales = cache(async (query?: string): Promise<SaleListItem[]> =>
 				completed_at
 			)
 		`)
-		.eq("current_stage", "venta")
-		.order("created_at", { ascending: false });
+			.eq("current_stage", "venta")
+			.order("created_at", { ascending: false });
 
-	console.log("[getSales] Resultado de consulta:", { trabajosData, trabajosError });
+		if (trabajosError) {
+			console.error(
+				"[getSales] Error al obtener trabajos en etapa venta:",
+				trabajosError,
+			);
+			return [];
+		}
 
-	if (trabajosError) {
-		console.error("[getSales] Error al obtener trabajos en etapa venta:", trabajosError);
-		return [];
-	}
+		const sales: SaleListItem[] = (
+			(trabajosData || []) as SaleTrabajoRow[]
+		).map((row) => {
+			const saleStage = row.trabajo_sale_stage?.[0];
 
-	const sales: SaleListItem[] = (trabajosData || []).map((row: any) => {
-		const client = row.clients?.[0];
-		const saleStage = row.trabajo_sale_stage?.[0];
-		
-		return {
-			id: saleStage?.id || row.id,
-			trabajo_id: row.id,
-			client_name: client?.full_name || row.intake_name || "Sin nombre",
-			quotation_amount: saleStage?.agreed_amount || 0,
-			confirmed_on: saleStage?.confirmed_on || null,
-			completed: !!saleStage?.completed_at,
-		};
-	});
+			return {
+				id: saleStage?.id || row.id,
+				trabajo_id: row.id,
+				client_name: row.intake_name || "Sin nombre",
+				quotation_amount: saleStage?.agreed_amount || 0,
+				confirmed_on: saleStage?.confirmed_on || null,
+				completed: !!saleStage?.completed_at,
+			};
+		});
 
-	console.log("[getSales] Ventas procesadas:", sales);
+		if (query) {
+			const normalized = query.toLowerCase().trim();
+			return sales.filter(
+				(sale) =>
+					sale.client_name?.toLowerCase().includes(normalized) ||
+					sale.trabajo_id.toLowerCase().includes(normalized),
+			);
+		}
 
-	if (query) {
-		const normalized = query.toLowerCase().trim();
-		return sales.filter(
-			(sale) =>
-				sale.client_name?.toLowerCase().includes(normalized) ||
-				sale.trabajo_id.toLowerCase().includes(normalized)
-		);
-	}
-
-	return sales;
-});
+		return sales;
+	},
+);
