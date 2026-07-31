@@ -215,7 +215,9 @@ function mapPumpPackage(visita: VisitaData): QuotationItem[] {
 /**
  * Mapea paquetes de cambio a 220
  */
-function mapCambio220Package(_visita: VisitaData): QuotationItem[] {
+function mapCambio220Package(visita?: VisitaData): QuotationItem[] {
+	void visita;
+
 	const items: QuotationItem[] = [];
 
 	const acometida = findClosestCatalogProduct("Acometida 220 v");

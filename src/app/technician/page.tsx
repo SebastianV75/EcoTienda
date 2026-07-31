@@ -6,7 +6,6 @@ import { getCurrentUser, requireRole } from "@/features/auth/session";
 import { getTrabajosForList } from "@/features/trabajos/data";
 import { getWorkerByAuthUserId } from "@/features/workers/data";
 import { hasSupabaseEnv } from "@/lib/env";
-import { trabajoStageLabels } from "@/types/trabajo";
 
 function formatAppointment(dateString: string | null) {
 	if (!dateString) {

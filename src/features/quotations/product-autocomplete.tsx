@@ -30,16 +30,11 @@ export function ProductAutocomplete({
 	className = "",
 }: ProductAutocompleteProps) {
 	const [isOpen, setIsOpen] = useState(false);
-	const [query, setQuery] = useState(value);
 	const [dropdownPos, setDropdownPos] = useState<DropdownPosition | null>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const listId = useId();
-
-	useEffect(() => {
-		setQuery(value);
-	}, [value]);
 
 	function updatePosition() {
 		if (!inputRef.current) return;
@@ -88,7 +83,7 @@ export function ProductAutocomplete({
 		return () => document.removeEventListener("mousedown", handleMouseDown);
 	}, [isOpen]);
 
-	const normalizedQuery = query.trim().toLowerCase();
+	const normalizedQuery = value.trim().toLowerCase();
 
 	const filtered: FilteredCategory[] = PRODUCT_CATALOG.map((cat) => ({
 		name: cat.name,
@@ -98,13 +93,11 @@ export function ProductAutocomplete({
 	const totalResults = filtered.reduce((sum, cat) => sum + cat.products.length, 0);
 
 	function handleInputChange(text: string) {
-		setQuery(text);
 		onChange(text);
 		setIsOpen(true);
 	}
 
 	function handleSelect(product: string) {
-		setQuery(product);
 		onChange(product);
 		setIsOpen(false);
 		inputRef.current?.focus();
@@ -130,7 +123,7 @@ export function ProductAutocomplete({
 				<input
 					ref={inputRef}
 					type="text"
-					value={query}
+					value={value}
 					onChange={(e) => handleInputChange(e.target.value)}
 					onFocus={handleFocus}
 					onKeyDown={handleKeyDown}

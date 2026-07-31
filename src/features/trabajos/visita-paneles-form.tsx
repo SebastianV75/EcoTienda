@@ -17,6 +17,7 @@ import {
 
 type VisitaPanelesFormProps = {
 	trabajoId: string;
+	googleMapsApiKey?: string | null;
 };
 
 const initialState: VisitaPanelesActionState = {
@@ -32,7 +33,13 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 	);
 }
 
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+function FieldLabel({
+	children,
+	required,
+}: {
+	children: React.ReactNode;
+	required?: boolean;
+}) {
 	return (
 		<label className="flex items-center gap-1 text-sm font-medium text-[var(--brand-deep)]">
 			{children}
@@ -45,7 +52,10 @@ function sectionFieldClass() {
 	return "w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300";
 }
 
-export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
+export function VisitaPanelesForm({
+	trabajoId,
+	googleMapsApiKey = null,
+}: VisitaPanelesFormProps) {
 	const [state, formAction, isPending] = useActionState(
 		saveVisitaPanelesAction,
 		initialState,
@@ -96,7 +106,10 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5 md:col-span-2">
 						<FieldLabel>Ubicación</FieldLabel>
-						<GoogleMapsPicker name="location" />
+						<GoogleMapsPicker
+							name="location"
+							googleMapsApiKey={googleMapsApiKey}
+						/>
 					</div>
 				</div>
 			</div>
@@ -106,7 +119,11 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 				<div className="grid gap-4 md:grid-cols-2">
 					<div className="space-y-2.5">
 						<FieldLabel>Recibo de luz</FieldLabel>
-						<ImageUpload name="utility_bill" trabajoId={trabajoId} fieldName="utility_bill" />
+						<ImageUpload
+							name="utility_bill"
+							trabajoId={trabajoId}
+							fieldName="utility_bill"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
@@ -155,7 +172,11 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 							<div className="space-y-2.5">
 								<FieldLabel>Foto de donde va el minisplit</FieldLabel>
-								<ImageUpload name="minisplit_photo" trabajoId={trabajoId} fieldName="minisplit_photo" />
+								<ImageUpload
+									name="minisplit_photo"
+									trabajoId={trabajoId}
+									fieldName="minisplit_photo"
+								/>
 							</div>
 						</div>
 					)}
@@ -163,23 +184,42 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 			</div>
 
 			<div className="space-y-5">
-				<SectionHeader>Evidencia Fotográfica y Detalles Técnicos (Casa y Medidor)</SectionHeader>
+				<SectionHeader>
+					Evidencia Fotográfica y Detalles Técnicos (Casa y Medidor)
+				</SectionHeader>
 				<div className="grid gap-4 md:grid-cols-2">
 					<div className="space-y-2.5">
 						<FieldLabel>Hojas de visita</FieldLabel>
-						<ImageUpload name="hojas_visita" trabajoId={trabajoId} fieldName="hojas_visita" />
+						<ImageUpload
+							name="hojas_visita"
+							trabajoId={trabajoId}
+							fieldName="hojas_visita"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de casa</FieldLabel>
-						<ImageUpload name="house_image" trabajoId={trabajoId} fieldName="house_image" />
+						<ImageUpload
+							name="house_image"
+							trabajoId={trabajoId}
+							fieldName="house_image"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Orientación</FieldLabel>
 						<DropdownSelect
 							name="orientation"
-							options={["Norte", "Sur", "Este", "Oeste", "Noreste", "Noroeste", "Sureste", "Suroeste"]}
+							options={[
+								"Norte",
+								"Sur",
+								"Este",
+								"Oeste",
+								"Noreste",
+								"Noroeste",
+								"Sureste",
+								"Suroeste",
+							]}
 							description="viendo la casa de la puerta hacia la calle"
 						/>
 					</div>
@@ -191,23 +231,36 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen del medidor de lejos</FieldLabel>
-						<ImageUpload name="meter_far" trabajoId={trabajoId} fieldName="meter_far" />
+						<ImageUpload
+							name="meter_far"
+							trabajoId={trabajoId}
+							fieldName="meter_far"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de medidor de cerca</FieldLabel>
-						<ImageUpload name="meter_close" trabajoId={trabajoId} fieldName="meter_close" />
+						<ImageUpload
+							name="meter_close"
+							trabajoId={trabajoId}
+							fieldName="meter_close"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Voltaje</FieldLabel>
 						<ToggleGroup name="voltage" options={["110v", "220v"]} />
-						<p className="text-xs text-[var(--muted)]">En el medidor dice 1F o 2F</p>
+						<p className="text-xs text-[var(--muted)]">
+							En el medidor dice 1F o 2F
+						</p>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Medidor</FieldLabel>
-						<ToggleGroup name="meter_position" options={["Da a la calle", "Adentro del barandal"]} />
+						<ToggleGroup
+							name="meter_position"
+							options={["Da a la calle", "Adentro del barandal"]}
+						/>
 					</div>
 
 					<div className="space-y-2.5">
@@ -217,12 +270,20 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de centro de carga</FieldLabel>
-						<ImageUpload name="load_center" trabajoId={trabajoId} fieldName="load_center" />
+						<ImageUpload
+							name="load_center"
+							trabajoId={trabajoId}
+							fieldName="load_center"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de subida eléctrica</FieldLabel>
-						<ImageUpload name="electrical_rise" trabajoId={trabajoId} fieldName="electrical_rise" />
+						<ImageUpload
+							name="electrical_rise"
+							trabajoId={trabajoId}
+							fieldName="electrical_rise"
+						/>
 					</div>
 				</div>
 			</div>
@@ -237,12 +298,19 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen del techo</FieldLabel>
-						<ImageUpload name="roof_image" trabajoId={trabajoId} fieldName="roof_image" />
+						<ImageUpload
+							name="roof_image"
+							trabajoId={trabajoId}
+							fieldName="roof_image"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Material del techo</FieldLabel>
-						<SurveySelect name="roof_material" options={["Losa", "Lámina", "Madera"]} />
+						<SurveySelect
+							name="roof_material"
+							options={["Losa", "Lámina", "Madera"]}
+						/>
 					</div>
 
 					<div className="space-y-2.5">
@@ -255,22 +323,37 @@ export function VisitaPanelesForm({ trabajoId }: VisitaPanelesFormProps) {
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de sombreado 1</FieldLabel>
-						<ImageUpload name="shading_1" trabajoId={trabajoId} fieldName="shading_1" />
+						<ImageUpload
+							name="shading_1"
+							trabajoId={trabajoId}
+							fieldName="shading_1"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Imagen de sombreado 2</FieldLabel>
-						<ImageUpload name="shading_2" trabajoId={trabajoId} fieldName="shading_2" />
+						<ImageUpload
+							name="shading_2"
+							trabajoId={trabajoId}
+							fieldName="shading_2"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Medidas del techo</FieldLabel>
-						<ImageUpload name="roof_measurements" trabajoId={trabajoId} fieldName="roof_measurements" />
+						<ImageUpload
+							name="roof_measurements"
+							trabajoId={trabajoId}
+							fieldName="roof_measurements"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Tipo de estructura</FieldLabel>
-						<SurveySelect name="structure_type" options={["1 nivel", "2 niveles", "Ambos"]} />
+						<SurveySelect
+							name="structure_type"
+							options={["1 nivel", "2 niveles", "Ambos"]}
+						/>
 					</div>
 				</div>
 			</div>

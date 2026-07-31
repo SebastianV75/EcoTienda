@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
-import { EmptyState } from "@/components/empty-state";
 import { AgendaItemCard } from "@/features/agenda/agenda-item-card";
 import { getAgendaItemsByType } from "@/features/agenda/data";
 import type { AgendaItem } from "@/types/agenda";

@@ -7,6 +7,7 @@ import { requireRole } from "@/features/auth/session";
 import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
+import { getVisitSaveRedirectPath } from "./visit-save-redirect";
 
 export type PanelesSolaresActionState = {
 	error: string | null;
@@ -22,9 +23,9 @@ export async function savePanelesSolaresAction(
 	_prevState: PanelesSolaresActionState,
 	formData: FormData,
 ): Promise<PanelesSolaresActionState> {
-	if (hasSupabaseEnv()) {
-		await requireRole(["admin", "technician"]);
-	}
+	const user = hasSupabaseEnv()
+		? await requireRole(["admin", "technician"])
+		: null;
 
 	const trabajoId = getString(formData, "trabajo_id");
 	const contactName = getString(formData, "contact_name");
@@ -80,7 +81,10 @@ export async function savePanelesSolaresAction(
 		.upsert(payload, { onConflict: "trabajo_id" });
 
 	if (visitaError) {
-		return { error: "No se pudo guardar la visita de paneles solares.", success: null };
+		return {
+			error: "No se pudo guardar la visita de paneles solares.",
+			success: null,
+		};
 	}
 
 	const { error: trabajoError } = await supabase
@@ -99,22 +103,26 @@ export async function savePanelesSolaresAction(
 	}
 
 	// Crear automáticamente la cotización vinculada al trabajo
-	const { quotationId, error: quotationError } = await createQuotationFromVisita(supabase, {
-		trabajo_id: trabajoId,
-		contact_name: contactName,
-		contact_phone: contactPhone,
-		confirmed_address: location,
-		interest_package: "Paneles Solares",
-		quotation_type: "Paneles Solares",
-		notes: notes,
-		house_attributes: houseAttributes,
-		electrical_attributes: electricalAttributes,
-		roof_attributes: {},
-		minisplit_attributes: minisplitAttributes,
-	});
+	const { quotationId, error: quotationError } =
+		await createQuotationFromVisita(supabase, {
+			trabajo_id: trabajoId,
+			contact_name: contactName,
+			contact_phone: contactPhone,
+			confirmed_address: location,
+			interest_package: "Paneles Solares",
+			quotation_type: "Paneles Solares",
+			notes: notes,
+			house_attributes: houseAttributes,
+			electrical_attributes: electricalAttributes,
+			roof_attributes: {},
+			minisplit_attributes: minisplitAttributes,
+		});
 
 	if (quotationError) {
-		console.error("[Paneles Solares] Error creando cotización automática:", quotationError);
+		console.error(
+			"[Paneles Solares] Error creando cotización automática:",
+			quotationError,
+		);
 	}
 
 	revalidatePath("/admin/visits");
@@ -123,10 +131,20 @@ export async function savePanelesSolaresAction(
 	revalidatePath(`/agenda/${trabajoId}`);
 	revalidatePath("/admin/quotations");
 
-	// Redirigir a la cotización creada
-	if (quotationId) {
-		redirect(`/admin/quotations/${quotationId}/edit`);
+	if (user) {
+		redirect(
+			getVisitSaveRedirectPath({
+				role: user.role,
+				trabajoId,
+				quotationId,
+			}),
+		);
 	}
 
-	return { error: null, success: "Visita de paneles solares guardada correctamente. Cotización creada automáticamente.", quotationId };
+	return {
+		error: null,
+		success:
+			"Visita de paneles solares guardada correctamente. Cotización creada automáticamente.",
+		quotationId,
+	};
 }

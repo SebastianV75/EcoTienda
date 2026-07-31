@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
+
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const BUCKET_NAME = "visita-images";
@@ -10,7 +11,6 @@ type ImageUploadProps = {
 	trabajoId: string;
 	fieldName: string;
 	defaultValue?: string;
-	label?: string;
 };
 
 export function ImageUpload({
@@ -18,12 +18,12 @@ export function ImageUpload({
 	trabajoId,
 	fieldName,
 	defaultValue = "",
-	label = "📷 Pulsa para seleccionar",
 }: ImageUploadProps) {
 	const [imageUrl, setImageUrl] = useState(defaultValue);
 	const [uploading, setUploading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const inputRef = useRef<HTMLInputElement>(null);
+	const cameraInputRef = useRef<HTMLInputElement>(null);
+	const galleryInputRef = useRef<HTMLInputElement>(null);
 
 	async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
 		const file = event.target.files?.[0];
@@ -33,13 +33,11 @@ export function ImageUpload({
 		setUploading(true);
 
 		try {
-			// Comprimir imagen antes de subir
 			const compressedFile = await compressImage(file);
 
 			const supabase = createSupabaseBrowserClient();
 			const ext = file.name.split(".").pop() || "jpg";
-			const timestamp = Date.now();
-			const path = `${trabajoId}/${fieldName}-${timestamp}.${ext}`;
+			const path = `${trabajoId}/${fieldName}-${file.lastModified}-${file.size}.${ext}`;
 
 			const { error: uploadError } = await supabase.storage
 				.from(BUCKET_NAME)
@@ -60,6 +58,7 @@ export function ImageUpload({
 			setImageUrl("");
 		} finally {
 			setUploading(false);
+			event.target.value = "";
 		}
 	}
 
@@ -70,7 +69,6 @@ export function ImageUpload({
 			const img = new Image();
 
 			img.onload = () => {
-				// Redimensionar si es muy grande (max 1920px)
 				const maxSize = 1920;
 				let { width, height } = img;
 
@@ -93,7 +91,7 @@ export function ImageUpload({
 						resolve(blob!);
 					},
 					"image/jpeg",
-					0.85, // Calidad 85%
+					0.85,
 				);
 			};
 
@@ -101,10 +99,21 @@ export function ImageUpload({
 		});
 	}
 
+	function resetSelection() {
+		setImageUrl("");
+		if (cameraInputRef.current) {
+			cameraInputRef.current.value = "";
+		}
+		if (galleryInputRef.current) {
+			galleryInputRef.current.value = "";
+		}
+	}
+
 	return (
 		<div className="space-y-2">
 			{imageUrl ? (
 				<div className="space-y-2">
+					{/* eslint-disable-next-line @next/next/no-img-element -- preview local/storage image without Next optimization inside form workflow */}
 					<img
 						src={imageUrl}
 						alt="Preview"
@@ -112,12 +121,7 @@ export function ImageUpload({
 					/>
 					<button
 						type="button"
-						onClick={() => {
-							setImageUrl("");
-							if (inputRef.current) {
-								inputRef.current.value = "";
-							}
-						}}
+						onClick={resetSelection}
 						disabled={uploading}
 						className="rounded-full bg-[var(--surface)] px-4 py-2 text-sm text-[var(--brand-deep)] transition duration-200 hover:bg-[rgba(239,246,239,0.96)] disabled:opacity-50"
 					>
@@ -125,14 +129,24 @@ export function ImageUpload({
 					</button>
 				</div>
 			) : (
-				<button
-					type="button"
-					onClick={() => inputRef.current?.click()}
-					disabled={uploading}
-					className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[var(--muted)] transition duration-200 hover:border-[var(--brand)] hover:bg-[var(--surface)] disabled:opacity-50"
-				>
-					{uploading ? "Subiendo..." : label}
-				</button>
+				<div className="grid gap-2 sm:grid-cols-2">
+					<button
+						type="button"
+						onClick={() => cameraInputRef.current?.click()}
+						disabled={uploading}
+						className="rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[var(--brand-deep)] transition duration-200 hover:border-[var(--brand)] hover:bg-[var(--surface)] disabled:opacity-50"
+					>
+						📷 Cámara
+					</button>
+					<button
+						type="button"
+						onClick={() => galleryInputRef.current?.click()}
+						disabled={uploading}
+						className="rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[var(--brand-deep)] transition duration-200 hover:border-[var(--brand)] hover:bg-[var(--surface)] disabled:opacity-50"
+					>
+						🖼️ Galería
+					</button>
+				</div>
 			)}
 
 			{error && (
@@ -142,10 +156,18 @@ export function ImageUpload({
 			)}
 
 			<input
-				ref={inputRef}
+				ref={cameraInputRef}
 				type="file"
 				accept="image/*"
 				capture="environment"
+				onChange={handleFileChange}
+				className="hidden"
+				disabled={uploading}
+			/>
+			<input
+				ref={galleryInputRef}
+				type="file"
+				accept="image/*"
 				onChange={handleFileChange}
 				className="hidden"
 				disabled={uploading}

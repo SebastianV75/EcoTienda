@@ -7,6 +7,7 @@ import { requireRole } from "@/features/auth/session";
 import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
+import { getVisitSaveRedirectPath } from "./visit-save-redirect";
 
 export type VisitaPanelesActionState = {
 	error: string | null;
@@ -22,9 +23,9 @@ export async function saveVisitaPanelesAction(
 	_prevState: VisitaPanelesActionState,
 	formData: FormData,
 ): Promise<VisitaPanelesActionState> {
-	if (hasSupabaseEnv()) {
-		await requireRole(["admin", "technician"]);
-	}
+	const user = hasSupabaseEnv()
+		? await requireRole(["admin", "technician"])
+		: null;
 
 	const trabajoId = getString(formData, "trabajo_id");
 	const executionDate = getString(formData, "execution_date_date");
@@ -149,22 +150,26 @@ export async function saveVisitaPanelesAction(
 	}
 
 	// Crear automáticamente la cotización vinculada al trabajo
-	const { quotationId, error: quotationError } = await createQuotationFromVisita(supabase, {
-		trabajo_id: trabajoId,
-		contact_name: contactName,
-		contact_phone: contactPhone,
-		confirmed_address: location,
-		interest_package: interestPackage,
-		quotation_type: quotationType,
-		notes: notes,
-		house_attributes: houseAttributes,
-		electrical_attributes: electricalAttributes,
-		roof_attributes: roofAttributes,
-		minisplit_attributes: minisplitAttributes,
-	});
+	const { quotationId, error: quotationError } =
+		await createQuotationFromVisita(supabase, {
+			trabajo_id: trabajoId,
+			contact_name: contactName,
+			contact_phone: contactPhone,
+			confirmed_address: location,
+			interest_package: interestPackage,
+			quotation_type: quotationType,
+			notes: notes,
+			house_attributes: houseAttributes,
+			electrical_attributes: electricalAttributes,
+			roof_attributes: roofAttributes,
+			minisplit_attributes: minisplitAttributes,
+		});
 
 	if (quotationError) {
-		console.error("[Visita Paneles] Error creando cotización automática:", quotationError);
+		console.error(
+			"[Visita Paneles] Error creando cotización automática:",
+			quotationError,
+		);
 		// No fallar completamente, la visita ya se guardó
 	}
 
@@ -174,10 +179,20 @@ export async function saveVisitaPanelesAction(
 	revalidatePath(`/agenda/${trabajoId}`);
 	revalidatePath("/admin/quotations");
 
-	// Redirigir a la cotización creada
-	if (quotationId) {
-		redirect(`/admin/quotations/${quotationId}/edit`);
+	if (user) {
+		redirect(
+			getVisitSaveRedirectPath({
+				role: user.role,
+				trabajoId,
+				quotationId,
+			}),
+		);
 	}
 
-	return { error: null, success: "Visita de paneles guardada correctamente. Cotización creada automáticamente.", quotationId };
+	return {
+		error: null,
+		success:
+			"Visita de paneles guardada correctamente. Cotización creada automáticamente.",
+		quotationId,
+	};
 }

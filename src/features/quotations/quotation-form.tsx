@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useActionState } from "react";
 
 import { createQuotationAction, updateQuotationAction, saveDraftAction, type QuotationActionState } from "@/features/quotations/actions";
@@ -55,6 +55,10 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 	const [quotationId, setQuotationId] = useState<string | null>(initialData.quotation_id ?? null);
 	const [isSaving, setIsSaving] = useState(false);
 	const [saveMessage, setSaveMessage] = useState<string | null>(null);
+	const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const hasChangesRef = useRef(false);
+	const itemsRef = useRef(items);
+	const quotationIdRef = useRef(quotationId);
 
 	// Estado controlado para todos los campos del formulario
 	const [formData, setFormData] = useState({
@@ -66,32 +70,53 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 		expected_delivery: initialData.expected_delivery ?? "",
 		trabajo_id: initialData.trabajo_id ?? "",
 	});
+	const formDataRef = useRef(formData);
 
-	// Función para actualizar un campo del formulario
-	const updateField = useCallback((field: string, value: string) => {
-		setFormData(prev => ({ ...prev, [field]: value }));
-	}, []);
+	useEffect(() => {
+		formDataRef.current = formData;
+	}, [formData]);
 
-	// Función para guardar borrador
-	const saveDraft = useCallback(async () => {
-		if (!quotationId) return;
+	useEffect(() => {
+		itemsRef.current = items;
+	}, [items]);
+
+	useEffect(() => {
+		quotationIdRef.current = quotationId;
+	}, [quotationId]);
+
+	function scheduleDraftSave() {
+		if (saveTimeoutRef.current) {
+			clearTimeout(saveTimeoutRef.current);
+		}
+
+		saveTimeoutRef.current = setTimeout(() => {
+			void saveDraft();
+		}, 2000);
+	}
+
+	async function saveDraft() {
+		if (!hasChangesRef.current) return;
 
 		setIsSaving(true);
 		setSaveMessage(null);
 		try {
+			const currentFormData = formDataRef.current;
 			const result = await saveDraftAction({
-				quotationId,
-				trabajoId: formData.trabajo_id || undefined,
-				supplierName: formData.supplier_name || undefined,
-				project: formData.project || undefined,
-				status: formData.status || "draft",
-				termsAndConditions: formData.terms_and_conditions || undefined,
-				orderDeadline: formData.order_deadline || undefined,
-				expectedDelivery: formData.expected_delivery || undefined,
-				items: items,
+				quotationId: quotationIdRef.current ?? undefined,
+				trabajoId: currentFormData.trabajo_id || undefined,
+				supplierName: currentFormData.supplier_name || undefined,
+				project: currentFormData.project || undefined,
+				status: currentFormData.status || "draft",
+				termsAndConditions: currentFormData.terms_and_conditions || undefined,
+				orderDeadline: currentFormData.order_deadline || undefined,
+				expectedDelivery: currentFormData.expected_delivery || undefined,
+				items: itemsRef.current,
 			});
 
 			if (result.success) {
+				if (result.quotationId) {
+					setQuotationId(result.quotationId);
+				}
 				setSaveMessage("Guardado");
 				setTimeout(() => setSaveMessage(null), 3000);
 			}
@@ -100,20 +125,53 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 		} finally {
 			setIsSaving(false);
 		}
-	}, [quotationId, items, formData]);
+	}
+
+	function updateField(field: string, value: string) {
+		setFormData((prev) => ({ ...prev, [field]: value }));
+		hasChangesRef.current = true;
+		scheduleDraftSave();
+	}
+
+	useEffect(() => {
+		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+			if (hasChangesRef.current) {
+				e.preventDefault();
+				e.returnValue = "";
+				void saveDraft();
+			}
+		};
+
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+	}, []);
+
+	useEffect(() => {
+		return () => {
+			if (saveTimeoutRef.current) {
+				clearTimeout(saveTimeoutRef.current);
+			}
+		};
+	}, []);
 
 	function handleItemChange(index: number, item: QuotationItem) {
 		const updated = [...items];
 		updated[index] = item;
 		setItems(updated);
+		hasChangesRef.current = true;
+		scheduleDraftSave();
 	}
 
 	function handleItemRemove(index: number) {
 		setItems(items.filter((_, i) => i !== index));
+		hasChangesRef.current = true;
+		scheduleDraftSave();
 	}
 
 	function handleAddProduct() {
 		setItems([...items, createEmptyItem(items.length)]);
+		hasChangesRef.current = true;
+		scheduleDraftSave();
 	}
 
 	function handleAddSection() {
@@ -126,6 +184,8 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 				unit: "",
 			},
 		]);
+		hasChangesRef.current = true;
+		scheduleDraftSave();
 	}
 
 	function handleAddNote() {
@@ -141,6 +201,8 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 				amount: 0,
 			},
 		]);
+		hasChangesRef.current = true;
+		scheduleDraftSave();
 	}
 
 	const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
@@ -167,9 +229,9 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 							</svg>
 							{isEditing ? "Editar" : "Nueva cotización"}
 						</h2>
-						{saveMessage && (
+						{(isSaving || saveMessage) && (
 							<p className="mt-1 text-xs text-emerald-600">
-								{saveMessage}
+								{isSaving ? "Guardando..." : saveMessage}
 							</p>
 						)}
 					</div>

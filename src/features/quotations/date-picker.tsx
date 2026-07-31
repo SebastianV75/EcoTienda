@@ -131,9 +131,10 @@ export function DatePicker({ id, name, value, onChange, placeholder = "Seleccion
 
 	return (
 		<div ref={containerRef} className="relative">
-			<input type="hidden" name={name} value={selectedDate} />
+			<input id={id} type="hidden" name={name} value={selectedDate} />
 			<button
 				type="button"
+				aria-controls={id}
 				onClick={() => setIsOpen(!isOpen)}
 				className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-left text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 			>

@@ -13,7 +13,6 @@ export function StageProgressIndicator({ currentStage, size = "md" }: StageProgr
 			{trabajoStages.map((stage, index) => {
 				const isCompleted = index < currentIndex;
 				const isCurrent = index === currentIndex;
-				const isPending = index > currentIndex;
 
 				return (
 					<div key={stage} className="flex items-center gap-1">
