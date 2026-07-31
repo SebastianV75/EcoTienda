@@ -4,6 +4,7 @@
 
 import type { QuotationItem } from "@/types/quotation";
 import { findReferencePrice } from "./reference-prices";
+import { findClosestCatalogProduct } from "./product-catalog";
 
 type VisitaData = {
 	interest_package: string;
@@ -61,61 +62,53 @@ function mapSolarPackage(visita: VisitaData): QuotationItem[] {
 	const items: QuotationItem[] = [];
 	const pkg = visita.interest_package.toLowerCase();
 
-	// Detectar cantidad de paneles
 	const panelMatch = pkg.match(/(\d+)\s*panel/i);
 	const panelCount = panelMatch ? parseInt(panelMatch[1]) : null;
 
-	// Detectar potencia del inversor
 	const inverterMatch = pkg.match(/inversor.*?(\d+)\s*kw/i);
 	const inverterKw = inverterMatch ? parseInt(inverterMatch[1]) : null;
 
 	if (panelCount && inverterKw) {
-		// Paquete específico con paneles e inversor
-		items.push({
-			product_name: `${panelCount} paneles solares inversor de ${inverterKw} kw`,
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0, // Se calculará después
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		const candidate = `${panelCount} paneles solares inversor de ${inverterKw} kw`;
+		const catalogName = findClosestCatalogProduct(candidate);
+		if (catalogName) {
+			items.push({
+				product_name: catalogName,
+				quantity: 1,
+				unit: "pz",
+				unit_price: 0,
+				tax_rate: 16,
+				amount: 0,
+				sort_order: items.length,
+			});
+		}
 	} else if (panelCount) {
-		// Solo paneles
-		items.push({
-			product_name: `${panelCount} paneles solares`,
-			quantity: panelCount,
-			unit: "pz",
-			unit_price: 0,
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		const candidate = `${panelCount} paneles solares inversor de 2 kw`;
+		const catalogName = findClosestCatalogProduct(candidate);
+		if (catalogName) {
+			items.push({
+				product_name: catalogName,
+				quantity: 1,
+				unit: "pz",
+				unit_price: 0,
+				tax_rate: 16,
+				amount: 0,
+				sort_order: items.length,
+			});
+		}
 	} else {
-		// Paquete genérico
-		items.push({
-			product_name: "Sistema de paneles solares",
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0,
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
-	}
-
-	// Agregar estructura si hay datos del techo
-	const roofMaterial = visita.roof_attributes.roof_material as string | undefined;
-	if (roofMaterial) {
-		items.push({
-			product_name: "Estructura para paneles solares",
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0,
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		const catalogName = findClosestCatalogProduct("2 paneles solares inversor de 2 kw");
+		if (catalogName) {
+			items.push({
+				product_name: catalogName,
+				quantity: 1,
+				unit: "pz",
+				unit_price: 0,
+				tax_rate: 16,
+				amount: 0,
+				sort_order: items.length,
+			});
+		}
 	}
 
 	return items;
@@ -128,14 +121,10 @@ function mapMinisplitPackage(visita: VisitaData): QuotationItem[] {
 	const items: QuotationItem[] = [];
 	const pkg = visita.interest_package.toLowerCase();
 
-	// Detectar toneladas
 	const tonMatch = pkg.match(/(\d+\.?\d*)\s*ton/i);
 	const tons = tonMatch ? parseFloat(tonMatch[1]) : null;
 
-	// Detectar si es inverter
 	const isInverter = pkg.includes("inverter");
-
-	// Detectar marca
 	const isMirage = pkg.includes("mirage");
 	const isUA = pkg.includes("ua") || pkg.includes("uniden");
 
@@ -157,26 +146,33 @@ function mapMinisplitPackage(visita: VisitaData): QuotationItem[] {
 		productName += " convencional";
 	}
 
-	items.push({
-		product_name: productName,
-		quantity: 1,
-		unit: "pz",
-		unit_price: 0,
-		tax_rate: 16,
-		amount: 0,
-		sort_order: items.length,
-	});
+	const catalogName = findClosestCatalogProduct(productName);
+	if (catalogName) {
+		items.push({
+			product_name: catalogName,
+			quantity: 1,
+			unit: "pz",
+			unit_price: 0,
+			tax_rate: 16,
+			amount: 0,
+			sort_order: items.length,
+		});
+	}
 
-	// Agregar instalación
-	items.push({
-		product_name: `Instalación de minisplit ${tons || 1} ton`,
-		quantity: 1,
-		unit: "pz",
-		unit_price: 0,
-		tax_rate: 16,
-		amount: 0,
-		sort_order: items.length,
-	});
+	const installTons = tons || 1;
+	const installCandidate = installTons <= 1 ? "Instalacion de minisplit 1 ton" : "Instalacion de minisplit 2 ton";
+	const installName = findClosestCatalogProduct(installCandidate);
+	if (installName) {
+		items.push({
+			product_name: installName,
+			quantity: 1,
+			unit: "pz",
+			unit_price: 0,
+			tax_rate: 16,
+			amount: 0,
+			sort_order: items.length,
+		});
+	}
 
 	return items;
 }
@@ -188,39 +184,22 @@ function mapPumpPackage(visita: VisitaData): QuotationItem[] {
 	const items: QuotationItem[] = [];
 	const pkg = visita.interest_package.toLowerCase();
 
+	let candidate: string;
+
 	if (pkg.includes("alberca") || pkg.includes("pool")) {
-		items.push({
-			product_name: "Motobomba alberca pool32-900/2 paneles /estructura",
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0,
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		candidate = "Motobomba alberca pool32-900/2 paneles /estructura";
 	} else if (pkg.includes("centrifuga")) {
-		items.push({
-			product_name: "Motobomba centrifuga kolos-cfp-1300/6paneles/estructura",
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0,
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		candidate = "Motobomba centrifuga kolos-cfp-1300/6paneles/estructura";
 	} else if (pkg.includes("periferica")) {
-		items.push({
-			product_name: "Motobomba periferica kolosasp50x/2 paneles/estructura",
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0,
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		candidate = "Motobomba periferica kolosasp50x/2 paneles/estructura";
 	} else {
+		candidate = "Motobomba sumergible kolos2spp / 2 paneles/estructura";
+	}
+
+	const catalogName = findClosestCatalogProduct(candidate);
+	if (catalogName) {
 		items.push({
-			product_name: "Sistema de bombeo solar",
+			product_name: catalogName,
 			quantity: 1,
 			unit: "pz",
 			unit_price: 0,
@@ -237,26 +216,35 @@ function mapPumpPackage(visita: VisitaData): QuotationItem[] {
  * Mapea paquetes de cambio a 220
  */
 function mapCambio220Package(_visita: VisitaData): QuotationItem[] {
-	return [
-		{
-			product_name: "Cambio a 220v",
+	const items: QuotationItem[] = [];
+
+	const acometida = findClosestCatalogProduct("Acometida 220 v");
+	if (acometida) {
+		items.push({
+			product_name: acometida,
 			quantity: 1,
 			unit: "pz",
 			unit_price: 0,
 			tax_rate: 16,
 			amount: 0,
 			sort_order: 0,
-		},
-		{
-			product_name: "Acometida 220 v",
+		});
+	}
+
+	const centro = findClosestCatalogProduct("Centro de carga de minisplit");
+	if (centro) {
+		items.push({
+			product_name: centro,
 			quantity: 1,
 			unit: "pz",
 			unit_price: 0,
 			tax_rate: 16,
 			amount: 0,
-			sort_order: 1,
-		},
-	];
+			sort_order: items.length,
+		});
+	}
+
+	return items;
 }
 
 /**
@@ -266,36 +254,22 @@ function mapAmpliacionPackage(visita: VisitaData): QuotationItem[] {
 	const items: QuotationItem[] = [];
 	const pkg = visita.interest_package.toLowerCase();
 
-	// Detectar paneles adicionales
 	const panelMatch = pkg.match(/(\d+)\s*panel/i);
 	const panelCount = panelMatch ? parseInt(panelMatch[1]) : null;
 
 	if (panelCount) {
-		items.push({
-			product_name: `${panelCount} paneles solares ampliacion`,
-			quantity: panelCount,
-			unit: "pz",
-			unit_price: 0,
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
-	}
-
-	// Detectar cambio de inversor
-	const inverterMatch = pkg.match(/inversor.*?(\d+)\s*kw/i);
-	const inverterKw = inverterMatch ? parseInt(inverterMatch[1]) : null;
-
-	if (inverterKw) {
-		items.push({
-			product_name: `Inversor de ${inverterKw} kw`,
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0,
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		const catalogName = findClosestCatalogProduct("Panel solar 550w ampliacion");
+		if (catalogName) {
+			items.push({
+				product_name: catalogName,
+				quantity: panelCount,
+				unit: "pz",
+				unit_price: 0,
+				tax_rate: 16,
+				amount: 0,
+				sort_order: items.length,
+			});
+		}
 	}
 
 	return items;

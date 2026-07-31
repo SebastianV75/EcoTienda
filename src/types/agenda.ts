@@ -25,7 +25,6 @@ export type AgendaItem = {
 	tipo: AgendaItemType;
 	estado: AgendaItemState;
 	descripcion: string | null;
-	client_id: string | null;
 	visit_id: string | null;
 	trabajo_id: string | null;
 	work_type: string | null;
@@ -43,14 +42,6 @@ export type AgendaItem = {
 	longitude: number | null;
 	created_at: string;
 	updated_at: string;
-	client?: AgendaItemClientSummary | null;
-};
-
-export type AgendaItemClientSummary = {
-	id: string;
-	full_name: string;
-	phone: string;
-	rpu: string;
 };
 
 export const agendaWorkTypeOptions = [

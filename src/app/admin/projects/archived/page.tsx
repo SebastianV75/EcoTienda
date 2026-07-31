@@ -54,10 +54,7 @@ export default async function ArchivedProjectsPage() {
 								<div className="flex flex-wrap items-start justify-between gap-3">
 									<div>
 										<p className="text-lg font-semibold tracking-[-0.03em] text-[var(--brand-deep)]">
-											{project.client?.full_name ?? "Cliente sin nombre"}
-										</p>
-										<p className="mt-1 text-sm text-[var(--muted)]">
-											{project.client?.rpu ? `RPU ${project.client.rpu}` : "Sin RPU"}
+											{"Trabajo sin nombre"}
 										</p>
 									</div>
 									<span

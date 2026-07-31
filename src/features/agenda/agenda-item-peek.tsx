@@ -107,7 +107,6 @@ export function AgendaItemPeek({
 								</dt>
 								<dd className="mt-1 leading-6">
 									{item.contact_name?.trim() ||
-										item.client?.full_name ||
 										"Sin contacto"}
 								</dd>
 							</div>

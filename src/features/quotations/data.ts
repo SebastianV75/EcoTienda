@@ -155,3 +155,21 @@ export const getQuotationById = cache(async (id: string) => {
 		items: (items ?? []) as QuotationItem[],
 	} as QuotationDetail;
 });
+
+export const getQuotationByTrabajoId = cache(async (trabajoId: string) => {
+	const supabase = await createSupabaseServerClient();
+
+	const { data: quotation, error } = await supabase
+		.from("quotations")
+		.select("id, quotation_number, status, total")
+		.eq("trabajo_id", trabajoId)
+		.order("created_at", { ascending: false })
+		.limit(1)
+		.maybeSingle();
+
+	if (error || !quotation) {
+		return null;
+	}
+
+	return quotation as { id: string; quotation_number: string | null; status: string; total: number };
+});

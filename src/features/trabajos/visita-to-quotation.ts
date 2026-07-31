@@ -1,4 +1,5 @@
 import type { QuotationItem } from "@/types/quotation";
+import { findClosestCatalogProduct } from "@/features/quotations/product-catalog";
 
 type VisitaData = {
 	interest_package: string;
@@ -21,67 +22,64 @@ export function generateQuotationItemsFromVisita(visita: VisitaData): QuotationI
 	const items: QuotationItem[] = [];
 	const packageLower = visita.interest_package.toLowerCase();
 
-	// Mapeo de paquetes de interés a productos sugeridos
 	if (packageLower.includes("minisplit")) {
-		items.push({
-			product_name: "Instalación de minisplit",
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0, // Precio por definir
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		const catalogName = findClosestCatalogProduct("Minisplit 1 ton inverter");
+		if (catalogName) {
+			items.push({
+				product_name: catalogName,
+				quantity: 1,
+				unit: "pz",
+				unit_price: 0,
+				tax_rate: 16,
+				amount: 0,
+				sort_order: items.length,
+			});
+		}
 	}
 
 	if (packageLower.includes("panel") || packageLower.includes("solar")) {
-		items.push({
-			product_name: "Sistema de paneles solares",
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0, // Precio por definir
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		const catalogName = findClosestCatalogProduct("4 paneles solares inversor de 2 kw");
+		if (catalogName) {
+			items.push({
+				product_name: catalogName,
+				quantity: 1,
+				unit: "pz",
+				unit_price: 0,
+				tax_rate: 16,
+				amount: 0,
+				sort_order: items.length,
+			});
+		}
 	}
 
 	if (packageLower.includes("bomba") || packageLower.includes("bombeo")) {
-		items.push({
-			product_name: "Sistema de bombeo solar",
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0, // Precio por definir
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		const catalogName = findClosestCatalogProduct("Motobomba sumergible kolos2spp / 2 paneles/estructura");
+		if (catalogName) {
+			items.push({
+				product_name: catalogName,
+				quantity: 1,
+				unit: "pz",
+				unit_price: 0,
+				tax_rate: 16,
+				amount: 0,
+				sort_order: items.length,
+			});
+		}
 	}
 
-	// Si tiene minisplit según los atributos
-	if (visita.minisplit_attributes.has_minisplit === "Si") {
-		items.push({
-			product_name: "Minisplit (especificar en cotización)",
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0,
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
-	}
-
-	// Si no hay items sugeridos, agregar uno genérico
 	if (items.length === 0) {
-		items.push({
-			product_name: visita.interest_package || "Servicio solicitado",
-			quantity: 1,
-			unit: "pz",
-			unit_price: 0,
-			tax_rate: 16,
-			amount: 0,
-			sort_order: items.length,
-		});
+		const catalogName = findClosestCatalogProduct(visita.interest_package || "Minisplit 1 ton convencional");
+		if (catalogName) {
+			items.push({
+				product_name: catalogName,
+				quantity: 1,
+				unit: "pz",
+				unit_price: 0,
+				tax_rate: 16,
+				amount: 0,
+				sort_order: items.length,
+			});
+		}
 	}
 
 	return items;

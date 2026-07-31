@@ -72,7 +72,7 @@ function getStatusConfig(status: TrabajoStatus) {
 }
 
 function buildBriefDescription(trabajo: TrabajoListItem): string {
-	const parts = [trabajo.client_name ?? trabajo.intake_name].filter(Boolean);
+	const parts = [trabajo.intake_name].filter(Boolean);
 
 	if (trabajo.agenda_work_type) {
 		parts.push(trabajo.agenda_work_type);
@@ -122,7 +122,7 @@ export function TrabajoCard({ trabajo }: TrabajoCardProps) {
 						)}
 					</div>
 					<h3 className="mt-3 truncate text-xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
-						{trabajo.client_name ?? "Sin cliente"}
+						{trabajo.intake_name ?? "Sin cliente"}
 					</h3>
 				</div>
 				<span className="mt-1 text-[var(--muted)] transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:text-[var(--brand-deep)]">

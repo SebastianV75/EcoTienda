@@ -9,6 +9,7 @@ import { DescargablesCompletionForm } from "@/features/trabajos/descargables-com
 import { CotizacionForm } from "@/features/trabajos/cotizacion-form";
 import { isTrabajoDescargablesReady } from "@/features/trabajos/rules";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
+import { getQuotationByTrabajoId } from "@/features/quotations/data";
 
 import { trabajoStageLabels } from "@/types/trabajo";
 import { TrabajoTimeline } from "@/features/trabajos/trabajo-timeline";
@@ -59,6 +60,7 @@ export default async function TrabajoDetailPage({
 	const { id } = await params;
 
 	const trabajo = await getTrabajoDocumentById(id);
+	const linkedQuotation = await getQuotationByTrabajoId(id);
 
 	if (!trabajo) {
 		notFound();
@@ -343,7 +345,32 @@ export default async function TrabajoDetailPage({
 						stage="cotizacion"
 						isCompleted={completedStages.includes("cotizacion")}
 					>
-						{isCotizacionEditable ? (
+						{linkedQuotation ? (
+							<div className="space-y-3">
+								<div className="flex items-center justify-between rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3">
+									<div>
+										<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
+											Cotización activa
+										</p>
+										<p className="mt-1 text-sm font-medium text-[var(--foreground)]">
+											{linkedQuotation.quotation_number ?? "Sin número"}
+											<span className="ml-2 text-xs text-[var(--muted)]">
+												{linkedQuotation.status === "draft" ? "Borrador" : linkedQuotation.status === "sent" ? "Enviada" : linkedQuotation.status === "accepted" ? "Aceptada" : linkedQuotation.status}
+											</span>
+										</p>
+										<p className="mt-0.5 text-sm text-[var(--brand-deep)] font-semibold">
+											${linkedQuotation.total.toFixed(2)} MXN
+										</p>
+									</div>
+									<Link
+										href={`/admin/quotations/${linkedQuotation.id}/edit`}
+										className="rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
+									>
+										Editar cotización
+									</Link>
+								</div>
+							</div>
+						) : isCotizacionEditable ? (
 							<CotizacionForm
 								trabajoId={trabajo.id}
 								defaultValues={quotationDefaults}

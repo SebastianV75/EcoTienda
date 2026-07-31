@@ -96,7 +96,6 @@ export type TrabajoListItem = {
 	intake_name: string;
 	intake_address_text: string;
 	created_at: string;
-	client_name: string | null;
 	agenda_work_type: string | null;
 	assigned_worker_name: string | null;
 	appointment_at: string | null;
@@ -178,7 +177,6 @@ intake_address_text,
 intake_latitude,
 intake_longitude,
 work_type,
-client_id,
 agenda_completed_at,
 visita_completed_at,
 cotizacion_completed_at,
@@ -204,7 +202,6 @@ agenda:trabajo_agenda_stage (
 	address_text,
 	latitude,
 	longitude,
-	client_id,
 	completed_at,
 	created_at,
 	updated_at
@@ -258,7 +255,6 @@ intake_address_text,
 intake_latitude,
 intake_longitude,
 work_type,
-client_id,
 agenda_completed_at,
 visita_completed_at,
 cotizacion_completed_at,
@@ -284,7 +280,6 @@ agenda:trabajo_agenda_stage (
 	address_text,
 	latitude,
 	longitude,
-	client_id,
 	completed_at,
 	created_at,
 	updated_at
@@ -443,7 +438,6 @@ function normalizeTrabajoListRow(row: TrabajoListRow): TrabajoListItem {
 		intake_name: row.intake_name,
 		intake_address_text: row.intake_address_text,
 		created_at: row.created_at,
-		client_name: null,
 		agenda_work_type: row.work_type ?? agenda?.work_type ?? null,
 		assigned_worker_name:
 			agendaWorker?.full_name ?? agenda?.assignee_name?.trim() ?? null,
@@ -671,29 +665,6 @@ export const getTrabajoDocumentById = cache(async (id: string) => {
 	}
 
 	return normalizeTrabajoDocumentRow(data as unknown as TrabajoDocumentRow);
-});
-
-export const getLatestTrabajoDocumentByClientId = cache(async (clientId: string) => {
-	const supabase = await createSupabaseServerClient();
-	const { data, error } = await supabase
-		.from("trabajos")
-		.select(trabajoDocumentSelect)
-		.eq("client_id", clientId)
-		.order("updated_at", { ascending: false })
-		.limit(1);
-
-	if (error) {
-		throw new Error(
-			`No se pudo cargar el trabajo para documentos desde clientId. ${error.message}`,
-		);
-	}
-
-	const row = data?.[0];
-	if (!row) {
-		return null;
-	}
-
-	return normalizeTrabajoDocumentRow(row as unknown as TrabajoDocumentRow);
 });
 
 export const getTrabajosForDocumentSelection = cache(async () => {

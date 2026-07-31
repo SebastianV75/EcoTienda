@@ -1,9 +1,11 @@
 type QuotationFooterProps = {
 	subtotal: number;
 	total: number;
+	termsAndConditions?: string;
+	onTermsChange?: (value: string) => void;
 };
 
-export function QuotationFooter({ subtotal, total }: QuotationFooterProps) {
+export function QuotationFooter({ subtotal, total, termsAndConditions = "", onTermsChange }: QuotationFooterProps) {
 	return (
 		<section className="grid gap-6 lg:grid-cols-2">
 			<div className="space-y-2.5">
@@ -15,8 +17,9 @@ export function QuotationFooter({ subtotal, total }: QuotationFooterProps) {
 				</label>
 				<textarea
 					id="terms_and_conditions"
-					name="terms_and_conditions"
 					rows={6}
+					value={termsAndConditions}
+					onChange={(e) => onTermsChange?.(e.target.value)}
 					className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 					placeholder="Defina sus términos y condiciones..."
 				/>

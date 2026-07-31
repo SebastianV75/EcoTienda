@@ -89,7 +89,7 @@ export async function confirmQuotationAction(
 	revalidatePath("/admin/sales");
 	revalidatePath("/admin/trabajos");
 
-	return { error: null, success: true };
+	redirect("/admin/sales");
 }
 
 export async function createQuotationAction(
@@ -131,6 +131,16 @@ export async function createQuotationAction(
 	const quotationNumber = await generateQuotationNumber();
 
 	const supabase = await createSupabaseServerClient();
+
+	if (trabajoId) {
+		await supabase
+			.from("trabajos")
+			.update({
+				current_stage: "cotizacion",
+				visita_completed_at: new Date().toISOString(),
+			})
+			.eq("id", trabajoId);
+	}
 
 	const { data: quotation, error: quotationError } = await supabase
 		.from("quotations")
@@ -193,7 +203,8 @@ export async function createQuotationAction(
 		revalidatePath(`/agenda/${trabajoId}`);
 		revalidatePath(`/admin/visits/${trabajoId}`);
 	}
-	redirect(`/admin/quotations/${quotation.id}`);
+
+	return { error: null, success: true, quotationId: quotation.id };
 }
 
 export async function updateQuotationAction(
@@ -313,7 +324,8 @@ export async function updateQuotationAction(
 		revalidatePath(`/agenda/${trabajoId}`);
 		revalidatePath(`/admin/visits/${trabajoId}`);
 	}
-	redirect(`/admin/quotations/${quotation.id}`);
+
+	return { error: null, success: true, quotationId: quotation.id };
 }
 
 export async function saveDraftAction(

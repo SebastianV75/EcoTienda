@@ -329,7 +329,7 @@ function TrabajoCard({
 					<div className="flex items-start justify-between gap-3">
 						<div className="flex-1">
 							<h3 className="text-lg font-semibold text-gray-900">
-								{trabajo.client_name ?? trabajo.intake_name}
+								{trabajo.intake_name}
 							</h3>
 							{appointmentLabel && (
 								<div className="mt-1 flex items-center gap-1.5 text-sm text-gray-600">

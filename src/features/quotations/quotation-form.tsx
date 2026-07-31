@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useActionState } from "react";
 
 import { createQuotationAction, updateQuotationAction, saveDraftAction, type QuotationActionState } from "@/features/quotations/actions";
@@ -53,10 +53,8 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 	);
 	const [items, setItems] = useState<QuotationItem[]>(initialData.items);
 	const [quotationId, setQuotationId] = useState<string | null>(initialData.quotation_id ?? null);
-	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [isSaving, setIsSaving] = useState(false);
-	const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	const hasChangesRef = useRef(false);
+	const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
 	// Estado controlado para todos los campos del formulario
 	const [formData, setFormData] = useState({
@@ -72,25 +70,17 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 	// Función para actualizar un campo del formulario
 	const updateField = useCallback((field: string, value: string) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
-		hasChangesRef.current = true;
-		
-		if (saveTimeoutRef.current) {
-			clearTimeout(saveTimeoutRef.current);
-		}
-
-		saveTimeoutRef.current = setTimeout(() => {
-			saveDraft();
-		}, 2000);
 	}, []);
 
 	// Función para guardar borrador
 	const saveDraft = useCallback(async () => {
-		if (!hasChangesRef.current) return;
+		if (!quotationId) return;
 
 		setIsSaving(true);
+		setSaveMessage(null);
 		try {
 			const result = await saveDraftAction({
-				quotationId: quotationId ?? undefined,
+				quotationId,
 				trabajoId: formData.trabajo_id || undefined,
 				supplierName: formData.supplier_name || undefined,
 				project: formData.project || undefined,
@@ -101,10 +91,9 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 				items: items,
 			});
 
-			if (result.success && result.quotationId) {
-				setQuotationId(result.quotationId);
-				setLastSaved(new Date());
-				hasChangesRef.current = false;
+			if (result.success) {
+				setSaveMessage("Guardado");
+				setTimeout(() => setSaveMessage(null), 3000);
 			}
 		} catch (error) {
 			console.error("Error al guardar borrador:", error);
@@ -113,80 +102,18 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 		}
 	}, [quotationId, items, formData]);
 
-	// Actualizar la referencia de saveDraft cuando cambien las dependencias
-	useEffect(() => {
-		if (saveTimeoutRef.current) {
-			clearTimeout(saveTimeoutRef.current);
-			saveTimeoutRef.current = setTimeout(() => {
-				saveDraft();
-			}, 2000);
-		}
-	}, [saveDraft]);
-
-	// Guardar al salir de la página
-	useEffect(() => {
-		const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
-			if (hasChangesRef.current) {
-				e.preventDefault();
-				e.returnValue = "";
-				
-				// Intentar guardar antes de cerrar
-				await saveDraft();
-			}
-		};
-
-		window.addEventListener("beforeunload", handleBeforeUnload);
-		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-	}, [saveDraft]);
-
-	// Limpiar timeout al desmontar
-	useEffect(() => {
-		return () => {
-			if (saveTimeoutRef.current) {
-				clearTimeout(saveTimeoutRef.current);
-			}
-		};
-	}, []);
-
 	function handleItemChange(index: number, item: QuotationItem) {
 		const updated = [...items];
 		updated[index] = item;
 		setItems(updated);
-		hasChangesRef.current = true;
-		
-		if (saveTimeoutRef.current) {
-			clearTimeout(saveTimeoutRef.current);
-		}
-
-		saveTimeoutRef.current = setTimeout(() => {
-			saveDraft();
-		}, 2000);
 	}
 
 	function handleItemRemove(index: number) {
 		setItems(items.filter((_, i) => i !== index));
-		hasChangesRef.current = true;
-		
-		if (saveTimeoutRef.current) {
-			clearTimeout(saveTimeoutRef.current);
-		}
-
-		saveTimeoutRef.current = setTimeout(() => {
-			saveDraft();
-		}, 2000);
 	}
 
 	function handleAddProduct() {
 		setItems([...items, createEmptyItem(items.length)]);
-		hasChangesRef.current = true;
-		
-		if (saveTimeoutRef.current) {
-			clearTimeout(saveTimeoutRef.current);
-		}
-
-		saveTimeoutRef.current = setTimeout(() => {
-			saveDraft();
-		}, 2000);
 	}
 
 	function handleAddSection() {
@@ -199,15 +126,6 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 				unit: "",
 			},
 		]);
-		hasChangesRef.current = true;
-		
-		if (saveTimeoutRef.current) {
-			clearTimeout(saveTimeoutRef.current);
-		}
-
-		saveTimeoutRef.current = setTimeout(() => {
-			saveDraft();
-		}, 2000);
 	}
 
 	function handleAddNote() {
@@ -223,15 +141,6 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 				amount: 0,
 			},
 		]);
-		hasChangesRef.current = true;
-		
-		if (saveTimeoutRef.current) {
-			clearTimeout(saveTimeoutRef.current);
-		}
-
-		saveTimeoutRef.current = setTimeout(() => {
-			saveDraft();
-		}, 2000);
 	}
 
 	const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
@@ -258,9 +167,9 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 							</svg>
 							{isEditing ? "Editar" : "Nueva cotización"}
 						</h2>
-						{lastSaved && (
-							<p className="mt-1 text-xs text-[var(--muted)]">
-								{isSaving ? "Guardando..." : `Último guardado: ${lastSaved.toLocaleTimeString("es-MX")}`}
+						{saveMessage && (
+							<p className="mt-1 text-xs text-emerald-600">
+								{saveMessage}
 							</p>
 						)}
 					</div>
@@ -326,7 +235,7 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 					</section>
 				)}
 
-				<QuotationFooter subtotal={subtotal} total={total} />
+				<QuotationFooter subtotal={subtotal} total={total} termsAndConditions={formData.terms_and_conditions} onTermsChange={(v) => updateField("terms_and_conditions", v)} />
 
 				<input type="hidden" name="items" value={JSON.stringify(items)} />
 				<input type="hidden" name="quotation_number" value={initialData.quotation_number ?? ""} />

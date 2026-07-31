@@ -140,3 +140,40 @@ export const PRODUCT_CATALOG: ProductCategory[] = [
 export function getAllProducts(): string[] {
 	return PRODUCT_CATALOG.flatMap((cat) => cat.products);
 }
+
+const ALL_PRODUCTS = getAllProducts();
+
+export function findClosestCatalogProduct(name: string): string | null {
+	const normalized = name.toLowerCase().trim();
+
+	const exact = ALL_PRODUCTS.find((p) => p.toLowerCase() === normalized);
+	if (exact) return exact;
+
+	const contains = ALL_PRODUCTS.find((p) => {
+		const pl = p.toLowerCase();
+		return pl.includes(normalized) || normalized.includes(pl);
+	});
+	if (contains) return contains;
+
+	const keywords = normalized.split(/\s+/).filter((w) => w.length > 2);
+	let bestMatch: string | null = null;
+	let bestScore = 0;
+
+	for (const product of ALL_PRODUCTS) {
+		const pl = product.toLowerCase();
+		let score = 0;
+		for (const kw of keywords) {
+			if (pl.includes(kw)) score++;
+		}
+		if (score > bestScore && score >= Math.ceil(keywords.length * 0.5)) {
+			bestScore = score;
+			bestMatch = product;
+		}
+	}
+
+	return bestMatch;
+}
+
+export function isCatalogProduct(name: string): boolean {
+	return findClosestCatalogProduct(name) !== null;
+}

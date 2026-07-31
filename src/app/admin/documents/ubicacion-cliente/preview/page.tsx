@@ -12,7 +12,7 @@ import { getTrabajoDocumentById } from "@/features/trabajos/data";
 export default async function UbicacionClientePreviewPage({
 	searchParams,
 }: {
-	searchParams?: Promise<{ trabajoId?: string; clientId?: string }>;
+	searchParams?: Promise<{ trabajoId?: string }>;
 }) {
 	const user = await requireRole(["admin"]);
 	const params = searchParams ? await searchParams : undefined;

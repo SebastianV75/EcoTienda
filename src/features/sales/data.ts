@@ -25,7 +25,6 @@ export const getSales = cache(
 	async (query?: string): Promise<SaleListItem[]> => {
 		const supabase = await createSupabaseServerClient();
 
-		// Obtener todos los trabajos en etapa venta con sus datos de venta (si existen)
 		const { data: trabajosData, error: trabajosError } = await supabase
 			.from("trabajos")
 			.select(`

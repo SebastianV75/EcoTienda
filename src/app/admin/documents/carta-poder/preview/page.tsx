@@ -19,7 +19,6 @@ export default async function CartaPoderPreviewPage({
 }: {
 	searchParams?: Promise<{
 		trabajoId?: string;
-		clientId?: string;
 		powerAcceptorName?: string;
 		witnessOneName?: string;
 		witnessTwoName?: string;

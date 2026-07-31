@@ -66,17 +66,6 @@ export function AgendaItemCard({
 							}).format(new Date(item.appointment_at))}
 						</p>
 					) : null}
-					{item.client ? (
-						<p
-							className={
-								compact
-									? "mt-1 text-[11px] leading-4 text-[var(--muted)]"
-									: "mt-2 text-sm leading-6 text-[var(--muted)]"
-							}
-						>
-							{item.client.full_name}
-						</p>
-					) : null}
 					{item.assignee_worker?.full_name || item.assignee_name ? (
 						<p
 							className={

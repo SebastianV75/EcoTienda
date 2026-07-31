@@ -87,17 +87,17 @@ export default async function DocumentsPage() {
 					</div>
 				</section>
 
-				<section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+				<section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 					{templates.map((template) => (
 						<article
 							key={template.title}
 							className="rounded-[26px] border border-[var(--border-soft)] bg-white p-6 shadow-sm"
 						>
-							<div className="flex items-center justify-between gap-3">
+							<div className="flex items-center justify-between">
 								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
 									Plantilla
 								</p>
-								<span className="rounded-full bg-[var(--surface-strong)] px-2.5 py-1 text-xs font-medium text-[var(--brand-deep)]">
+								<span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
 									{template.status}
 								</span>
 							</div>
@@ -107,18 +107,12 @@ export default async function DocumentsPage() {
 							<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
 								{template.description}
 							</p>
-							{template.status === "Activo" ? (
-								<Link
-									href={template.href}
-									className="mt-5 inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
-								>
-									Abrir plantilla
-								</Link>
-							) : (
-								<span className="mt-5 inline-flex rounded-full border border-[var(--border-soft)] px-4 py-2 text-sm font-medium text-[var(--muted)]">
-									Próximamente
-								</span>
-							)}
+							<Link
+								href={template.href}
+								className="mt-5 inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
+							>
+								Abrir plantilla
+							</Link>
 						</article>
 					))}
 				</section>
