@@ -21,6 +21,9 @@ export function DeleteTrabajoButton({ trabajoId }: DeleteTrabajoButtonProps) {
 				setError(result.error);
 				setShowConfirm(false);
 			} else {
+				// Cerrar modal inmediatamente
+				setShowConfirm(false);
+				// Redirigir inmediatamente
 				router.push("/admin/trabajos");
 				router.refresh();
 			}

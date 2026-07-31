@@ -450,71 +450,39 @@ export async function deleteTrabajoAction(
 
 	const supabase = await createSupabaseServerClient();
 
-	// Eliminar en orden para respetar foreign keys
-	// 1. Eliminar quotation_items (depende de quotations)
+	// Paso 1: Obtener IDs de cotizaciones para eliminar items en paralelo
 	const { data: quotations } = await supabase
 		.from("quotations")
 		.select("id")
 		.eq("trabajo_id", trabajoId);
 
+	// Paso 2: Eliminar todo en paralelo (tablas independientes)
+	const deletePromises = [];
+
+	// Eliminar quotation_items si hay cotizaciones
 	if (quotations && quotations.length > 0) {
-		for (const quotation of quotations) {
-			await supabase
-				.from("quotation_items")
-				.delete()
-				.eq("quotation_id", quotation.id);
-		}
+		const quotationIds = quotations.map(q => q.id);
+		deletePromises.push(
+			supabase.from("quotation_items").delete().in("quotation_id", quotationIds)
+		);
 	}
 
-	// 2. Eliminar quotations
-	await supabase
-		.from("quotations")
-		.delete()
-		.eq("trabajo_id", trabajoId);
+	// Eliminar todas las tablas de stage y relacionadas en paralelo
+	deletePromises.push(
+		supabase.from("quotations").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_sale_stage").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_quotation_stage").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_visita_stage").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_agenda_stage").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_media_assets").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_document_overrides").delete().eq("trabajo_id", trabajoId),
+		supabase.from("agenda_items").delete().eq("id", trabajoId)
+	);
 
-	// 3. Eliminar trabajo_sale_stage
-	await supabase
-		.from("trabajo_sale_stage")
-		.delete()
-		.eq("trabajo_id", trabajoId);
+	// Esperar todas las eliminaciones en paralelo
+	await Promise.all(deletePromises);
 
-	// 4. Eliminar trabajo_quotation_stage
-	await supabase
-		.from("trabajo_quotation_stage")
-		.delete()
-		.eq("trabajo_id", trabajoId);
-
-	// 5. Eliminar trabajo_visita_stage
-	await supabase
-		.from("trabajo_visita_stage")
-		.delete()
-		.eq("trabajo_id", trabajoId);
-
-	// 6. Eliminar trabajo_agenda_stage
-	await supabase
-		.from("trabajo_agenda_stage")
-		.delete()
-		.eq("trabajo_id", trabajoId);
-
-	// 7. Eliminar trabajo_media_assets
-	await supabase
-		.from("trabajo_media_assets")
-		.delete()
-		.eq("trabajo_id", trabajoId);
-
-	// 8. Eliminar trabajo_document_overrides
-	await supabase
-		.from("trabajo_document_overrides")
-		.delete()
-		.eq("trabajo_id", trabajoId);
-
-	// 9. Eliminar agenda_items (puente)
-	await supabase
-		.from("agenda_items")
-		.delete()
-		.eq("id", trabajoId);
-
-	// 10. Finalmente eliminar el trabajo
+	// Paso 3: Finalmente eliminar el trabajo
 	const { error } = await supabase
 		.from("trabajos")
 		.delete()
@@ -525,11 +493,17 @@ export async function deleteTrabajoAction(
 		return { error: "No se pudo eliminar el trabajo.", success: false };
 	}
 
+	// Revalidar todas las rutas relevantes para actualización instantánea
 	revalidatePath("/admin/trabajos");
+	revalidatePath("/admin/trabajos/[id]", "page");
 	revalidatePath("/agenda");
+	revalidatePath("/agenda/[id]", "page");
 	revalidatePath("/admin/visits");
+	revalidatePath("/admin/visits/[id]", "page");
 	revalidatePath("/admin/quotations");
+	revalidatePath("/admin/quotations/[id]", "page");
 	revalidatePath("/admin/sales");
+	revalidatePath("/");
 
 	return { error: null, success: true };
 }
