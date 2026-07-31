@@ -450,37 +450,24 @@ export async function deleteTrabajoAction(
 
 	const supabase = await createSupabaseServerClient();
 
-	// Paso 1: Obtener IDs de cotizaciones para eliminar items en paralelo
-	const { data: quotations } = await supabase
-		.from("quotations")
-		.select("id")
+	// Paso 1: Eliminar trabajo_sale_stage PRIMERO
+	// Tiene FK restrict hacia trabajo_quotation_stage, debe eliminarse antes
+	await supabase
+		.from("trabajo_sale_stage")
+		.delete()
 		.eq("trabajo_id", trabajoId);
 
-	// Paso 2: Eliminar todo en paralelo (tablas independientes)
-	const deletePromises = [];
-
-	// Eliminar quotation_items si hay cotizaciones
-	if (quotations && quotations.length > 0) {
-		const quotationIds = quotations.map(q => q.id);
-		deletePromises.push(
-			supabase.from("quotation_items").delete().in("quotation_id", quotationIds)
-		);
-	}
-
-	// Eliminar todas las tablas de stage y relacionadas en paralelo
-	deletePromises.push(
+	// Paso 2: Eliminar todo lo demás en paralelo
+	// quotation_items se elimina en cascade con quotations
+	await Promise.all([
 		supabase.from("quotations").delete().eq("trabajo_id", trabajoId),
-		supabase.from("trabajo_sale_stage").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_quotation_stage").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_visita_stage").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_agenda_stage").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_media_assets").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_document_overrides").delete().eq("trabajo_id", trabajoId),
 		supabase.from("agenda_items").delete().eq("id", trabajoId)
-	);
-
-	// Esperar todas las eliminaciones en paralelo
-	await Promise.all(deletePromises);
+	]);
 
 	// Paso 3: Finalmente eliminar el trabajo
 	const { error } = await supabase
