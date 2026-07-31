@@ -338,6 +338,7 @@ export async function createAgendaItemAction(
 	}
 
 	const trabajoId = globalThis.crypto.randomUUID();
+	const now = new Date().toISOString();
 
 	const { error: trabajoError } = await supabase.from("trabajos").insert({
 		id: trabajoId,
@@ -352,7 +353,7 @@ export async function createAgendaItemAction(
 		intake_latitude: values.latitude,
 		intake_longitude: values.longitude,
 		work_type: values.work_type,
-		
+		agenda_completed_at: now,
 	});
 
 	if (trabajoError) {
