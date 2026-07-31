@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useActionState, startTransition } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-
+import { Card } from "@/components/ui/card";
 import { deleteQuotationAction, confirmQuotationAction } from "./actions";
 import type { QuotationListItem } from "./data";
 import { QuotationStatusBadge } from "./quotation-status";
@@ -112,17 +111,10 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 	}
 
 	return (
-		<AnimatePresence mode="wait">
-			{!isDeleted && !isConfirmed && (
-				<motion.article
-					key={quotation.id}
-					initial={{ opacity: 0, y: 20, scale: 0.95 }}
-					animate={{ opacity: 1, y: 0, scale: 1 }}
-					exit={{ opacity: 0, y: -20, scale: 0.95 }}
-					transition={{ duration: 0.2, ease: "easeOut" }}
-					className="relative"
-				>
-					<article className="group relative rounded-panel border border-[var(--border-soft)] bg-white p-5 shadow-panel transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-[rgba(13,79,46,0.12)] hover:shadow-[0_10px_24px_rgba(10,44,21,0.08)]">
+		<>
+		{!isDeleted && !isConfirmed && (
+				<div className="relative motion-safe:transition-opacity motion-reduce:transition-none">
+					<Card className="group relative p-5">
 						<div className="flex items-start justify-between gap-3">
 							<div className="min-w-0 flex-1">
 								<p className="text-xs font-semibold uppercase tracking-eyebrow text-[var(--brand-strong)]">
@@ -251,9 +243,9 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 						{confirmState.error && (
 							<p className="mt-3 text-sm text-red-600">{confirmState.error}</p>
 						)}
-					</article>
-				</motion.article>
+					</Card>
+				</div>
 			)}
-		</AnimatePresence>
+		</>
 	);
 }

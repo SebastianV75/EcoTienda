@@ -1,3 +1,4 @@
+import { ActionButton } from "@/components/ui/action-button";
 import { signOutAction } from "@/features/auth/actions";
 
 type AuthStatusProps = {
@@ -17,12 +18,13 @@ export function AuthStatus({ email }: AuthStatusProps) {
 				{email ?? "Usuario desconocido"}
 			</p>
 			<form action={signOutAction} className="mt-4">
-				<button
+				<ActionButton
 					type="submit"
+					pendingLabel="Cerrando…"
 					className="ui-secondary-action w-full"
 				>
 					Cerrar sesión
-				</button>
+				</ActionButton>
 			</form>
 		</div>
 	);

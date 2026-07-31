@@ -117,7 +117,7 @@ export function ImageUpload({
 					<img
 						src={imageUrl}
 						alt="Preview"
-						className="w-full rounded-[18px] border border-[var(--border-soft)]"
+						className="aspect-[4/3] w-full rounded-[18px] border border-[var(--border-soft)] object-contain bg-[var(--surface)]"
 					/>
 					<button
 						type="button"

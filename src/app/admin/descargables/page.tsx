@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
+import { EmptyState } from "@/components/empty-state";
 import { DescargableCard } from "@/features/descargables/descargable-card";
 import { getDescargables } from "@/features/descargables/data";
 import { requireRole } from "@/features/auth/session";
@@ -26,7 +27,9 @@ export default async function DescargablesPage() {
 							</h1>
 							<div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--muted)]">
 								<span>
-									<strong className="font-semibold text-[var(--brand-deep)]">{descargables.length}</strong>{" "}
+									<strong className="font-semibold text-[var(--brand-deep)]">
+										{descargables.length}
+									</strong>{" "}
 									trabajos listos para descargar
 								</span>
 							</div>
@@ -41,35 +44,16 @@ export default async function DescargablesPage() {
 						))}
 					</section>
 				) : (
-					<section className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
-						<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50">
-							<svg
-								className="h-10 w-10 text-gray-400"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-								/>
-							</svg>
-						</div>
-						<h3 className="text-lg font-semibold text-gray-900">
-							No hay trabajos finalizados
-						</h3>
-						<p className="mt-2 text-sm text-gray-600">
-							Los trabajos aparecerán aquí cuando completen todas las etapas del flujo.
-						</p>
-						<Link
-							href="/admin/sales"
-							className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gray-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-gray-700"
-						>
-							Ir a Ventas
-						</Link>
-					</section>
+					<EmptyState
+						eyebrow="Sin resultados"
+						title="No hay trabajos finalizados"
+						description="Los trabajos aparecerán aquí cuando completen todas las etapas del flujo."
+						action={
+							<Link href="/admin/sales" className="ui-secondary-action">
+								Ir a Ventas
+							</Link>
+						}
+					/>
 				)}
 			</div>
 		</AppShell>

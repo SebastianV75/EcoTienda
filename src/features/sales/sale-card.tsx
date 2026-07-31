@@ -3,6 +3,10 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ActionButton } from "@/components/ui/action-button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { StatusFeedback } from "@/components/ui/status-feedback";
 import type { SaleListItem } from "./data";
 import {
 	confirmSaleAction,
@@ -98,7 +102,7 @@ export function SaleCard({ sale }: SaleCardProps) {
 	};
 
 	return (
-		<article className="rounded-2xl border border-[var(--border-soft)] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+		<Card className="p-5">
 			<div className="flex flex-col gap-4">
 				{/* Header */}
 				<div className="flex items-start justify-between gap-3">
@@ -129,7 +133,7 @@ export function SaleCard({ sale }: SaleCardProps) {
 						)}
 					</div>
 					{sale.completed && (
-						<span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+						<Badge className="border-emerald-200 bg-emerald-50 text-emerald-800">
 							<svg
 								className="h-3 w-3"
 								fill="currentColor"
@@ -142,7 +146,7 @@ export function SaleCard({ sale }: SaleCardProps) {
 								/>
 							</svg>
 							Completada
-						</span>
+						</Badge>
 					)}
 				</div>
 
@@ -261,10 +265,12 @@ export function SaleCard({ sale }: SaleCardProps) {
 				{/* Action buttons */}
 				{!sale.completed ? (
 					<div className="flex flex-col gap-2 sm:flex-row">
-						<button
+						<ActionButton
+							type="button"
 							onClick={handleConfirmSale}
 							disabled={isPending}
-							className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
+							pendingLabel="Procesando…"
+							className="ui-primary-action flex-1 justify-center"
 						>
 							<svg
 								className="h-5 w-5"
@@ -280,11 +286,13 @@ export function SaleCard({ sale }: SaleCardProps) {
 								/>
 							</svg>
 							{isPending ? "Procesando..." : "Venta realizada"}
-						</button>
-						<button
+						</ActionButton>
+						<ActionButton
+							type="button"
 							onClick={handleMarkAsLost}
 							disabled={isPending}
-							className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-[0.98] disabled:opacity-50"
+							pendingLabel="Procesando…"
+							className="ui-secondary-action flex-1 justify-center"
 						>
 							<svg
 								className="h-5 w-5"
@@ -300,10 +308,10 @@ export function SaleCard({ sale }: SaleCardProps) {
 								/>
 							</svg>
 							{isPending ? "Procesando..." : "Venta no realizada"}
-						</button>
+						</ActionButton>
 					</div>
-				) : (
-					<div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+					) : (
+					<StatusFeedback variant="success" className="flex items-center justify-center gap-2">
 						<svg
 							className="h-5 w-5"
 							fill="none"
@@ -318,21 +326,21 @@ export function SaleCard({ sale }: SaleCardProps) {
 							/>
 						</svg>
 						Venta confirmada - Listo para descargables
-					</div>
+					</StatusFeedback>
 				)}
 
 				{/* Messages */}
 				{state.error && (
-					<p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+					<StatusFeedback variant="warning">
 						{state.error}
-					</p>
+					</StatusFeedback>
 				)}
 				{state.success && (
-					<p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+					<StatusFeedback variant="success">
 						{state.success}
-					</p>
-				)}
-			</div>
-		</article>
+						</StatusFeedback>
+					)}
+				</div>
+		</Card>
 	);
 }

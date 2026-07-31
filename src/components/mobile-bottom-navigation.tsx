@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Drawer } from "@/components/ui/overlay";
 import {
-	useEffect,
-	useId,
 	useState,
 	type ComponentType,
 	type ReactNode,
@@ -54,7 +53,12 @@ const primaryMobileNavigationByRole: Record<AppRole, PrimaryItem[]> = {
 		{ href: "/admin/quotations", label: "Cotización", icon: Clipboard },
 	],
 	technician: [
-		{ href: "/technician", label: "Visitas técnicas", icon: Location, exact: true },
+		{
+			href: "/technician",
+			label: "Visitas técnicas",
+			icon: Location,
+			exact: true,
+		},
 	],
 };
 
@@ -90,24 +94,10 @@ export function MobileBottomNavigation({
 	const secondaryMobileNavigation = secondaryMobileNavigationByRole[role];
 	const pathname = usePathname() ?? "";
 	const [isMoreOpen, setIsMoreOpen] = useState(false);
-	const sheetTitleId = useId();
 
 	const onSecondaryRoute = secondaryMobileNavigation.some(
 		(item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
 	);
-
-	useEffect(() => {
-		if (!isMoreOpen) {
-			return;
-		}
-		function onKeyDown(event: KeyboardEvent) {
-			if (event.key === "Escape") {
-				setIsMoreOpen(false);
-			}
-		}
-		window.addEventListener("keydown", onKeyDown);
-		return () => window.removeEventListener("keydown", onKeyDown);
-	}, [isMoreOpen]);
 
 	function onSheetPanelPointerDown(event: React.PointerEvent<HTMLDivElement>) {
 		const target = event.currentTarget;
@@ -167,7 +157,6 @@ export function MobileBottomNavigation({
 							type="button"
 							aria-haspopup="dialog"
 							aria-expanded={isMoreOpen}
-							aria-controls={isMoreOpen ? sheetTitleId : undefined}
 							onClick={() => setIsMoreOpen((open) => !open)}
 							className={
 								"flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-[transform,color] duration-200 ease-out active:scale-[0.96] motion-reduce:transition-none " +
@@ -191,77 +180,65 @@ export function MobileBottomNavigation({
 				</div>
 			</nav>
 
-			{isMoreOpen ? (
+			<Drawer
+				open={isMoreOpen}
+				onClose={() => setIsMoreOpen(false)}
+				title="Más opciones"
+			>
 				<div
-					role="dialog"
-					aria-modal="true"
-					aria-labelledby={sheetTitleId}
-					className="fixed inset-0 z-50 flex items-end lg:hidden print:hidden"
+					onPointerDown={onSheetPanelPointerDown}
+					onPointerUp={onSheetPanelPointerUp}
+					className="relative w-full bg-[rgba(255,255,255,0.98)] lg:hidden print:hidden"
 				>
-					<button
-						type="button"
-						aria-label="Cerrar menú"
-						onClick={() => setIsMoreOpen(false)}
-						className="absolute inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-200 ease-out motion-reduce:transition-none"
-					/>
-					<div
-						onPointerDown={onSheetPanelPointerDown}
-						onPointerUp={onSheetPanelPointerUp}
-						className="relative w-full rounded-t-[28px] bg-[rgba(255,255,255,0.98)] shadow-[0_-24px_60px_rgba(10,44,21,0.22)] transition-transform duration-200 ease-out motion-reduce:transition-none"
+					<div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-[var(--border-soft)]" />
+					<div className="flex items-center justify-between px-5 pt-4">
+						<h2 className="text-base font-semibold tracking-[-0.02em] text-[var(--brand-deep)]">
+							Más opciones
+						</h2>
+						<button
+							type="button"
+							onClick={() => setIsMoreOpen(false)}
+							aria-label="Cerrar"
+							className="rounded-full border border-[var(--border-soft)] bg-white p-2 text-[var(--muted)] transition duration-200 ease-out hover:text-[var(--brand-deep)] motion-reduce:transition-none"
+						>
+							<Add size={16} weight="Outline" className="rotate-45" />
+						</button>
+					</div>
+
+					<nav
+						aria-label="Secciones secundarias"
+						className="flex flex-col gap-2 px-5 pt-4"
 					>
-						<div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-[var(--border-soft)]" />
-						<div className="flex items-center justify-between px-5 pt-4">
-							<h2
-								id={sheetTitleId}
-								className="text-base font-semibold tracking-[-0.02em] text-[var(--brand-deep)]"
-							>
-								Más opciones
-							</h2>
-							<button
-								type="button"
-								onClick={() => setIsMoreOpen(false)}
-								aria-label="Cerrar"
-								className="rounded-full border border-[var(--border-soft)] bg-white p-2 text-[var(--muted)] transition duration-200 ease-out hover:text-[var(--brand-deep)] motion-reduce:transition-none"
-							>
-								<Add size={16} weight="Outline" className="rotate-45" />
-							</button>
-						</div>
+						{secondaryMobileNavigation.map((item) => {
+							const Icon = item.icon;
+							return (
+								<Link
+									key={item.href}
+									href={item.href}
+									onClick={() => setIsMoreOpen(false)}
+									className="flex min-h-[44px] items-center gap-3 rounded-2xl border border-[var(--border-soft)] bg-white px-4 py-3 text-sm font-medium text-[var(--brand-deep)] transition-[transform,background-color,border-color] duration-200 ease-out hover:border-[var(--brand-strong)]/40 hover:bg-[var(--surface-strong)] active:scale-[0.96] motion-reduce:transition-none"
+								>
+									<Icon
+										size={20}
+										weight="Outline"
+										className="text-[var(--brand-strong)]"
+									/>
+									<span>{item.label}</span>
+								</Link>
+							);
+						})}
+					</nav>
 
-						<nav
-							aria-label="Secciones secundarias"
-							className="flex flex-col gap-2 px-5 pt-4"
-						>
-							{secondaryMobileNavigation.map((item) => {
-								const Icon = item.icon;
-								return (
-									<Link
-										key={item.href}
-										href={item.href}
-										onClick={() => setIsMoreOpen(false)}
-										className="flex min-h-[44px] items-center gap-3 rounded-2xl border border-[var(--border-soft)] bg-white px-4 py-3 text-sm font-medium text-[var(--brand-deep)] transition-[transform,background-color,border-color] duration-200 ease-out hover:border-[var(--brand-strong)]/40 hover:bg-[var(--surface-strong)] active:scale-[0.96] motion-reduce:transition-none"
-									>
-										<Icon
-											size={20}
-											weight="Outline"
-											className="text-[var(--brand-strong)]"
-										/>
-										<span>{item.label}</span>
-									</Link>
-								);
-							})}
-						</nav>
-
-						<div
-							className="mx-5 mt-4 rounded-[24px] border border-[var(--border-soft)] bg-white p-4"
-							style={{
-								paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
-							}}
-						>
-							{signOutSlot}
-						</div>
+					<div
+						className="mx-5 mt-4 rounded-[24px] border border-[var(--border-soft)] bg-white p-4"
+						style={{
+							paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
+						}}
+					>
+						{signOutSlot}
 					</div>
 				</div>
-			) : null}
+			</Drawer>
 		</>
 	);
 }

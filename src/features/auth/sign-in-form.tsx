@@ -2,6 +2,9 @@
 
 import { useActionState } from "react";
 
+import { Alert } from "@/components/ui/feedback";
+import { ActionButton } from "@/components/ui/action-button";
+import { Input } from "@/components/ui/field";
 import { type AuthActionState, signInAction } from "@/features/auth/actions";
 
 const initialState: AuthActionState = {
@@ -9,10 +12,7 @@ const initialState: AuthActionState = {
 };
 
 export function SignInForm() {
-	const [state, formAction, isPending] = useActionState(
-		signInAction,
-		initialState,
-	);
+	const [state, formAction] = useActionState(signInAction, initialState);
 
 	return (
 		<form action={formAction} className="space-y-5 sm:space-y-6">
@@ -23,7 +23,7 @@ export function SignInForm() {
 				>
 					Correo electrónico
 				</label>
-				<input
+				<Input
 					id="email"
 					name="email"
 					type="email"
@@ -41,7 +41,7 @@ export function SignInForm() {
 				>
 					Contraseña
 				</label>
-				<input
+				<Input
 					id="password"
 					name="password"
 					type="password"
@@ -52,23 +52,15 @@ export function SignInForm() {
 				/>
 			</div>
 
-			{state.error ? (
-				<p
-					className="rounded-[20px] border border-rose-200 bg-rose-50/95 px-4 py-3.5 text-sm leading-6 text-rose-800"
-					role="alert"
-					aria-live="polite"
-				>
-					{state.error}
-				</p>
-			) : null}
+			{state.error ? <Alert>{state.error}</Alert> : null}
 
-			<button
+			<ActionButton
 				type="submit"
-				disabled={isPending}
+				pendingLabel="Ingresando..."
 				className="w-full rounded-full bg-[linear-gradient(180deg,var(--brand),var(--brand-strong))] px-5 py-3.5 font-semibold text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
 			>
-				{isPending ? "Ingresando..." : "Entrar al sistema"}
-			</button>
+				Entrar al sistema
+			</ActionButton>
 		</form>
 	);
 }

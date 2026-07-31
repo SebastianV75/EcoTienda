@@ -1,3 +1,4 @@
+import { ActionButton } from "@/components/ui/action-button";
 import { signOutAction } from "@/features/auth/actions";
 
 type MobileSignOutProps = {
@@ -15,12 +16,13 @@ export function MobileSignOut({ email }: MobileSignOutProps) {
 				{email ?? "Usuario desconocido"}
 			</p>
 			<form action={signOutAction} className="mt-3">
-				<button
+				<ActionButton
 					type="submit"
+					pendingLabel="Cerrando…"
 					className="w-full rounded-full border border-[var(--border-soft)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-[var(--brand-strong)]/40 hover:bg-white active:scale-[0.97] motion-reduce:transition-none"
 				>
 					Cerrar sesión
-				</button>
+				</ActionButton>
 			</form>
 		</div>
 	);

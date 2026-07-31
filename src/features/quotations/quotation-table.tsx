@@ -22,7 +22,7 @@ export function QuotationTable({
 }: QuotationTableProps) {
 	return (
 		<section className="rounded-[28px] border border-[var(--border-soft)] bg-white shadow-sm">
-			<div className="hidden overflow-x-auto sm:block">
+			<div className="hidden overflow-x-auto overscroll-x-contain touch-pan-x sm:block" tabIndex={0} aria-label="Tabla de cotizaciones desplazable horizontalmente">
 				<table className="w-full table-fixed">
 					<colgroup>
 						<col className="w-[42%]" />

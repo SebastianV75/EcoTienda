@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { requireRole } from "@/features/auth/session";
 
 const templates = [
@@ -89,17 +91,14 @@ export default async function DocumentsPage() {
 
 				<section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 					{templates.map((template) => (
-						<article
-							key={template.title}
-							className="rounded-[26px] border border-[var(--border-soft)] bg-white p-6 shadow-sm"
-						>
+						<Card key={template.title} className="p-6">
 							<div className="flex items-center justify-between">
 								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
 									Plantilla
 								</p>
-								<span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+								<Badge className="border-emerald-200 bg-emerald-50 text-emerald-800">
 									{template.status}
-								</span>
+								</Badge>
 							</div>
 							<h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
 								{template.title}
@@ -113,7 +112,7 @@ export default async function DocumentsPage() {
 							>
 								Abrir plantilla
 							</Link>
-						</article>
+						</Card>
 					))}
 				</section>
 			</div>

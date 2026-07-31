@@ -1,8 +1,12 @@
 import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
+import { EmptyState } from "@/components/empty-state";
 import { QuotationCard } from "@/features/quotations/quotation-card";
-import { getQuotations, type QuotationListItem } from "@/features/quotations/data";
+import {
+	getQuotations,
+	type QuotationListItem,
+} from "@/features/quotations/data";
 import { getQuotationStatusSummary } from "@/features/quotations/quotation-status";
 import { requireRole } from "@/features/auth/session";
 
@@ -34,12 +38,16 @@ export default async function QuotationsPage({
 							</h1>
 							<div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--muted)]">
 								<span>
-									<strong className="font-semibold text-[var(--brand-deep)]">{quotations.length}</strong>{" "}
+									<strong className="font-semibold text-[var(--brand-deep)]">
+										{quotations.length}
+									</strong>{" "}
 									en etapa de cotización
 								</span>
 								{statusSummary.map((item) => (
 									<span key={item.status}>
-										<strong className="font-semibold text-[var(--brand-deep)]">{item.count}</strong>{" "}
+										<strong className="font-semibold text-[var(--brand-deep)]">
+											{item.count}
+										</strong>{" "}
 										{item.label.toLowerCase()}
 									</span>
 								))}
@@ -49,8 +57,18 @@ export default async function QuotationsPage({
 							href="/admin/quotations/new"
 							className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)] sm:py-2.5"
 						>
-							<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+							<svg
+								className="h-4 w-4"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M12 4v16m8-8H4"
+								/>
 							</svg>
 							<span className="hidden sm:inline">Nueva cotización</span>
 							<span className="sm:hidden">Nueva</span>
@@ -92,41 +110,26 @@ export default async function QuotationsPage({
 						))}
 					</section>
 				) : (
-					<section className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
-						<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-orange-50">
-							<svg
-								className="h-10 w-10 text-orange-400"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-								/>
-							</svg>
-						</div>
-						<h3 className="text-lg font-semibold text-gray-900">
-							{query
+					<EmptyState
+						eyebrow="Sin resultados"
+						title={
+							query
 								? "No se encontraron cotizaciones"
-								: "No hay cotizaciones pendientes"}
-						</h3>
-						<p className="mt-2 text-sm text-gray-600">
-							{query
+								: "No hay cotizaciones pendientes"
+						}
+						description={
+							query
 								? "Intenta con otra búsqueda."
-								: "Las cotizaciones aparecerán aquí automáticamente cuando se complete una visita técnica."}
-						</p>
-						{!query && (
-							<Link
-								href="/admin/visits"
-								className="mt-4 inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-orange-700"
-							>
-								Ir a Visitas Técnicas
-							</Link>
-						)}
-					</section>
+								: "Las cotizaciones aparecerán aquí automáticamente cuando se complete una visita técnica."
+						}
+						action={
+							!query ? (
+								<Link href="/admin/visits" className="ui-secondary-action">
+									Ir a Visitas Técnicas
+								</Link>
+							) : undefined
+						}
+					/>
 				)}
 			</div>
 		</AppShell>

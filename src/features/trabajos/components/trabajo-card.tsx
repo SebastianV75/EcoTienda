@@ -3,12 +3,11 @@
 import Link from "next/link";
 
 import type { TrabajoListItem } from "@/features/trabajos/data";
+import { trabajoStatusLabels, type TrabajoStatus } from "@/types/trabajo";
 import {
-	trabajoStageLabels,
-	trabajoStatusLabels,
-	type TrabajoStatus,
-} from "@/types/trabajo";
-import { StageProgressIndicator } from "@/components/stage-progress-indicator";
+	StageBadge,
+	StageProgressIndicator,
+} from "@/components/stage-progress-indicator";
 
 type TrabajoCardProps = {
 	trabajo: TrabajoListItem;
@@ -100,9 +99,7 @@ export function TrabajoCard({ trabajo }: TrabajoCardProps) {
 			<div className="flex items-start justify-between gap-3">
 				<div className="min-w-0 flex-1">
 					<div className="flex flex-wrap items-center gap-2">
-						<span className="inline-flex rounded-full border border-[var(--border-soft)] bg-[var(--surface-strong)] px-2.5 py-1 text-xs font-medium text-[var(--brand-deep)]">
-							{trabajoStageLabels[trabajo.current_stage]}
-						</span>
+						<StageBadge stage={trabajo.current_stage} />
 						{statusConfig.kind === "pill" ? (
 							<span
 								className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusConfig.className}`}
@@ -147,7 +144,10 @@ export function TrabajoCard({ trabajo }: TrabajoCardProps) {
 
 			{/* Indicador de progreso de etapas */}
 			<div className="mt-4">
-				<StageProgressIndicator currentStage={trabajo.current_stage} size="sm" />
+				<StageProgressIndicator
+					currentStage={trabajo.current_stage}
+					size="sm"
+				/>
 			</div>
 
 			{assignedWorkerName || appointmentLabel ? (

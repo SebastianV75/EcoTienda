@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
+import { EmptyState } from "@/components/empty-state";
 import { WorkerCard } from "@/features/workers/worker-card";
 import { getWorkers } from "@/features/workers/data";
 
@@ -54,19 +55,12 @@ export default async function WorkersPage({
 						))}
 					</section>
 				) : (
-					<section className="rounded-[26px] border border-[var(--border-soft)] bg-white p-8 text-center shadow-sm">
-						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-							Sin resultados
-						</p>
-						<h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
-							Todavía no hay trabajadores registrados
-						</h2>
-						<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-							Empieza con el primer trabajador para usarlo después en la
-							operación interna.
-						</p>
-					</section>
-				)}
+					<EmptyState
+						eyebrow="Sin resultados"
+						title={query ? "No se encontraron trabajadores" : "Todavía no hay trabajadores registrados"}
+						description={query ? "Intenta con otra búsqueda." : "Empieza con el primer trabajador para usarlo después en la operación interna."}
+					/>
+					)}
 			</div>
 		</AppShell>
 	);

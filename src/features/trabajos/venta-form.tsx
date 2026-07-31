@@ -2,6 +2,9 @@
 
 import { useActionState } from "react";
 
+import { ActionButton } from "@/components/ui/action-button";
+import { Input, Textarea } from "@/components/ui/field";
+
 import { saveTrabajoVentaAction, type VentaActionState, type VentaFormValues } from "@/features/trabajos/trabajo-stage-actions";
 
 type VentaFormProps = {
@@ -20,12 +23,12 @@ function sectionFieldClass() {
 }
 
 export function VentaForm({ trabajoId, quotationTrabajoId, defaultValues = {} }: VentaFormProps) {
-	const [state, formAction, isPending] = useActionState(saveTrabajoVentaAction, initialState);
+	const [state, formAction] = useActionState(saveTrabajoVentaAction, initialState);
 
 	return (
 		<form action={formAction} className="space-y-4">
-			<input type="hidden" name="trabajo_id" value={trabajoId} />
-			<input type="hidden" name="quotation_trabajo_id" value={quotationTrabajoId} />
+			<Input type="hidden" name="trabajo_id" value={trabajoId} />
+			<Input type="hidden" name="quotation_trabajo_id" value={quotationTrabajoId} />
 
 			<div className="grid gap-4 md:grid-cols-2">
 				<div className="space-y-2.5">
@@ -35,7 +38,7 @@ export function VentaForm({ trabajoId, quotationTrabajoId, defaultValues = {} }:
 					>
 						Fecha de confirmación
 					</label>
-					<input
+					<Input
 						id="confirmed_on"
 						name="confirmed_on"
 						type="date"
@@ -52,7 +55,7 @@ export function VentaForm({ trabajoId, quotationTrabajoId, defaultValues = {} }:
 					>
 						Monto acordado
 					</label>
-					<input
+					<Input
 						id="agreed_amount"
 						name="agreed_amount"
 						type="number"
@@ -71,7 +74,7 @@ export function VentaForm({ trabajoId, quotationTrabajoId, defaultValues = {} }:
 					>
 						Notas
 					</label>
-					<textarea
+					<Textarea
 						id="notes"
 						name="notes"
 						defaultValue={defaultValues.notes}
@@ -94,13 +97,13 @@ export function VentaForm({ trabajoId, quotationTrabajoId, defaultValues = {} }:
 				</p>
 			) : null}
 
-			<button
+			<ActionButton
 				type="submit"
-				disabled={isPending}
+				pendingLabel="Guardando..."
 				className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-[var(--brand)] px-5 py-3.5 text-sm font-medium text-white transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70"
 			>
-				{isPending ? "Guardando..." : "Confirmar venta"}
-			</button>
+				Confirmar venta
+			</ActionButton>
 		</form>
 	);
 }

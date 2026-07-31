@@ -24,6 +24,9 @@
   --tracking-display: -0.04em;
   --tracking-action: -0.01em;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-duration-fast: 160ms;
+  --motion-duration-standard: 280ms;
+  --focus-ring: 0 0 0 3px rgba(47, 179, 20, 0.22);
 }
 
 @theme inline {
@@ -83,6 +86,32 @@ button {
 
 button:active {
   transform: scale(0.98);
+}
+
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  box-shadow: var(--focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+animation-duration: 0.01ms !important;
+animation-iteration-count: 1 !important;
+scroll-behavior: auto !important;
+transition-duration: 0.01ms !important;
+  }
+
+  button:active,
+  .ui-secondary-action:active {
+transform: none;
+  }
 }
 
 ::selection {

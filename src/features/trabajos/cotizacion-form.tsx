@@ -2,6 +2,9 @@
 
 import { useActionState } from "react";
 
+import { ActionButton } from "@/components/ui/action-button";
+import { Input, Textarea } from "@/components/ui/field";
+
 import {
 	saveTrabajoCotizacionAction,
 	type CotizacionActionState,
@@ -23,14 +26,14 @@ function sectionFieldClass() {
 }
 
 export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps) {
-	const [state, formAction, isPending] = useActionState(
+	const [state, formAction] = useActionState(
 		saveTrabajoCotizacionAction,
 		initialState,
 	);
 
 	return (
 		<form action={formAction} className="space-y-5">
-			<input type="hidden" name="trabajo_id" value={trabajoId} />
+			<Input type="hidden" name="trabajo_id" value={trabajoId} />
 
 			<div className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--muted)]">
 				<p>
@@ -48,7 +51,7 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 					<label htmlFor="rfc" className="text-sm font-medium text-[var(--brand-deep)]">
 						RFC
 					</label>
-					<input
+					<Input
 						id="rfc"
 						name="rfc"
 						defaultValue={defaultValues.rfc ?? ""}
@@ -62,7 +65,7 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 					<label htmlFor="rpu" className="text-sm font-medium text-[var(--brand-deep)]">
 						RPU
 					</label>
-					<input
+					<Input
 						id="rpu"
 						name="rpu"
 						defaultValue={defaultValues.rpu ?? ""}
@@ -76,7 +79,7 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 					<label htmlFor="quotation_type" className="text-sm font-medium text-[var(--brand-deep)]">
 						Tipo de cotización
 					</label>
-					<input
+					<Input
 						id="quotation_type"
 						name="quotation_type"
 						defaultValue={defaultValues.quotation_type ?? ""}
@@ -90,7 +93,7 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 					<label htmlFor="amount" className="text-sm font-medium text-[var(--brand-deep)]">
 						Monto
 					</label>
-					<input
+					<Input
 						id="amount"
 						name="amount"
 						type="number"
@@ -107,7 +110,7 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 					<label htmlFor="scope_summary" className="text-sm font-medium text-[var(--brand-deep)]">
 						Alcance
 					</label>
-					<textarea
+					<Textarea
 						id="scope_summary"
 						name="scope_summary"
 						defaultValue={defaultValues.scope_summary ?? ""}
@@ -122,7 +125,7 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 					<label htmlFor="terms_and_conditions" className="text-sm font-medium text-[var(--brand-deep)]">
 						Términos y condiciones
 					</label>
-					<textarea
+					<Textarea
 						id="terms_and_conditions"
 						name="terms_and_conditions"
 						defaultValue={defaultValues.terms_and_conditions ?? ""}
@@ -137,7 +140,7 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 					<label htmlFor="outcome" className="text-sm font-medium text-[var(--brand-deep)]">
 						Resultado
 					</label>
-					<textarea
+					<Textarea
 						id="outcome"
 						name="outcome"
 						defaultValue={defaultValues.outcome ?? ""}
@@ -161,13 +164,13 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 				</p>
 			) : null}
 
-			<button
+			<ActionButton
 				type="submit"
-				disabled={isPending}
+				pendingLabel="Guardando..."
 				className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-[var(--brand)] px-5 py-3.5 text-sm font-medium text-white transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70"
 			>
-				{isPending ? "Guardando..." : "Guardar cotización"}
-			</button>
+				Guardar cotización
+			</ActionButton>
 		</form>
 	);
 }

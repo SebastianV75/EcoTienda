@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/ui/feedback";
 import { AppShell } from "@/components/app-shell";
 import { AgendaItemCard } from "@/features/agenda/agenda-item-card";
 import { getAgendaItemsByType } from "@/features/agenda/data";
@@ -76,12 +78,12 @@ export default async function VisitsPage() {
 				</section>
 
 				{hasVisitsError ? (
-					<section className="rounded-card border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-						<p className="text-xs font-semibold uppercase tracking-eyebrow text-amber-800">
+					<ErrorState>
+						<p className="text-xs font-semibold uppercase tracking-eyebrow">
 							Carga pendiente
 						</p>
-						<p className="mt-3 leading-6">{visitsNotice}</p>
-					</section>
+						<p className="mt-3">{visitsNotice}</p>
+					</ErrorState>
 				) : null}
 
 				{orderedVisitItems.length > 0 ? (
@@ -96,36 +98,16 @@ export default async function VisitsPage() {
 						))}
 					</section>
 				) : hasVisitsError ? null : (
-					<section className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
-						<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-blue-50">
-							<svg
-								className="h-10 w-10 text-blue-400"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-								/>
-							</svg>
-						</div>
-						<h3 className="text-lg font-semibold text-gray-900">
-							No hay visitas técnicas pendientes
-						</h3>
-						<p className="mt-2 text-sm text-gray-600">
-							Los trabajos aparecerán aquí cuando estén listos para visita
-							técnica.
-						</p>
-						<Link
-							href="/agenda"
-							className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-700"
-						>
-							Ir a Agenda
-						</Link>
-					</section>
+					<EmptyState
+						eyebrow="Sin pendientes"
+						title="No hay visitas técnicas pendientes"
+						description="Los trabajos aparecerán aquí cuando estén listos para visita técnica."
+						action={
+							<Link href="/agenda" className="ui-secondary-action">
+								Ir a Agenda
+							</Link>
+						}
+					/>
 				)}
 			</div>
 		</AppShell>

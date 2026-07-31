@@ -1,4 +1,7 @@
 import Link from "next/link";
+
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import type { DescargableItem } from "./data";
 
 type DescargableCardProps = {
@@ -7,7 +10,7 @@ type DescargableCardProps = {
 
 export function DescargableCard({ item }: DescargableCardProps) {
 	return (
-		<article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+		<Card className="p-4">
 			<div className="flex flex-col gap-4">
 				{/* Encabezado */}
 				<div>
@@ -20,9 +23,9 @@ export function DescargableCard({ item }: DescargableCardProps) {
 								Trabajo: {item.id.slice(0, 8)}...
 							</p>
 						</div>
-						<span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+						<Badge className="border-emerald-200 bg-emerald-50 text-emerald-800">
 							Finalizado
-						</span>
+						</Badge>
 					</div>
 				</div>
 
@@ -56,7 +59,7 @@ export function DescargableCard({ item }: DescargableCardProps) {
 				{/* Acción */}
 				<Link
 					href={`/admin/trabajos/${item.id}`}
-					className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-600 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-gray-700 active:scale-[0.98]"
+					className="ui-primary-action w-full justify-center sm:w-auto"
 				>
 					<svg
 						className="h-5 w-5"
@@ -74,6 +77,6 @@ export function DescargableCard({ item }: DescargableCardProps) {
 					Ver y descargar archivos
 				</Link>
 			</div>
-		</article>
+		</Card>
 	);
 }

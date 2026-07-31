@@ -269,16 +269,29 @@ export function EditQuotationForm({
 				<QuotationTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
 				{activeTab === "products" ? (
-					<QuotationTable
-						items={items}
-						onItemChange={handleItemChange}
-						onItemRemove={handleItemRemove}
-						onAddProduct={handleAddProduct}
-						onAddSection={handleAddSection}
-						onAddNote={handleAddNote}
-					/>
+					<div
+						id="tabpanel-products"
+						role="tabpanel"
+						aria-labelledby="tab-products"
+						tabIndex={0}
+					>
+						<QuotationTable
+							items={items}
+							onItemChange={handleItemChange}
+							onItemRemove={handleItemRemove}
+							onAddProduct={handleAddProduct}
+							onAddSection={handleAddSection}
+							onAddNote={handleAddNote}
+						/>
+					</div>
 				) : (
-					<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
+					<section
+						id="tabpanel-other"
+						role="tabpanel"
+						aria-labelledby="tab-other"
+						tabIndex={0}
+						className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7"
+					>
 						<div className="space-y-5">
 							<div className="space-y-1.5">
 								<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">

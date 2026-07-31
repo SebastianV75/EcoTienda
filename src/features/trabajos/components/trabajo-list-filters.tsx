@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition, useState } from "react";
 
+import { Input, Select } from "@/components/ui/field";
 import type { TrabajoListFilters } from "@/features/trabajos/data";
 import {
 	trabajoStageLabels,
@@ -102,7 +103,7 @@ export function TrabajoListFilters({
 								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
 							/>
 						</svg>
-						<input
+						<Input
 							id="trabajo-search"
 							type="text"
 							defaultValue={initialFilters.q ?? ""}
@@ -162,7 +163,7 @@ export function TrabajoListFilters({
 								>
 									Etapa
 								</label>
-								<select
+								<Select
 									id="trabajo-stage"
 									value={initialFilters.stage ?? ""}
 									className={inputClassName}
@@ -181,7 +182,7 @@ export function TrabajoListFilters({
 											{trabajoStageLabels[stage]}
 										</option>
 									))}
-								</select>
+								</Select>
 							</div>
 
 							<div>
@@ -191,7 +192,7 @@ export function TrabajoListFilters({
 								>
 									Estado
 								</label>
-								<select
+								<Select
 									id="trabajo-status"
 									value={initialFilters.status ?? ""}
 									className={inputClassName}
@@ -210,7 +211,7 @@ export function TrabajoListFilters({
 											{trabajoStatusLabels[status]}
 										</option>
 									))}
-								</select>
+								</Select>
 							</div>
 
 							<div>
@@ -220,7 +221,7 @@ export function TrabajoListFilters({
 								>
 									Trabajador
 								</label>
-								<select
+								<Select
 									id="trabajo-assignee-worker"
 									value={initialFilters.assignee_worker_id ?? ""}
 									className={inputClassName}
@@ -237,7 +238,7 @@ export function TrabajoListFilters({
 											{worker.full_name}
 										</option>
 									))}
-								</select>
+								</Select>
 							</div>
 
 							<div>
@@ -247,7 +248,7 @@ export function TrabajoListFilters({
 								>
 									Desde
 								</label>
-								<input
+								<Input
 									id="trabajo-from"
 									type="date"
 									value={initialFilters.from ?? ""}
@@ -266,7 +267,7 @@ export function TrabajoListFilters({
 								>
 									Hasta
 								</label>
-								<input
+								<Input
 									id="trabajo-to"
 									type="date"
 									value={initialFilters.to ?? ""}

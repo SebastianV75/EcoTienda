@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { StatusFeedback } from "@/components/ui/status-feedback";
 import { DownloadShortcuts } from "@/features/projects/download-shortcuts";
 import { PostSaleStepper } from "@/features/projects/post-sale-stepper";
 import { ProjectStageForm } from "@/features/projects/project-stage-form";
@@ -65,24 +68,22 @@ export function ProjectCard({ project, followUpReason }: ProjectCardProps) {
 		project.stage === "post_venta";
 
 	return (
-		<article className="rounded-[24px] border border-[var(--border-soft)] bg-white p-5 shadow-sm">
+		<Card className="p-5">
 			<div className="flex flex-wrap items-start justify-between gap-3">
 				<div>
 					<p className="text-lg font-semibold tracking-[-0.03em] text-[var(--brand-deep)]">
 						{"Trabajo sin nombre"}
 					</p>
 				</div>
-				<span
-					className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${projectStageBadgeClasses[project.stage]}`}
-				>
+				<Badge className={projectStageBadgeClasses[project.stage]}>
 					{projectStageLabels[project.stage]}
-				</span>
+				</Badge>
 			</div>
 
 			{followUpReason ? (
-				<p className="mt-3 rounded-[16px] border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+				<StatusFeedback variant="warning" className="mt-3 px-3 py-2 text-xs font-medium">
 					Seguimiento: {followUpReason}
-				</p>
+				</StatusFeedback>
 			) : null}
 
 			<div className="mt-4 space-y-4">
@@ -111,6 +112,6 @@ export function ProjectCard({ project, followUpReason }: ProjectCardProps) {
 
 				<ProjectStageForm projectId={project.id} currentStage={project.stage} />
 			</div>
-		</article>
+		</Card>
 	);
 }

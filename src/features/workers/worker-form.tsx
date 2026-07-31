@@ -2,6 +2,9 @@
 
 import { useActionState } from "react";
 
+import { ActionButton } from "@/components/ui/action-button";
+import { Input, Select } from "@/components/ui/field";
+
 import {
 	createWorkerAction,
 	type WorkerActionState,
@@ -21,7 +24,7 @@ const initialState: WorkerActionState = {
 
 export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 	const action = mode === "create" ? createWorkerAction : updateWorkerAction;
-	const [state, formAction, isPending] = useActionState(action, initialState);
+	const [state, formAction] = useActionState(action, initialState);
 
 	return (
 		<form action={formAction} className="space-y-5">
@@ -37,7 +40,7 @@ export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 					>
 						Nombre completo
 					</label>
-					<input
+					<Input
 						id="full_name"
 						name="full_name"
 						defaultValue={defaultValues?.full_name ?? ""}
@@ -54,7 +57,7 @@ export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 					>
 						Teléfono
 					</label>
-					<input
+					<Input
 						id="phone"
 						name="phone"
 						defaultValue={defaultValues?.phone ?? ""}
@@ -70,7 +73,7 @@ export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 					>
 						Rol
 					</label>
-					<select
+					<Select
 						id="role"
 						name="role"
 						defaultValue={defaultValues?.role ?? "staff"}
@@ -81,7 +84,7 @@ export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 								{label}
 							</option>
 						))}
-					</select>
+					</Select>
 				</div>
 
 				<div className="space-y-2.5 md:col-span-2">
@@ -91,7 +94,7 @@ export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 					>
 						ID de auth
 					</label>
-					<input
+					<Input
 						id="auth_user_id"
 						name="auth_user_id"
 						defaultValue={defaultValues?.auth_user_id ?? ""}
@@ -99,14 +102,14 @@ export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 						placeholder="Opcional"
 					/>
 					<p className="text-xs leading-5 text-[var(--muted)]">
-						Puedes vincular el trabajador con un usuario de auth más adelante sin
-						bloquear el alta.
+						Puedes vincular el trabajador con un usuario de auth más adelante
+						sin bloquear el alta.
 					</p>
 				</div>
 			</div>
 
 			<label className="flex items-start gap-3 rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] p-4 text-sm text-[var(--brand-deep)]">
-				<input
+				<Input
 					type="checkbox"
 					name="active"
 					value="true"
@@ -128,19 +131,13 @@ export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 				</p>
 			) : null}
 
-			<button
+			<ActionButton
 				type="submit"
-				disabled={isPending}
+				pendingLabel={mode === "create" ? "Guardando..." : "Actualizando..."}
 				className="w-full rounded-full bg-[var(--brand)] px-5 py-3.5 font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
 			>
-				{isPending
-					? mode === "create"
-						? "Guardando..."
-						: "Actualizando..."
-					: mode === "create"
-						? "Guardar trabajador"
-						: "Actualizar trabajador"}
-			</button>
+				{mode === "create" ? "Guardar trabajador" : "Actualizar trabajador"}
+			</ActionButton>
 		</form>
 	);
 }
