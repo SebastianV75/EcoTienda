@@ -97,7 +97,9 @@ function mapSolarPackage(visita: VisitaData): QuotationItem[] {
 			});
 		}
 	} else {
-		const catalogName = findClosestCatalogProduct("2 paneles solares inversor de 2 kw");
+		const catalogName = findClosestCatalogProduct(
+			"2 paneles solares inversor de 2 kw",
+		);
 		if (catalogName) {
 			items.push({
 				product_name: catalogName,
@@ -160,7 +162,10 @@ function mapMinisplitPackage(visita: VisitaData): QuotationItem[] {
 	}
 
 	const installTons = tons || 1;
-	const installCandidate = installTons <= 1 ? "Instalacion de minisplit 1 ton" : "Instalacion de minisplit 2 ton";
+	const installCandidate =
+		installTons <= 1
+			? "Instalacion de minisplit 1 ton"
+			: "Instalacion de minisplit 2 ton";
 	const installName = findClosestCatalogProduct(installCandidate);
 	if (installName) {
 		items.push({
@@ -260,7 +265,9 @@ function mapAmpliacionPackage(visita: VisitaData): QuotationItem[] {
 	const panelCount = panelMatch ? parseInt(panelMatch[1]) : null;
 
 	if (panelCount) {
-		const catalogName = findClosestCatalogProduct("Panel solar 550w ampliacion");
+		const catalogName = findClosestCatalogProduct(
+			"Panel solar 550w ampliacion",
+		);
 		if (catalogName) {
 			items.push({
 				product_name: catalogName,

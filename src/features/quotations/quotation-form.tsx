@@ -317,7 +317,12 @@ export function EditQuotationForm({
 					</section>
 				)}
 
-				<QuotationFooter subtotal={subtotal} total={total} termsAndConditions={formData.terms_and_conditions} onTermsChange={(v) => updateField("terms_and_conditions", v)} />
+				<QuotationFooter
+					subtotal={subtotal}
+					total={total}
+					termsAndConditions={formData.terms_and_conditions}
+					onTermsChange={(v) => updateField("terms_and_conditions", v)}
+				/>
 
 				<input type="hidden" name="items" value={JSON.stringify(items)} />
 				<input
