@@ -450,34 +450,75 @@ export async function deleteTrabajoAction(
 
 	const supabase = await createSupabaseServerClient();
 
+	// Verificar que el trabajo existe antes de intentar eliminarlo
+	const { data: existingTrabajo, error: existingError } = await supabase
+		.from("trabajos")
+		.select("id")
+		.eq("id", trabajoId)
+		.maybeSingle();
+
+	if (existingError || !existingTrabajo) {
+		return { error: "El trabajo no existe o no se puede acceder.", success: false };
+	}
+
 	// Paso 1: Eliminar trabajo_sale_stage PRIMERO
 	// Tiene FK restrict hacia trabajo_quotation_stage, debe eliminarse antes
-	await supabase
+	const { error: saleError } = await supabase
 		.from("trabajo_sale_stage")
 		.delete()
 		.eq("trabajo_id", trabajoId);
 
+	if (saleError) {
+		console.error("[deleteTrabajoAction] Error eliminando sale stage:", saleError);
+		return { error: "No se pudo eliminar la etapa de venta.", success: false };
+	}
+
 	// Paso 2: Eliminar todo lo demás en paralelo
 	// quotation_items se elimina en cascade con quotations
-	await Promise.all([
+	const results = await Promise.all([
 		supabase.from("quotations").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_quotation_stage").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_visita_stage").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_agenda_stage").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_media_assets").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_document_overrides").delete().eq("trabajo_id", trabajoId),
-		supabase.from("agenda_items").delete().eq("id", trabajoId)
+		supabase.from("agenda_items").delete().eq("id", trabajoId),
 	]);
 
+	const stageNames = [
+		"quotations",
+		"trabajo_quotation_stage",
+		"trabajo_visita_stage",
+		"trabajo_agenda_stage",
+		"trabajo_media_assets",
+		"trabajo_document_overrides",
+		"agenda_items",
+	];
+
+	for (let i = 0; i < results.length; i++) {
+		if (results[i].error) {
+			console.error(
+				`[deleteTrabajoAction] Error eliminando ${stageNames[i]}:`,
+				results[i].error,
+			);
+			return { error: `No se pudo eliminar ${stageNames[i]}.`, success: false };
+		}
+	}
+
 	// Paso 3: Finalmente eliminar el trabajo
-	const { error } = await supabase
+	const { error, count } = await supabase
 		.from("trabajos")
 		.delete()
-		.eq("id", trabajoId);
+		.eq("id", trabajoId)
+		.select();
 
 	if (error) {
 		console.error("[deleteTrabajoAction] Error eliminando trabajo:", error);
 		return { error: "No se pudo eliminar el trabajo.", success: false };
+	}
+
+	if (!count || count === 0) {
+		return { error: "El trabajo no pudo ser eliminado. Verificá los permisos.", success: false };
 	}
 
 	// Revalidar todas las rutas relevantes para actualización instantánea
