@@ -79,6 +79,12 @@ const supportNavigation: NavigationItem[] = [
 		icon: Clipboard,
 	},
 	{
+		href: "/admin/sales",
+		label: "Ventas",
+		roles: ["admin"],
+		icon: Clipboard,
+	},
+	{
 		href: "/admin/settings",
 		label: "Configuración",
 		roles: ["admin"],
