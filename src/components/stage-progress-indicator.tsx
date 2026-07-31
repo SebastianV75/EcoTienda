@@ -1,11 +1,18 @@
-import { trabajoStages, trabajoStageLabels, type TrabajoStage } from "@/types/trabajo";
+import {
+	trabajoStages,
+	trabajoStageLabels,
+	type TrabajoStage,
+} from "@/types/trabajo";
 
 type StageProgressIndicatorProps = {
 	currentStage: TrabajoStage;
 	size?: "sm" | "md";
 };
 
-export function StageProgressIndicator({ currentStage, size = "md" }: StageProgressIndicatorProps) {
+export function StageProgressIndicator({
+	currentStage,
+	size = "md",
+}: StageProgressIndicatorProps) {
 	const currentIndex = trabajoStages.indexOf(currentStage);
 
 	return (
@@ -23,8 +30,8 @@ export function StageProgressIndicator({ currentStage, size = "md" }: StageProgr
 								isCompleted
 									? "bg-emerald-500 text-white"
 									: isCurrent
-									? "bg-blue-500 text-white ring-2 ring-blue-200"
-									: "bg-gray-200 text-gray-400"
+										? "bg-blue-500 text-white ring-2 ring-blue-200"
+										: "bg-gray-200 text-gray-400"
 							}`}
 						>
 							{isCompleted ? (

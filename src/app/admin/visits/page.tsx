@@ -49,7 +49,8 @@ export default async function VisitsPage() {
 								Visitas técnicas pendientes
 							</h1>
 							<p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-								Trabajos que están listos para visita técnica. Completa la visita para generar la cotización automáticamente.
+								Trabajos que están listos para visita técnica. Completa la
+								visita para generar la cotización automáticamente.
 							</p>
 						</div>
 
@@ -115,7 +116,8 @@ export default async function VisitsPage() {
 							No hay visitas técnicas pendientes
 						</h3>
 						<p className="mt-2 text-sm text-gray-600">
-							Los trabajos aparecerán aquí cuando estén listos para visita técnica.
+							Los trabajos aparecerán aquí cuando estén listos para visita
+							técnica.
 						</p>
 						<Link
 							href="/agenda"

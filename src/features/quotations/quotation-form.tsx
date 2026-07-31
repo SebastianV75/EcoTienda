@@ -3,7 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useActionState } from "react";
 
-import { createQuotationAction, updateQuotationAction, saveDraftAction, type QuotationActionState } from "@/features/quotations/actions";
+import {
+	createQuotationAction,
+	updateQuotationAction,
+	saveDraftAction,
+	type QuotationActionState,
+} from "@/features/quotations/actions";
 import { QuotationHeader } from "@/features/quotations/quotation-header";
 import { QuotationTabs } from "@/features/quotations/quotation-tabs";
 import { QuotationTable } from "@/features/quotations/quotation-table";
@@ -41,7 +46,20 @@ function createEmptyItem(sortOrder: number): QuotationItem {
 	};
 }
 
-export function EditQuotationForm({ initialData = { quotation_number: null, quotation_id: null, trabajo_id: null, supplier_name: "", project: null, status: null, terms_and_conditions: null, order_deadline: null, expected_delivery: null, items: [] } }: EditQuotationFormProps) {
+export function EditQuotationForm({
+	initialData = {
+		quotation_number: null,
+		quotation_id: null,
+		trabajo_id: null,
+		supplier_name: "",
+		project: null,
+		status: null,
+		terms_and_conditions: null,
+		order_deadline: null,
+		expected_delivery: null,
+		items: [],
+	},
+}: EditQuotationFormProps) {
 	const isEditing = !!initialData.quotation_number;
 
 	const [state, formAction, isPending] = useActionState(
@@ -52,9 +70,11 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 		(initialData.supplier_name ?? "").trim() ? "products" : "other",
 	);
 	const [items, setItems] = useState<QuotationItem[]>(initialData.items);
-	const [quotationId, setQuotationId] = useState<string | null>(initialData.quotation_id ?? null);
+	const [quotationId, setQuotationId] = useState<string | null>(
+		initialData.quotation_id ?? null,
+	);
+	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [isSaving, setIsSaving] = useState(false);
-	const [saveMessage, setSaveMessage] = useState<string | null>(null);
 	const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const hasChangesRef = useRef(false);
 	const itemsRef = useRef(items);
@@ -98,7 +118,6 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 		if (!hasChangesRef.current) return;
 
 		setIsSaving(true);
-		setSaveMessage(null);
 		try {
 			const currentFormData = formDataRef.current;
 			const result = await saveDraftAction({
@@ -117,8 +136,7 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 				if (result.quotationId) {
 					setQuotationId(result.quotationId);
 				}
-				setSaveMessage("Guardado");
-				setTimeout(() => setSaveMessage(null), 3000);
+				setLastSaved(new Date());
 			}
 		} catch (error) {
 			console.error("Error al guardar borrador:", error);
@@ -229,9 +247,11 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 							</svg>
 							{isEditing ? "Editar" : "Nueva cotización"}
 						</h2>
-						{(isSaving || saveMessage) && (
-							<p className="mt-1 text-xs text-emerald-600">
-								{isSaving ? "Guardando..." : saveMessage}
+						{(isSaving || lastSaved) && (
+							<p className="mt-1 text-xs text-[var(--muted)]">
+								{isSaving
+									? "Guardando..."
+									: `Último guardado: ${lastSaved?.toLocaleTimeString("es-MX")}`}
 							</p>
 						)}
 					</div>
@@ -300,14 +320,34 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 				<QuotationFooter subtotal={subtotal} total={total} termsAndConditions={formData.terms_and_conditions} onTermsChange={(v) => updateField("terms_and_conditions", v)} />
 
 				<input type="hidden" name="items" value={JSON.stringify(items)} />
-				<input type="hidden" name="quotation_number" value={initialData.quotation_number ?? ""} />
+				<input
+					type="hidden"
+					name="quotation_number"
+					value={initialData.quotation_number ?? ""}
+				/>
 				<input type="hidden" name="trabajo_id" value={formData.trabajo_id} />
-				<input type="hidden" name="supplier_name" value={formData.supplier_name} />
+				<input
+					type="hidden"
+					name="supplier_name"
+					value={formData.supplier_name}
+				/>
 				<input type="hidden" name="project" value={formData.project} />
 				<input type="hidden" name="status" value={formData.status} />
-				<input type="hidden" name="terms_and_conditions" value={formData.terms_and_conditions} />
-				<input type="hidden" name="order_deadline" value={formData.order_deadline} />
-				<input type="hidden" name="expected_delivery" value={formData.expected_delivery} />
+				<input
+					type="hidden"
+					name="terms_and_conditions"
+					value={formData.terms_and_conditions}
+				/>
+				<input
+					type="hidden"
+					name="order_deadline"
+					value={formData.order_deadline}
+				/>
+				<input
+					type="hidden"
+					name="expected_delivery"
+					value={formData.expected_delivery}
+				/>
 
 				{state.error ? (
 					<p className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -321,7 +361,11 @@ export function EditQuotationForm({ initialData = { quotation_number: null, quot
 						disabled={isPending}
 						className="rounded-full bg-[var(--brand)] px-6 py-3.5 font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70"
 					>
-						{isPending ? "Guardando..." : isEditing ? "Guardar cambios" : "Crear cotización"}
+						{isPending
+							? "Guardando..."
+							: isEditing
+								? "Guardar cambios"
+								: "Crear cotización"}
 					</button>
 				</div>
 			</form>

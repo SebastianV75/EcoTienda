@@ -42,7 +42,10 @@ export function ProductAutocomplete({
 		const viewportHeight = window.innerHeight;
 		const spaceBelow = viewportHeight - rect.bottom - 8;
 		const spaceAbove = rect.top - 8;
-		const maxH = Math.min(320, Math.max(spaceBelow, spaceAbove > spaceBelow ? spaceAbove : spaceBelow));
+		const maxH = Math.min(
+			320,
+			Math.max(spaceBelow, spaceAbove > spaceBelow ? spaceAbove : spaceBelow),
+		);
 
 		setDropdownPos({
 			top: rect.bottom + 4,
@@ -87,10 +90,15 @@ export function ProductAutocomplete({
 
 	const filtered: FilteredCategory[] = PRODUCT_CATALOG.map((cat) => ({
 		name: cat.name,
-		products: cat.products.filter((p) => p.toLowerCase().includes(normalizedQuery)),
+		products: cat.products.filter((p) =>
+			p.toLowerCase().includes(normalizedQuery),
+		),
 	})).filter((cat) => cat.products.length > 0);
 
-	const totalResults = filtered.reduce((sum, cat) => sum + cat.products.length, 0);
+	const totalResults = filtered.reduce(
+		(sum, cat) => sum + cat.products.length,
+		0,
+	);
 
 	function handleInputChange(text: string) {
 		onChange(text);
@@ -136,61 +144,70 @@ export function ProductAutocomplete({
 				/>
 			</div>
 
-			{isOpen && totalResults > 0 && dropdownPos && typeof document !== "undefined" && createPortal(
-				<div
-					id={listId}
-					ref={dropdownRef}
-					role="listbox"
-					style={{
-						position: "fixed",
-						top: dropdownPos.top,
-						left: dropdownPos.left,
-						width: dropdownPos.width,
-						maxHeight: dropdownPos.maxHeight,
-					}}
-					className="z-[100] overflow-y-auto rounded-[18px] border border-[var(--border-soft)] bg-white shadow-xl"
-				>
-					{filtered.map((category) => (
-						<div key={category.name}>
-							<div className="sticky top-0 z-10 bg-emerald-50/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--brand-strong)] backdrop-blur-sm">
-								{category.name}
+			{isOpen &&
+				totalResults > 0 &&
+				dropdownPos &&
+				typeof document !== "undefined" &&
+				createPortal(
+					<div
+						id={listId}
+						ref={dropdownRef}
+						role="listbox"
+						style={{
+							position: "fixed",
+							top: dropdownPos.top,
+							left: dropdownPos.left,
+							width: dropdownPos.width,
+							maxHeight: dropdownPos.maxHeight,
+						}}
+						className="z-[100] overflow-y-auto rounded-[18px] border border-[var(--border-soft)] bg-white shadow-xl"
+					>
+						{filtered.map((category) => (
+							<div key={category.name}>
+								<div className="sticky top-0 z-10 bg-emerald-50/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--brand-strong)] backdrop-blur-sm">
+									{category.name}
+								</div>
+								{category.products.map((product) => (
+									<button
+										key={product}
+										type="button"
+										role="option"
+										aria-selected={product === value}
+										onMouseDown={(e) => e.preventDefault()}
+										onClick={() => handleSelect(product)}
+										className="w-full px-3 py-2 text-left text-sm text-[var(--foreground)] transition hover:bg-emerald-50 data-[selected=true]:bg-emerald-50"
+										data-selected={product === value}
+									>
+										{highlightMatch(product, normalizedQuery)}
+									</button>
+								))}
 							</div>
-							{category.products.map((product) => (
-								<button
-									key={product}
-									type="button"
-									role="option"
-									aria-selected={product === value}
-									onMouseDown={(e) => e.preventDefault()}
-									onClick={() => handleSelect(product)}
-									className="w-full px-3 py-2 text-left text-sm text-[var(--foreground)] transition hover:bg-emerald-50 data-[selected=true]:bg-emerald-50"
-									data-selected={product === value}
-								>
-									{highlightMatch(product, normalizedQuery)}
-								</button>
-							))}
-						</div>
-					))}
-				</div>,
-				document.body,
-			)}
+						))}
+					</div>,
+					document.body,
+				)}
 
-			{isOpen && totalResults === 0 && normalizedQuery.length > 0 && dropdownPos && typeof document !== "undefined" && createPortal(
-				<div
-					style={{
-						position: "fixed",
-						top: dropdownPos.top,
-						left: dropdownPos.left,
-						width: dropdownPos.width,
-					}}
-					className="z-[100] rounded-[18px] border border-[var(--border-soft)] bg-white p-3 shadow-xl"
-				>
-					<p className="text-xs text-[var(--muted)]">
-						Sin resultados. Puedes escribir el nombre manualmente.
-					</p>
-				</div>,
-				document.body,
-			)}
+			{isOpen &&
+				totalResults === 0 &&
+				normalizedQuery.length > 0 &&
+				dropdownPos &&
+				typeof document !== "undefined" &&
+				createPortal(
+					<div
+						style={{
+							position: "fixed",
+							top: dropdownPos.top,
+							left: dropdownPos.left,
+							width: dropdownPos.width,
+						}}
+						className="z-[100] rounded-[18px] border border-[var(--border-soft)] bg-white p-3 shadow-xl"
+					>
+						<p className="text-xs text-[var(--muted)]">
+							Sin resultados. Puedes escribir el nombre manualmente.
+						</p>
+					</div>,
+					document.body,
+				)}
 		</>
 	);
 }

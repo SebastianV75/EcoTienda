@@ -11,8 +11,18 @@ type DatePickerProps = {
 };
 
 const MONTH_NAMES = [
-	"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-	"Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+	"Enero",
+	"Febrero",
+	"Marzo",
+	"Abril",
+	"Mayo",
+	"Junio",
+	"Julio",
+	"Agosto",
+	"Septiembre",
+	"Octubre",
+	"Noviembre",
+	"Diciembre",
 ];
 
 const DAY_NAMES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -42,7 +52,13 @@ function getFirstDayOfMonth(year: number, month: number): number {
 	return new Date(year, month, 1).getDay();
 }
 
-export function DatePicker({ id, name, value, onChange, placeholder = "Seleccionar fecha" }: DatePickerProps) {
+export function DatePicker({
+	id,
+	name,
+	value,
+	onChange,
+	placeholder = "Seleccionar fecha",
+}: DatePickerProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [selectedDate, setSelectedDate] = useState<string>(value ?? "");
 	const [currentMonth, setCurrentMonth] = useState(() => {
@@ -57,7 +73,10 @@ export function DatePicker({ id, name, value, onChange, placeholder = "Seleccion
 
 	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
-			if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+			if (
+				containerRef.current &&
+				!containerRef.current.contains(event.target as Node)
+			) {
 				setIsOpen(false);
 			}
 		}
@@ -67,14 +86,16 @@ export function DatePicker({ id, name, value, onChange, placeholder = "Seleccion
 	}, []);
 
 	function handleDateSelect(day: number) {
-		const newDate = formatDate(new Date(currentMonth.year, currentMonth.month, day));
+		const newDate = formatDate(
+			new Date(currentMonth.year, currentMonth.month, day),
+		);
 		setSelectedDate(newDate);
 		setIsOpen(false);
 		onChange?.(newDate);
 	}
 
 	function handlePreviousMonth() {
-		setCurrentMonth(prev => {
+		setCurrentMonth((prev) => {
 			const month = prev.month === 0 ? 11 : prev.month - 1;
 			const year = prev.month === 0 ? prev.year - 1 : prev.year;
 			return { year, month };
@@ -82,7 +103,7 @@ export function DatePicker({ id, name, value, onChange, placeholder = "Seleccion
 	}
 
 	function handleNextMonth() {
-		setCurrentMonth(prev => {
+		setCurrentMonth((prev) => {
 			const month = prev.month === 11 ? 0 : prev.month + 1;
 			const year = prev.month === 11 ? prev.year + 1 : prev.year;
 			return { year, month };
@@ -107,7 +128,9 @@ export function DatePicker({ id, name, value, onChange, placeholder = "Seleccion
 	}
 
 	for (let day = 1; day <= daysInMonth; day++) {
-		const dateString = formatDate(new Date(currentMonth.year, currentMonth.month, day));
+		const dateString = formatDate(
+			new Date(currentMonth.year, currentMonth.month, day),
+		);
 		const isSelected = selectedDate === dateString;
 		const isToday = dateString === formatDate(new Date());
 
@@ -120,12 +143,12 @@ export function DatePicker({ id, name, value, onChange, placeholder = "Seleccion
 					isSelected
 						? "bg-[var(--brand)] text-white"
 						: isToday
-						? "bg-emerald-50 text-[var(--brand-deep)] hover:bg-emerald-100"
-						: "text-[var(--foreground)] hover:bg-[var(--surface)]"
+							? "bg-emerald-50 text-[var(--brand-deep)] hover:bg-emerald-100"
+							: "text-[var(--foreground)] hover:bg-[var(--surface)]"
 				}`}
 			>
 				{day}
-			</button>
+			</button>,
 		);
 	}
 
@@ -139,7 +162,11 @@ export function DatePicker({ id, name, value, onChange, placeholder = "Seleccion
 				className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-left text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 			>
 				<div className="flex items-center justify-between">
-					<span className={selectedDate ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>
+					<span
+						className={
+							selectedDate ? "text-[var(--foreground)]" : "text-[var(--muted)]"
+						}
+					>
 						{selectedDate ? formatDisplayDate(selectedDate) : placeholder}
 					</span>
 					<svg
@@ -166,8 +193,18 @@ export function DatePicker({ id, name, value, onChange, placeholder = "Seleccion
 							onClick={handlePreviousMonth}
 							className="rounded-full p-2 hover:bg-[var(--surface)]"
 						>
-							<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-								<path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+							<svg
+								className="h-5 w-5"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+								strokeWidth="2"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									d="M15 19l-7-7 7-7"
+								/>
 							</svg>
 						</button>
 						<span className="text-sm font-semibold text-[var(--brand-deep)]">
@@ -178,15 +215,28 @@ export function DatePicker({ id, name, value, onChange, placeholder = "Seleccion
 							onClick={handleNextMonth}
 							className="rounded-full p-2 hover:bg-[var(--surface)]"
 						>
-							<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-								<path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+							<svg
+								className="h-5 w-5"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+								strokeWidth="2"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									d="M9 5l7 7-7 7"
+								/>
 							</svg>
 						</button>
 					</div>
 
 					<div className="mb-2 grid grid-cols-7 gap-1">
-						{DAY_NAMES.map(day => (
-							<div key={day} className="text-center text-xs font-medium text-[var(--muted)]">
+						{DAY_NAMES.map((day) => (
+							<div
+								key={day}
+								className="text-center text-xs font-medium text-[var(--muted)]"
+							>
 								{day}
 							</div>
 						))}
