@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { deleteTrabajoAction } from "@/features/trabajos/actions";
 
 type DeleteTrabajoButtonProps = {
@@ -8,6 +9,7 @@ type DeleteTrabajoButtonProps = {
 };
 
 export function DeleteTrabajoButton({ trabajoId }: DeleteTrabajoButtonProps) {
+	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 	const [showConfirm, setShowConfirm] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -19,11 +21,11 @@ export function DeleteTrabajoButton({ trabajoId }: DeleteTrabajoButtonProps) {
 				setError(result.error);
 				setShowConfirm(false);
 			} else {
-				// Cerrar modal inmediatamente
+				// Cerrar modal y navegar a la lista. El listener de realtime se
+				// encargará de refrescar la lista cuando el DELETE se propague.
 				setShowConfirm(false);
-				// Forzar una navegación completa para evitar cache del router y
-				// garantizar que la lista se actualice al instante para todos los usuarios
-				window.location.href = "/admin/trabajos";
+				router.replace("/admin/trabajos");
+				router.refresh();
 			}
 		});
 	};
