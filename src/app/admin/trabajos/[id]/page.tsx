@@ -68,10 +68,10 @@ export default async function TrabajoDetailPage({
 
 	const currentStage = trabajo.current_stage;
 	const completedStages = [
-		...(trabajo.agenda ? ["agenda"] : []),
-		...(trabajo.visita ? ["visita"] : []),
-		...(trabajo.cotizacion?.completed_at ? ["cotizacion"] : []),
-		...(trabajo.venta ? ["venta"] : []),
+		...(trabajo.agenda_completed_at ? ["agenda"] : []),
+		...(trabajo.visita_completed_at ? ["visita"] : []),
+		...(trabajo.cotizacion_completed_at ? ["cotizacion"] : []),
+		...(trabajo.venta_completed_at ? ["venta"] : []),
 		...(trabajo.descargables_completed_at ? ["descargables"] : []),
 	];
 
