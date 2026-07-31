@@ -17,6 +17,7 @@ import {
 	DocumentText,
 	Home,
 	Location,
+	Money,
 	Profile,
 	Settings,
 } from "reicon-react";
@@ -82,7 +83,7 @@ const supportNavigation: NavigationItem[] = [
 		href: "/admin/sales",
 		label: "Ventas",
 		roles: ["admin"],
-		icon: Clipboard,
+		icon: Money,
 	},
 	{
 		href: "/admin/settings",
