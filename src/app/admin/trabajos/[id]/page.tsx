@@ -11,6 +11,7 @@ import { isTrabajoDescargablesReady } from "@/features/trabajos/rules";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
 import { getQuotationByTrabajoId } from "@/features/quotations/data";
 import { DeleteTrabajoButton } from "@/features/trabajos/delete-trabajo-button";
+import { TrabajoDetailRealtimeListener } from "@/features/trabajos/components/trabajo-detail-realtime-listener";
 
 import { trabajoStageLabels } from "@/types/trabajo";
 import { TrabajoTimeline } from "@/features/trabajos/trabajo-timeline";
@@ -145,6 +146,7 @@ export default async function TrabajoDetailPage({
 									Volver a Trabajos
 								</Link>
 							</div>
+							<TrabajoDetailRealtimeListener trabajoId={trabajo.id} />
 						</div>
 
 						<div className="rounded-card border border-[rgba(13,79,46,0.08)] bg-[rgba(244,247,244,0.72)] px-3 py-4 sm:px-4">
