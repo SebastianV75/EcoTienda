@@ -68,21 +68,47 @@ export async function confirmQuotationAction(
 
 	const supabase = await createSupabaseServerClient();
 
+	// Obtener el total de la cotización
+	const { data: quotation, error: quotationFetchError } = await supabase
+		.from("quotations")
+		.select("total")
+		.eq("id", quotationId)
+		.single();
+
+	if (quotationFetchError || !quotation) {
+		console.error("[confirmQuotationAction] Error al obtener cotización:", quotationFetchError);
+		return { error: "No se pudo obtener la cotización." };
+	}
+
 	// Actualizar el trabajo para avanzar a la etapa de venta
-	const { data: updateData, error: trabajoError } = await supabase
+	const { error: trabajoError } = await supabase
 		.from("trabajos")
 		.update({
 			current_stage: "venta",
 			cotizacion_completed_at: new Date().toISOString(),
 		})
-		.eq("id", trabajoId)
-		.select();
-
-	console.log("[confirmQuotationAction] Resultado de actualización:", { updateData, trabajoError });
+		.eq("id", trabajoId);
 
 	if (trabajoError) {
-		console.error("[confirmQuotationAction] Error al actualizar:", trabajoError);
+		console.error("[confirmQuotationAction] Error al actualizar trabajo:", trabajoError);
 		return { error: "No se pudo avanzar el trabajo a la etapa de venta." };
+	}
+
+	// Crear entrada en trabajo_sale_stage
+	const today = new Date().toISOString().split("T")[0];
+	const { error: saleStageError } = await supabase
+		.from("trabajo_sale_stage")
+		.upsert({
+			trabajo_id: trabajoId,
+			quotation_trabajo_id: trabajoId,
+			confirmed_on: today,
+			agreed_amount: quotation.total,
+			notes: "Venta confirmada desde cotización",
+		}, { onConflict: "trabajo_id" });
+
+	if (saleStageError) {
+		console.error("[confirmQuotationAction] Error al crear etapa de venta:", saleStageError);
+		return { error: "No se pudo crear la etapa de venta." };
 	}
 
 	revalidatePath("/admin/quotations");

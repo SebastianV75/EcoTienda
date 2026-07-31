@@ -158,6 +158,7 @@ export default async function TrabajoDetailPage({
 						title="Agenda"
 						stage="agenda"
 						isCompleted={completedStages.includes("agenda")}
+						isCurrentStage={currentStage === "agenda"}
 					>
 						{!trabajo.agenda ? (
 							<p className="text-sm text-[var(--muted)]">
@@ -242,6 +243,7 @@ export default async function TrabajoDetailPage({
 						title="Visita Técnica"
 						stage="visita"
 						isCompleted={completedStages.includes("visita")}
+						isCurrentStage={currentStage === "visita"}
 					>
 						{!trabajo.visita ? (
 							<p className="text-sm text-[var(--muted)]">
@@ -344,6 +346,7 @@ export default async function TrabajoDetailPage({
 						title="Cotización"
 						stage="cotizacion"
 						isCompleted={completedStages.includes("cotizacion")}
+						isCurrentStage={currentStage === "cotizacion"}
 					>
 						{linkedQuotation ? (
 							<div className="space-y-3">
@@ -362,12 +365,24 @@ export default async function TrabajoDetailPage({
 											${linkedQuotation.total.toFixed(2)} MXN
 										</p>
 									</div>
-									<Link
-										href={`/admin/quotations/${linkedQuotation.id}/edit`}
-										className="rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
-									>
-										Editar cotización
-									</Link>
+									<div className="flex gap-2">
+										{linkedQuotation.pdf_url && (
+											<a
+												href={linkedQuotation.pdf_url}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="rounded-full border border-[var(--brand)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand)] transition duration-200 ease-out hover:bg-[var(--surface)]"
+											>
+												Descargar PDF
+											</a>
+										)}
+										<Link
+											href={`/admin/quotations/${linkedQuotation.id}/edit`}
+											className="rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
+										>
+											Editar cotización
+										</Link>
+									</div>
 								</div>
 							</div>
 						) : isCotizacionEditable ? (
@@ -449,6 +464,7 @@ export default async function TrabajoDetailPage({
 						title="Venta"
 						stage="venta"
 						isCompleted={completedStages.includes("venta")}
+						isCurrentStage={currentStage === "venta"}
 					>
 						{!trabajo.venta ? (
 							currentStage === "venta" ? (
@@ -509,6 +525,7 @@ export default async function TrabajoDetailPage({
 						title="Descargables"
 						stage="descargables"
 						isCompleted={completedStages.includes("descargables")}
+						isCurrentStage={currentStage === "descargables"}
 					>
 						<div className="space-y-4">
 							<div className="grid gap-3 md:grid-cols-3">

@@ -161,7 +161,7 @@ export const getQuotationByTrabajoId = cache(async (trabajoId: string) => {
 
 	const { data: quotation, error } = await supabase
 		.from("quotations")
-		.select("id, quotation_number, status, total")
+		.select("id, quotation_number, status, total, pdf_url")
 		.eq("trabajo_id", trabajoId)
 		.order("created_at", { ascending: false })
 		.limit(1)
@@ -171,5 +171,5 @@ export const getQuotationByTrabajoId = cache(async (trabajoId: string) => {
 		return null;
 	}
 
-	return quotation as { id: string; quotation_number: string | null; status: string; total: number };
+	return quotation as { id: string; quotation_number: string | null; status: string; total: number; pdf_url: string | null };
 });
