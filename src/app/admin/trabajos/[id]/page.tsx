@@ -10,6 +10,7 @@ import { CotizacionForm } from "@/features/trabajos/cotizacion-form";
 import { isTrabajoDescargablesReady } from "@/features/trabajos/rules";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
 import { getQuotationByTrabajoId } from "@/features/quotations/data";
+import { DeleteTrabajoButton } from "@/features/trabajos/delete-trabajo-button";
 
 import { trabajoStageLabels } from "@/types/trabajo";
 import { TrabajoTimeline } from "@/features/trabajos/trabajo-timeline";
@@ -138,9 +139,12 @@ export default async function TrabajoDetailPage({
 								</div>
 							</div>
 
-							<Link href="/admin/trabajos" className="ui-secondary-action shrink-0">
-								Volver a Trabajos
-							</Link>
+							<div className="flex gap-2">
+								<DeleteTrabajoButton trabajoId={trabajo.id} />
+								<Link href="/admin/trabajos" className="ui-secondary-action shrink-0">
+									Volver a Trabajos
+								</Link>
+							</div>
 						</div>
 
 						<div className="rounded-card border border-[rgba(13,79,46,0.08)] bg-[rgba(244,247,244,0.72)] px-3 py-4 sm:px-4">
@@ -368,9 +372,7 @@ export default async function TrabajoDetailPage({
 									<div className="flex gap-2">
 										{linkedQuotation.pdf_url && (
 											<a
-												href={linkedQuotation.pdf_url}
-												target="_blank"
-												rel="noopener noreferrer"
+												href={`/api/quotations/${linkedQuotation.id}/pdf`}
 												className="rounded-full border border-[var(--brand)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand)] transition duration-200 ease-out hover:bg-[var(--surface)]"
 											>
 												Descargar PDF

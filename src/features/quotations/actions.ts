@@ -333,6 +333,17 @@ export async function updateQuotationAction(
 		}
 	}
 
+	// Regresar el trabajo a la etapa de cotización si tiene trabajo asociado
+	if (trabajoId) {
+		await supabase
+			.from("trabajos")
+			.update({
+				current_stage: "cotizacion",
+				cotizacion_completed_at: null,
+			})
+			.eq("id", trabajoId);
+	}
+
 	try {
 		console.log('[Actions] Iniciando generación de PDF para cotización:', quotation.id);
 		await generateAndSavePDF(quotation.id);
@@ -346,9 +357,12 @@ export async function updateQuotationAction(
 	}
 
 	revalidatePath("/admin/quotations");
+	revalidatePath("/admin/sales");
+	revalidatePath("/admin/trabajos");
 	if (trabajoId) {
 		revalidatePath(`/agenda/${trabajoId}`);
 		revalidatePath(`/admin/visits/${trabajoId}`);
+		revalidatePath(`/admin/trabajos/${trabajoId}`);
 	}
 
 	return { error: null, success: true, quotationId: quotation.id };

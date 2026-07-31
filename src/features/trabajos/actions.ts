@@ -435,3 +435,101 @@ export async function saveTrabajoVisitaAction(
 			: `/agenda/${result.values.trabajo_id}`,
 	);
 }
+
+export async function deleteTrabajoAction(
+	_previousState: { error: string | null; success: boolean },
+	trabajoId: string,
+): Promise<{ error: string | null; success: boolean }> {
+	if (hasSupabaseEnv()) {
+		await requireRole(["admin"]);
+	}
+
+	if (!trabajoId) {
+		return { error: "ID de trabajo no válido.", success: false };
+	}
+
+	const supabase = await createSupabaseServerClient();
+
+	// Eliminar en orden para respetar foreign keys
+	// 1. Eliminar quotation_items (depende de quotations)
+	const { data: quotations } = await supabase
+		.from("quotations")
+		.select("id")
+		.eq("trabajo_id", trabajoId);
+
+	if (quotations && quotations.length > 0) {
+		for (const quotation of quotations) {
+			await supabase
+				.from("quotation_items")
+				.delete()
+				.eq("quotation_id", quotation.id);
+		}
+	}
+
+	// 2. Eliminar quotations
+	await supabase
+		.from("quotations")
+		.delete()
+		.eq("trabajo_id", trabajoId);
+
+	// 3. Eliminar trabajo_sale_stage
+	await supabase
+		.from("trabajo_sale_stage")
+		.delete()
+		.eq("trabajo_id", trabajoId);
+
+	// 4. Eliminar trabajo_quotation_stage
+	await supabase
+		.from("trabajo_quotation_stage")
+		.delete()
+		.eq("trabajo_id", trabajoId);
+
+	// 5. Eliminar trabajo_visita_stage
+	await supabase
+		.from("trabajo_visita_stage")
+		.delete()
+		.eq("trabajo_id", trabajoId);
+
+	// 6. Eliminar trabajo_agenda_stage
+	await supabase
+		.from("trabajo_agenda_stage")
+		.delete()
+		.eq("trabajo_id", trabajoId);
+
+	// 7. Eliminar trabajo_media_assets
+	await supabase
+		.from("trabajo_media_assets")
+		.delete()
+		.eq("trabajo_id", trabajoId);
+
+	// 8. Eliminar trabajo_document_overrides
+	await supabase
+		.from("trabajo_document_overrides")
+		.delete()
+		.eq("trabajo_id", trabajoId);
+
+	// 9. Eliminar agenda_items (puente)
+	await supabase
+		.from("agenda_items")
+		.delete()
+		.eq("id", trabajoId);
+
+	// 10. Finalmente eliminar el trabajo
+	const { error } = await supabase
+		.from("trabajos")
+		.delete()
+		.eq("id", trabajoId);
+
+	if (error) {
+		console.error("[deleteTrabajoAction] Error eliminando trabajo:", error);
+		return { error: "No se pudo eliminar el trabajo.", success: false };
+	}
+
+	revalidatePath("/admin/trabajos");
+	revalidatePath("/agenda");
+	revalidatePath("/admin/visits");
+	revalidatePath("/admin/quotations");
+	revalidatePath("/admin/sales");
+
+	return { error: null, success: true };
+}
