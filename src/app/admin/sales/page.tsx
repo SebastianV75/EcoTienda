@@ -19,7 +19,7 @@ export default async function SalesPage({
 		<AppShell
 			role="admin"
 			title="Ventas"
-			description="Trabajos en etapa de venta. Confirma las ventas para avanzar a descargables."
+			description="Gestiona las ventas confirmadas y marca las que no se concretaron."
 			email={user.email}
 		>
 			<div className="space-y-3">
@@ -33,13 +33,19 @@ export default async function SalesPage({
 							<div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--muted)]">
 								<span>
 									<strong className="font-semibold text-[var(--brand-deep)]">{sales.length}</strong>{" "}
-									en etapa de venta
+									trabajos en venta
 								</span>
 								<span>
 									<strong className="font-semibold text-[var(--brand-deep)]">
 										{sales.filter((s) => s.completed).length}
 									</strong>{" "}
-									completadas
+									ventas realizadas
+								</span>
+								<span>
+									<strong className="font-semibold text-[var(--brand-deep)]">
+										{sales.filter((s) => !s.completed).length}
+									</strong>{" "}
+									pendientes de confirmar
 								</span>
 							</div>
 						</div>
