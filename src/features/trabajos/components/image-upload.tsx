@@ -43,7 +43,7 @@ export function ImageUpload({
 				.from(BUCKET_NAME)
 				.upload(path, compressedFile, {
 					cacheControl: "3600",
-					upsert: false,
+					upsert: true,
 					contentType: compressedFile.type,
 				});
 
@@ -63,39 +63,28 @@ export function ImageUpload({
 	}
 
 	async function compressImage(file: File): Promise<Blob> {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			const canvas = document.createElement("canvas");
-			const ctx = canvas.getContext("2d")!;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) return reject(new Error("El navegador no permite procesar la imagen."));
 			const img = new Image();
+			const objectUrl = URL.createObjectURL(file);
 
 			img.onload = () => {
+				URL.revokeObjectURL(objectUrl);
 				const maxSize = 1920;
 				let { width, height } = img;
-
 				if (width > maxSize || height > maxSize) {
-					if (width > height) {
-						height = (height / width) * maxSize;
-						width = maxSize;
-					} else {
-						width = (width / height) * maxSize;
-						height = maxSize;
-					}
+					if (width > height) { height = (height / width) * maxSize; width = maxSize; }
+					else { width = (width / height) * maxSize; height = maxSize; }
 				}
-
 				canvas.width = width;
 				canvas.height = height;
 				ctx.drawImage(img, 0, 0, width, height);
-
-				canvas.toBlob(
-					(blob) => {
-						resolve(blob!);
-					},
-					"image/jpeg",
-					0.85,
-				);
+				canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("No se pudo comprimir la imagen.")), "image/jpeg", 0.85);
 			};
-
-			img.src = URL.createObjectURL(file);
+			img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("La imagen no se pudo decodificar.")); };
+			img.src = objectUrl;
 		});
 	}
 

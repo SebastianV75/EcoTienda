@@ -8,7 +8,7 @@ let previousBodyOverflow: string | null = null;
 
 type OverlayProps = {
 	open: boolean;
-	onClose: () => void;
+	onCloseAction: () => void;
 	children: ReactNode;
 	className?: string;
 	label?: string;
@@ -16,7 +16,7 @@ type OverlayProps = {
 
 export function Overlay({
 	open,
-	onClose,
+	onCloseAction,
 	children,
 	className,
 	label = "Cerrar",
@@ -43,7 +43,7 @@ export function Overlay({
 			<button
 				type="button"
 				aria-label={label}
-				onClick={onClose}
+				onClick={onCloseAction}
 				className="absolute inset-0 bg-black/45 backdrop-blur-sm motion-reduce:backdrop-blur-none"
 			/>
 			{children}
@@ -55,7 +55,7 @@ type DialogProps = OverlayProps & { title: string; titleId?: string };
 
 export function Dialog({
 	open,
-	onClose,
+	onCloseAction,
 	title,
 	titleId,
 	children,
@@ -71,7 +71,7 @@ export function Dialog({
 		);
 		first?.focus();
 		const onKeyDown = (event: KeyboardEvent) => {
-			if (event.key === "Escape") onClose();
+			if (event.key === "Escape") onCloseAction();
 			if (event.key === "Tab" && panelRef.current) {
 				const focusable = Array.from(
 					panelRef.current.querySelectorAll<HTMLElement>(
@@ -94,15 +94,19 @@ export function Dialog({
 			document.removeEventListener("keydown", onKeyDown);
 			triggerRef.current?.focus();
 		};
-	}, [open, onClose]);
+	}, [open, onCloseAction]);
 	return (
-		<Overlay open={open} onClose={onClose} className="lg:hidden print:hidden">
+		<Overlay
+			open={open}
+			onCloseAction={onCloseAction}
+			className="lg:hidden print:hidden"
+		>
 			<div
 				ref={panelRef}
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby={headingId}
-				className="relative z-10"
+				className="relative z-10 h-full"
 			>
 				<h2 id={headingId} className="sr-only">
 					{title}
@@ -115,13 +119,18 @@ export function Dialog({
 
 export function Drawer({
 	open,
-	onClose,
+	onCloseAction,
 	title,
 	titleId,
 	children,
 }: DialogProps) {
 	return (
-		<Dialog open={open} onClose={onClose} title={title} titleId={titleId}>
+		<Dialog
+			open={open}
+			onCloseAction={onCloseAction}
+			title={title}
+			titleId={titleId}
+		>
 			<div className="absolute inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-[28px] bg-white shadow-[0_-24px_60px_rgba(10,44,21,0.22)] motion-safe:animate-[slide-up_200ms_ease-out] motion-reduce:animate-none">
 				<div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-[var(--border-soft)]" />
 				{children}

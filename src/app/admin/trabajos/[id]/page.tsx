@@ -17,11 +17,16 @@ import { trabajoStageLabels } from "@/types/trabajo";
 import { TrabajoTimeline } from "@/features/trabajos/trabajo-timeline";
 import { TrabajoStageSection } from "@/features/trabajos/components/trabajo-stage-section";
 import { VisitaAttributeGroup } from "@/features/trabajos/components/visita-attribute-group";
+import { VisitaAttributeImage } from "@/features/trabajos/components/visita-attribute-image";
 import { VentaForm } from "@/features/trabajos/venta-form";
 
 function formatDate(dateString: string | null | undefined) {
 	if (!dateString) return "—";
-	return new Date(dateString).toLocaleDateString("es-MX", {
+	// Date-only values represent a calendar day, not UTC midnight.
+	const date = /^\d{4}-\d{2}-\d{2}$/.test(dateString)
+		? new Date(`${dateString}T12:00:00`)
+		: new Date(dateString);
+	return date.toLocaleDateString("es-MX", {
 		day: "2-digit",
 		month: "2-digit",
 		year: "numeric",
@@ -315,12 +320,16 @@ export default async function TrabajoDetailPage({
 								</div>
 								{trabajo.visita.utility_bill_asset_id && (
 									<div className="space-y-2">
-										<p className="text-xs font-medium text-[var(--brand-strong)]">
-											Recibo de luz
-										</p>
-										<p className="text-sm text-[var(--foreground)]">
-											Asset ID: {trabajo.visita.utility_bill_asset_id}
-										</p>
+										<p className="text-xs font-medium text-[var(--brand-strong)]">Recibo de luz</p>
+										{/^https?:\/\/|^data:image\//i.test(trabajo.visita.utility_bill_asset_id) ? (
+											<VisitaAttributeImage src={trabajo.visita.utility_bill_asset_id} alt="Recibo de luz" />
+										) : <p className="text-sm text-[var(--foreground)]">Asset ID: {trabajo.visita.utility_bill_asset_id}</p>}
+									</div>
+								)}
+								{trabajo.visita.signature_asset_id && (
+									<div className="space-y-2 md:col-span-2">
+										<p className="text-xs font-medium text-[var(--brand-strong)]">Firma</p>
+										<VisitaAttributeImage src={trabajo.visita.signature_asset_id} alt="Firma del cliente" />
 									</div>
 								)}
 								<VisitaAttributeGroup

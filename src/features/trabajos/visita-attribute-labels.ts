@@ -14,7 +14,16 @@ export const VISITA_ATTRIBUTE_GROUP_TITLES: Record<AttributeGroup, string> = {
 	minisplit: "Datos minisplit",
 };
 
-export const VISITA_MEDIA_KEY_SUFFIXES = ["_image", "_photo", "_video"] as const;
+export const VISITA_MEDIA_KEY_SUFFIXES = [
+	"_image",
+	"_photo",
+	"_video",
+] as const;
+
+const MEDIA_URL_PATTERN = /^(?:data:(?:image|video)\/|https?:\/\/|blob:)/i;
+const VIDEO_URL_PATTERN =
+	/(?:\.mp4|\.webm|\.ogg|\.mov|\.m4v|\.avi)(?:[?#].*)?$/i;
+const IMAGE_URL_PATTERN = /(?:\.jpe?g|\.png|\.gif|\.webp|\.bmp)(?:[?#].*)?$/i;
 
 export const VISITA_BOOLEAN_KEYS = new Set([
 	"has_minisplit",
@@ -23,20 +32,37 @@ export const VISITA_BOOLEAN_KEYS = new Set([
 ]);
 
 /** Sufijos que identifican claves cuyo valor es una imagen o video. */
-export function isVisitaMediaKey(key: string): boolean {
-	return VISITA_MEDIA_KEY_SUFFIXES.some((suffix) => key.endsWith(suffix));
+export function isVisitaMediaKey(key: string, value?: unknown): boolean {
+	return (
+		VISITA_MEDIA_KEY_SUFFIXES.some((suffix) => key.endsWith(suffix)) ||
+		(typeof value === "string" &&
+			(MEDIA_URL_PATTERN.test(value) ||
+				IMAGE_URL_PATTERN.test(value) ||
+				VIDEO_URL_PATTERN.test(value)))
+	);
+}
+
+export function isVisitaVideoValue(value: string): boolean {
+	return /^data:video\//i.test(value) || VIDEO_URL_PATTERN.test(value);
 }
 
 /** Convierte una clave snake_case a un título legible en Title Case. */
 export function toTitleCase(key: string): string {
 	return key
 		.split("_")
-		.map((word) => (word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ""))
+		.map((word) =>
+			word.length > 0
+				? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+				: "",
+		)
 		.join(" ");
 }
 
 /** Etiquetas curadas por grupo para los atributos de visita. */
-export const visitaAttributeLabels: Record<AttributeGroup, Record<string, string>> = {
+export const visitaAttributeLabels: Record<
+	AttributeGroup,
+	Record<string, string>
+> = {
 	house: {
 		hojas_visita: "Hojas de visita",
 		house_image: "Imagen de casa",
@@ -90,7 +116,10 @@ export const visitaAttributeLabels: Record<AttributeGroup, Record<string, string
 };
 
 /** Devuelve la etiqueta curada o un Title Case generado como fallback. */
-export function getVisitaAttributeLabel(group: AttributeGroup, key: string): string {
+export function getVisitaAttributeLabel(
+	group: AttributeGroup,
+	key: string,
+): string {
 	return visitaAttributeLabels[group][key] ?? toTitleCase(key);
 }
 
@@ -107,7 +136,10 @@ export type VisitaAttributeValue =
  * - claves de media con valor → preview de imagen
  * - resto → texto
  */
-export function getVisitaAttributeValue(value: unknown, key: string): VisitaAttributeValue {
+export function getVisitaAttributeValue(
+	value: unknown,
+	key: string,
+): VisitaAttributeValue {
 	if (value === null || value === undefined || value === "") {
 		return { kind: "empty", text: "—" };
 	}
@@ -145,7 +177,7 @@ export function getVisitaAttributeValue(value: unknown, key: string): VisitaAttr
 			return { kind: "boolean", text: isAffirmative ? "Sí" : "No" };
 		}
 
-		if (isVisitaMediaKey(key)) {
+		if (isVisitaMediaKey(key, normalized)) {
 			return { kind: "media", text: normalized };
 		}
 
@@ -160,6 +192,8 @@ export function getVisitaAttributeValue(value: unknown, key: string): VisitaAttr
 }
 
 /** Claves conocidas para un grupo en el orden curado del diccionario. */
-export function getVisitaAttributeKeys(group: AttributeGroup): readonly string[] {
+export function getVisitaAttributeKeys(
+	group: AttributeGroup,
+): readonly string[] {
 	return Object.keys(visitaAttributeLabels[group]);
 }

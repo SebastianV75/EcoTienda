@@ -8,6 +8,7 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
 import { getVisitSaveRedirectPath } from "./visit-save-redirect";
+import { existingAttributes, existingText, getExistingVisita } from "./visita-action-helpers";
 
 export type Cambio220ActionState = {
 	error: string | null;
@@ -38,17 +39,18 @@ export async function saveCambio220Action(
 	}
 
 	const supabase = await createSupabaseServerClient();
+	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
-	const electricalAttributes: Record<string, string> = {};
+	const electricalAttributes: Record<string, string> = existingAttributes(existingVisita, "electrical_attributes");
 	if (meterPhoto) electricalAttributes.meter_photo = meterPhoto;
 	if (terminalPhoto) electricalAttributes.terminal_photo = terminalPhoto;
 
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: new Date().toISOString(),
-		contact_name: contactName,
+		execution_date: existingText(existingVisita, "execution_date", new Date().toISOString()),
+		contact_name: existingText(existingVisita, "contact_name", contactName),
 		contact_phone: "",
-		confirmed_address: address,
+		confirmed_address: existingText(existingVisita, "confirmed_address", address),
 		interest_package: "Cambio a 220",
 		quotation_type: "Cambio a 220",
 		house_attributes: {},
@@ -89,9 +91,9 @@ export async function saveCambio220Action(
 	const { quotationId, error: quotationError } =
 		await createQuotationFromVisita(supabase, {
 			trabajo_id: trabajoId,
-			contact_name: contactName,
+			contact_name: existingText(existingVisita, "contact_name", contactName),
 			contact_phone: "",
-			confirmed_address: address,
+			confirmed_address: existingText(existingVisita, "confirmed_address", address),
 			interest_package: "Cambio a 220",
 			quotation_type: "Cambio a 220",
 			notes: "",

@@ -58,8 +58,8 @@ export function SignaturePad({ name, defaultValue = "" }: SignaturePadProps) {
 			"touches" in event ? event.touches[0].clientY : event.clientY;
 
 		return {
-			x: clientX - rect.left,
-			y: clientY - rect.top,
+			x: ((clientX - rect.left) / rect.width) * canvas.width,
+			y: ((clientY - rect.top) / rect.height) * canvas.height,
 		};
 	}
 
@@ -137,8 +137,8 @@ export function SignaturePad({ name, defaultValue = "" }: SignaturePadProps) {
 						<div className="space-y-2">
 							<canvas
 								ref={canvasRef}
-								width={400}
-								height={200}
+								width={800}
+								height={400}
 								onMouseDown={startDrawing}
 								onMouseMove={draw}
 								onMouseUp={stopDrawing}
@@ -146,7 +146,7 @@ export function SignaturePad({ name, defaultValue = "" }: SignaturePadProps) {
 								onTouchStart={startDrawing}
 								onTouchMove={draw}
 								onTouchEnd={stopDrawing}
-								className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white"
+								className="aspect-[2/1] w-full rounded-[18px] border border-[var(--border-soft)] bg-white"
 								style={{ touchAction: "none" }}
 							/>
 							<div className="flex gap-2">

@@ -182,7 +182,7 @@ export function MobileBottomNavigation({
 
 			<Drawer
 				open={isMoreOpen}
-				onClose={() => setIsMoreOpen(false)}
+				onCloseAction={() => setIsMoreOpen(false)}
 				title="Más opciones"
 			>
 				<div

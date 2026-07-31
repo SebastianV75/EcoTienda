@@ -8,6 +8,7 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
 import { getVisitSaveRedirectPath } from "./visit-save-redirect";
+import { existingAttributes, existingText, getExistingVisita } from "./visita-action-helpers";
 
 export type PanelesSolaresActionState = {
 	error: string | null;
@@ -45,34 +46,35 @@ export async function savePanelesSolaresAction(
 	}
 
 	const supabase = await createSupabaseServerClient();
+	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
-	const houseAttributes: Record<string, string> = {};
+	const houseAttributes: Record<string, string> = existingAttributes(existingVisita, "house_attributes");
 	if (email) houseAttributes.email = email;
 	if (location) houseAttributes.location = location;
 	if (housePhoto) houseAttributes.house_photo = housePhoto;
 
-	const electricalAttributes: Record<string, string> = {};
+	const electricalAttributes: Record<string, string> = existingAttributes(existingVisita, "electrical_attributes");
 	if (voltage) electricalAttributes.voltage = voltage;
 	if (meterPhoto) electricalAttributes.meter_photo = meterPhoto;
 
-	const minisplitAttributes: Record<string, string> = {};
+	const minisplitAttributes: Record<string, string> = existingAttributes(existingVisita, "minisplit_attributes");
 	if (evaporatorPhoto) minisplitAttributes.evaporator_photo = evaporatorPhoto;
 	if (compressorPhoto) minisplitAttributes.compressor_photo = compressorPhoto;
 	if (extra) minisplitAttributes.extra = extra;
 
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: new Date().toISOString(),
-		contact_name: contactName,
-		contact_phone: contactPhone,
-		confirmed_address: location,
+		execution_date: existingText(existingVisita, "execution_date", new Date().toISOString()),
+		contact_name: existingText(existingVisita, "contact_name", contactName),
+		contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
+		confirmed_address: existingText(existingVisita, "confirmed_address", location),
 		interest_package: "Paneles Solares",
 		quotation_type: "Paneles Solares",
 		house_attributes: houseAttributes,
 		electrical_attributes: electricalAttributes,
 		minisplit_attributes: minisplitAttributes,
 		roof_attributes: {},
-		notes: notes,
+		notes: existingText(existingVisita, "notes", notes),
 		completed_at: new Date().toISOString(),
 	};
 
@@ -106,12 +108,12 @@ export async function savePanelesSolaresAction(
 	const { quotationId, error: quotationError } =
 		await createQuotationFromVisita(supabase, {
 			trabajo_id: trabajoId,
-			contact_name: contactName,
-			contact_phone: contactPhone,
-			confirmed_address: location,
+			contact_name: existingText(existingVisita, "contact_name", contactName),
+			contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
+			confirmed_address: existingText(existingVisita, "confirmed_address", location),
 			interest_package: "Paneles Solares",
 			quotation_type: "Paneles Solares",
-			notes: notes,
+			notes: existingText(existingVisita, "notes", notes),
 			house_attributes: houseAttributes,
 			electrical_attributes: electricalAttributes,
 			roof_attributes: {},
