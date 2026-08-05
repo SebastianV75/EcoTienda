@@ -122,6 +122,21 @@ const documentRequirements = {
 			test: (subject) => hasReadableValue(subject.estimated_monthly_generation),
 		},
 	],
+	cfe: [
+		{
+			label: "correo electrónico",
+			test: (subject) => hasReadableValue(subject.email),
+		},
+		{
+			label: "código postal",
+			test: (subject) => hasReadableValue(subject.postal_code),
+		},
+		{
+			label: "municipio",
+			test: (subject) => hasReadableValue(subject.municipality),
+		},
+		{ label: "estado", test: (subject) => hasReadableValue(subject.state) },
+	],
 } satisfies Record<DocumentTemplateSlug, readonly Requirement[]>;
 
 function getReadiness(
@@ -157,6 +172,10 @@ export function getDescargablesDocumentReadiness(
 		"diagrama-unifilar": getReadiness(
 			buildTrabajoPreviewSubject(trabajo, "diagrama-unifilar"),
 			documentRequirements["diagrama-unifilar"],
+		),
+		cfe: getReadiness(
+			buildTrabajoPreviewSubject(trabajo, "cfe"),
+			documentRequirements.cfe,
 		),
 	};
 }

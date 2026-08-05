@@ -16,17 +16,17 @@ export default async function CartaPoderTemplatePage() {
 			<div className="space-y-4">
 				<div className="flex flex-wrap gap-3">
 					<Link
-						href="/admin/documents"
+						href="/admin/descargables"
 						className="inline-flex rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
 					>
-						Volver a documentos
+						Volver a descargables
 					</Link>
 				</div>
 
 				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
 					<p className="text-sm leading-7 text-[var(--muted)]">
-						La selección ahora parte del trabajo, no del cliente. Así la carta poder
-						hereda los datos del flujo de agenda y visita.
+						La selección ahora parte del trabajo, no del cliente. Así la carta
+						poder hereda los datos del flujo de agenda y visita.
 					</p>
 					<Link
 						href="/admin/documents/trabajos?template=carta-poder"

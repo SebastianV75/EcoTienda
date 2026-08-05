@@ -6,8 +6,12 @@ import type { DocumentTemplateSlug } from "./trabajo-preview-selector";
 export type DocumentPreviewSubject = {
 	full_name: string;
 	phone: string | null;
+	email: string | null;
 	address: string | null;
 	neighborhood: string | null;
+	postal_code: string | null;
+	municipality: string | null;
+	state: string | null;
 	rfc: string | null;
 	rpu: string | null;
 	latitude: number | null;
@@ -103,8 +107,12 @@ export function buildTrabajoPreviewSubject(
 	const subject: DocumentPreviewSubject = {
 		full_name: defaults.client_name,
 		phone: defaults.client_phone,
+		email: null,
 		address: defaults.address_text,
 		neighborhood: null,
+		postal_code: null,
+		municipality: null,
+		state: null,
 		rfc: defaults.quotation.rfc,
 		rpu: defaults.quotation.rpu,
 		latitude: defaults.latitude,

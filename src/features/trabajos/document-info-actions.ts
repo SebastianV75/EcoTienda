@@ -24,6 +24,10 @@ type DocumentFieldValues = {
 	inverter: string;
 	installed_capacity: string;
 	estimated_monthly_generation: string;
+	email: string;
+	postal_code: string;
+	municipality: string;
+	state: string;
 };
 
 const documentFieldsByTemplate = {
@@ -51,6 +55,7 @@ const documentFieldsByTemplate = {
 		"installed_capacity",
 		"estimated_monthly_generation",
 	],
+	cfe: ["email", "postal_code", "municipality", "state"],
 } as const satisfies Record<string, readonly (keyof DocumentFieldValues)[]>;
 
 function getString(formData: FormData, key: string) {
@@ -86,6 +91,10 @@ export async function saveTrabajoDocumentInfoAction(
 			formData,
 			"estimated_monthly_generation",
 		),
+		email: getString(formData, "email"),
+		postal_code: getString(formData, "postal_code"),
+		municipality: getString(formData, "municipality"),
+		state: getString(formData, "state"),
 	};
 
 	const missing: string[] = [];
@@ -101,9 +110,19 @@ export async function saveTrabajoDocumentInfoAction(
 		["inverter", "inversor"],
 		["installed_capacity", "capacidad instalada"],
 		["estimated_monthly_generation", "generación media mensual estimada"],
+		["email", "correo electrónico"],
+		["postal_code", "código postal"],
+		["municipality", "municipio"],
+		["state", "estado"],
 	];
 
 	if (!trabajoId) missing.push("trabajo");
+	if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+		missing.push("correo electrónico válido");
+	}
+	if (values.postal_code && !/^\d{5}$/.test(values.postal_code)) {
+		missing.push("código postal de 5 dígitos");
+	}
 	for (const [field, label] of requiredTextFields) {
 		if (!values[field]) missing.push(label);
 	}
@@ -187,6 +206,7 @@ export async function saveTrabajoDocumentInfoAction(
 	revalidatePath(
 		`/admin/documents/diagrama-unifilar/preview?trabajoId=${trabajoId}`,
 	);
+	revalidatePath(`/api/trabajos/${trabajoId}/cfe`);
 
 	return {
 		error: null,

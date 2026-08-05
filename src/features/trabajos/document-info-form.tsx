@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ActionButton } from "@/components/ui/action-button";
 import { Input } from "@/components/ui/field";
 import type { DocumentPreviewSubject } from "@/features/documents/preview-data";
+import { getPostalCodeLocation } from "@/features/trabajos/postal-code-location";
 import {
 	saveTrabajoDocumentInfoAction,
 	type DocumentInfoActionState,
@@ -14,6 +15,7 @@ import {
 type DocumentInfoFormProps = {
 	trabajoId: string;
 	defaults: DocumentPreviewSubject;
+	cfeDefaults: DocumentPreviewSubject;
 	missing: string[];
 };
 
@@ -25,9 +27,90 @@ const initialState: DocumentInfoActionState = {
 const fieldClassName =
 	"w-full rounded-[16px] border border-[var(--border-soft)] bg-white px-3.5 py-2.5 text-sm text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300";
 
+function CfeContactFields({ defaults }: { defaults: DocumentPreviewSubject }) {
+	const initialPostalCode = defaults.postal_code ?? "";
+	const initialLocation = getPostalCodeLocation(initialPostalCode);
+	const [postalCode, setPostalCode] = useState(initialPostalCode);
+	const [municipality, setMunicipality] = useState(
+		defaults.municipality ?? initialLocation?.municipality ?? "",
+	);
+	const [state, setState] = useState(
+		defaults.state ?? initialLocation?.state ?? "",
+	);
+
+	function handlePostalCodeChange(value: string) {
+		const nextPostalCode = value.replace(/\D/g, "").slice(0, 5);
+		setPostalCode(nextPostalCode);
+
+		const location = getPostalCodeLocation(nextPostalCode);
+		if (!location) return;
+		if (!municipality.trim()) setMunicipality(location.municipality);
+		if (!state.trim()) setState(location.state);
+	}
+
+	return (
+		<div className="space-y-3">
+			<h4 className="text-sm font-semibold text-[var(--brand-deep)]">
+				Datos CFE del solicitante
+			</h4>
+			<p className="text-sm leading-6 text-amber-900/80">
+				El municipio y estado se completan al salir del código postal cuando
+				existe una coincidencia confirmada; puedes corregirlos manualmente.
+			</p>
+			<div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+				<label className="space-y-1.5 text-sm font-medium text-[var(--brand-deep)] md:col-span-2">
+					<span>Correo electrónico</span>
+					<Input
+						name="email"
+						type="email"
+						autoComplete="email"
+						defaultValue={defaults.email ?? ""}
+						required
+						className={fieldClassName}
+					/>
+				</label>
+				<label className="space-y-1.5 text-sm font-medium text-[var(--brand-deep)]">
+					<span>Código postal</span>
+					<Input
+						name="postal_code"
+						inputMode="numeric"
+						pattern="[0-9]{5}"
+						maxLength={5}
+						value={postalCode}
+						onChange={(event) => handlePostalCodeChange(event.target.value)}
+						required
+						className={fieldClassName}
+					/>
+				</label>
+				<label className="space-y-1.5 text-sm font-medium text-[var(--brand-deep)]">
+					<span>Municipio</span>
+					<Input
+						name="municipality"
+						value={municipality}
+						onChange={(event) => setMunicipality(event.target.value)}
+						required
+						className={fieldClassName}
+					/>
+				</label>
+				<label className="space-y-1.5 text-sm font-medium text-[var(--brand-deep)]">
+					<span>Estado</span>
+					<Input
+						name="state"
+						value={state}
+						onChange={(event) => setState(event.target.value)}
+						required
+						className={fieldClassName}
+					/>
+				</label>
+			</div>
+		</div>
+	);
+}
+
 export function DocumentInfoForm({
 	trabajoId,
 	defaults,
+	cfeDefaults,
 	missing,
 }: DocumentInfoFormProps) {
 	const router = useRouter();
@@ -52,8 +135,8 @@ export function DocumentInfoForm({
 					Completa los datos que usarán los documentos
 				</h3>
 				<p className="text-sm leading-6 text-amber-900/80">
-					Esta información se reutiliza en carta poder, ubicación del cliente y
-					diagrama unifilar.
+					Esta información se reutiliza en carta poder, ubicación del cliente,
+					diagrama unifilar y la solicitud CFE.
 				</p>
 			</div>
 
@@ -127,6 +210,8 @@ export function DocumentInfoForm({
 						</label>
 					</div>
 				</div>
+
+				<CfeContactFields defaults={cfeDefaults} />
 
 				<div className="space-y-3">
 					<h4 className="text-sm font-semibold text-[var(--brand-deep)]">
