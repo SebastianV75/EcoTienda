@@ -201,16 +201,6 @@ export const styles = StyleSheet.create({
 	totalsTable: {
 		width: "40%",
 	},
-	totalsRow: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		paddingVertical: 8,
-		paddingHorizontal: 12,
-		borderWidth: 1,
-		borderColor: COLORS.border,
-		borderStyle: "solid",
-		borderBottomWidth: 0,
-	},
 	totalsRowLast: {
 		flexDirection: "row",
 		justifyContent: "space-between",
@@ -225,11 +215,6 @@ export const styles = StyleSheet.create({
 		fontSize: 10,
 		fontWeight: "bold",
 		color: COLORS.foreground,
-	},
-	totalsValue: {
-		fontSize: 10,
-		color: COLORS.foreground,
-		textAlign: "right",
 	},
 	totalsValueBold: {
 		fontSize: 11,

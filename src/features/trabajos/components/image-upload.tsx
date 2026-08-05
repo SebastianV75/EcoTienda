@@ -36,14 +36,13 @@ export function ImageUpload({
 			const compressedFile = await compressImage(file);
 
 			const supabase = createSupabaseBrowserClient();
-			const ext = file.name.split(".").pop() || "jpg";
-			const path = `${trabajoId}/${fieldName}-${file.lastModified}-${file.size}.${ext}`;
+			const path = `${trabajoId}/${fieldName}-${crypto.randomUUID()}.jpg`;
 
 			const { error: uploadError } = await supabase.storage
 				.from(BUCKET_NAME)
 				.upload(path, compressedFile, {
 					cacheControl: "3600",
-					upsert: true,
+					upsert: false,
 					contentType: compressedFile.type,
 				});
 
@@ -66,7 +65,8 @@ export function ImageUpload({
 		return new Promise((resolve, reject) => {
 			const canvas = document.createElement("canvas");
 			const ctx = canvas.getContext("2d");
-			if (!ctx) return reject(new Error("El navegador no permite procesar la imagen."));
+			if (!ctx)
+				return reject(new Error("El navegador no permite procesar la imagen."));
 			const img = new Image();
 			const objectUrl = URL.createObjectURL(file);
 
@@ -75,15 +75,30 @@ export function ImageUpload({
 				const maxSize = 1920;
 				let { width, height } = img;
 				if (width > maxSize || height > maxSize) {
-					if (width > height) { height = (height / width) * maxSize; width = maxSize; }
-					else { width = (width / height) * maxSize; height = maxSize; }
+					if (width > height) {
+						height = (height / width) * maxSize;
+						width = maxSize;
+					} else {
+						width = (width / height) * maxSize;
+						height = maxSize;
+					}
 				}
 				canvas.width = width;
 				canvas.height = height;
 				ctx.drawImage(img, 0, 0, width, height);
-				canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("No se pudo comprimir la imagen.")), "image/jpeg", 0.85);
+				canvas.toBlob(
+					(blob) =>
+						blob
+							? resolve(blob)
+							: reject(new Error("No se pudo comprimir la imagen.")),
+					"image/jpeg",
+					0.85,
+				);
 			};
-			img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("La imagen no se pudo decodificar.")); };
+			img.onerror = () => {
+				URL.revokeObjectURL(objectUrl);
+				reject(new Error("La imagen no se pudo decodificar."));
+			};
 			img.src = objectUrl;
 		});
 	}
@@ -106,7 +121,7 @@ export function ImageUpload({
 					<img
 						src={imageUrl}
 						alt="Preview"
-						className="aspect-[4/3] w-full rounded-[18px] border border-[var(--border-soft)] object-contain bg-[var(--surface)]"
+						className="h-64 w-full rounded-[18px] border border-[var(--border-soft)] object-contain bg-[var(--surface)] sm:h-72"
 					/>
 					<button
 						type="button"

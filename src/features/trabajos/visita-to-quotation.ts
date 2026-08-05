@@ -18,7 +18,9 @@ type VisitaData = {
  * Genera items de cotización sugeridos basados en los datos de la visita técnica.
  * Analiza el interest_package y otros atributos para sugerir productos del catálogo.
  */
-export function generateQuotationItemsFromVisita(visita: VisitaData): QuotationItem[] {
+export function generateQuotationItemsFromVisita(
+	visita: VisitaData,
+): QuotationItem[] {
 	const items: QuotationItem[] = [];
 	const packageLower = visita.interest_package.toLowerCase();
 
@@ -30,7 +32,6 @@ export function generateQuotationItemsFromVisita(visita: VisitaData): QuotationI
 				quantity: 1,
 				unit: "pz",
 				unit_price: 0,
-				tax_rate: 16,
 				amount: 0,
 				sort_order: items.length,
 			});
@@ -38,14 +39,15 @@ export function generateQuotationItemsFromVisita(visita: VisitaData): QuotationI
 	}
 
 	if (packageLower.includes("panel") || packageLower.includes("solar")) {
-		const catalogName = findClosestCatalogProduct("4 paneles solares inversor de 2 kw");
+		const catalogName = findClosestCatalogProduct(
+			"4 paneles solares inversor de 2 kw",
+		);
 		if (catalogName) {
 			items.push({
 				product_name: catalogName,
 				quantity: 1,
 				unit: "pz",
 				unit_price: 0,
-				tax_rate: 16,
 				amount: 0,
 				sort_order: items.length,
 			});
@@ -53,14 +55,15 @@ export function generateQuotationItemsFromVisita(visita: VisitaData): QuotationI
 	}
 
 	if (packageLower.includes("bomba") || packageLower.includes("bombeo")) {
-		const catalogName = findClosestCatalogProduct("Motobomba sumergible kolos2spp / 2 paneles/estructura");
+		const catalogName = findClosestCatalogProduct(
+			"Motobomba sumergible kolos2spp / 2 paneles/estructura",
+		);
 		if (catalogName) {
 			items.push({
 				product_name: catalogName,
 				quantity: 1,
 				unit: "pz",
 				unit_price: 0,
-				tax_rate: 16,
 				amount: 0,
 				sort_order: items.length,
 			});
@@ -68,14 +71,15 @@ export function generateQuotationItemsFromVisita(visita: VisitaData): QuotationI
 	}
 
 	if (items.length === 0) {
-		const catalogName = findClosestCatalogProduct(visita.interest_package || "Minisplit 1 ton convencional");
+		const catalogName = findClosestCatalogProduct(
+			visita.interest_package || "Minisplit 1 ton convencional",
+		);
 		if (catalogName) {
 			items.push({
 				product_name: catalogName,
 				quantity: 1,
 				unit: "pz",
 				unit_price: 0,
-				tax_rate: 16,
 				amount: 0,
 				sort_order: items.length,
 			});

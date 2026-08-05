@@ -5,7 +5,11 @@ import { useActionState } from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import { Input, Textarea } from "@/components/ui/field";
 
-import { saveTrabajoVentaAction, type VentaActionState, type VentaFormValues } from "@/features/trabajos/trabajo-stage-actions";
+import {
+	saveTrabajoVentaAction,
+	type VentaActionState,
+	type VentaFormValues,
+} from "@/features/trabajos/trabajo-stage-actions";
 
 type VentaFormProps = {
 	trabajoId: string;
@@ -22,13 +26,24 @@ function sectionFieldClass() {
 	return "w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300";
 }
 
-export function VentaForm({ trabajoId, quotationTrabajoId, defaultValues = {} }: VentaFormProps) {
-	const [state, formAction] = useActionState(saveTrabajoVentaAction, initialState);
+export function VentaForm({
+	trabajoId,
+	quotationTrabajoId,
+	defaultValues = {},
+}: VentaFormProps) {
+	const [state, formAction] = useActionState(
+		saveTrabajoVentaAction,
+		initialState,
+	);
 
 	return (
 		<form action={formAction} className="space-y-4">
 			<Input type="hidden" name="trabajo_id" value={trabajoId} />
-			<Input type="hidden" name="quotation_trabajo_id" value={quotationTrabajoId} />
+			<Input
+				type="hidden"
+				name="quotation_trabajo_id"
+				value={quotationTrabajoId}
+			/>
 
 			<div className="grid gap-4 md:grid-cols-2">
 				<div className="space-y-2.5">
@@ -78,7 +93,6 @@ export function VentaForm({ trabajoId, quotationTrabajoId, defaultValues = {} }:
 						id="notes"
 						name="notes"
 						defaultValue={defaultValues.notes}
-						required
 						rows={4}
 						className={sectionFieldClass()}
 					/>

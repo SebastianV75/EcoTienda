@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import {
+	useState,
+	useEffect,
+	useRef,
+	useTransition,
+	type FormEvent,
+} from "react";
 import { useActionState } from "react";
 
 import {
@@ -40,7 +46,6 @@ function createEmptyItem(sortOrder: number): QuotationItem {
 		quantity: 1,
 		unit: "pz",
 		unit_price: 0,
-		tax_rate: 16,
 		amount: 0,
 		sort_order: sortOrder,
 	};
@@ -66,6 +71,7 @@ export function EditQuotationForm({
 		isEditing ? updateQuotationAction : createQuotationAction,
 		initialState,
 	);
+	const [, startTransition] = useTransition();
 	const [activeTab, setActiveTab] = useState<"products" | "other">(
 		(initialData.supplier_name ?? "").trim() ? "products" : "other",
 	);
@@ -76,6 +82,7 @@ export function EditQuotationForm({
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [isSaving, setIsSaving] = useState(false);
 	const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const draftSavePromiseRef = useRef<Promise<void> | null>(null);
 	const hasChangesRef = useRef(false);
 	const itemsRef = useRef(items);
 	const quotationIdRef = useRef(quotationId);
@@ -104,13 +111,35 @@ export function EditQuotationForm({
 		quotationIdRef.current = quotationId;
 	}, [quotationId]);
 
+	function startDraftSave() {
+		const previousSave = draftSavePromiseRef.current ?? Promise.resolve();
+		const nextSave = previousSave
+			.catch(() => undefined)
+			.then(() => saveDraft());
+
+		draftSavePromiseRef.current = nextSave;
+		void nextSave.then(
+			() => {
+				if (draftSavePromiseRef.current === nextSave) {
+					draftSavePromiseRef.current = null;
+				}
+			},
+			() => {
+				if (draftSavePromiseRef.current === nextSave) {
+					draftSavePromiseRef.current = null;
+				}
+			},
+		);
+	}
+
 	function scheduleDraftSave() {
 		if (saveTimeoutRef.current) {
 			clearTimeout(saveTimeoutRef.current);
 		}
 
 		saveTimeoutRef.current = setTimeout(() => {
-			void saveDraft();
+			saveTimeoutRef.current = null;
+			startDraftSave();
 		}, 2000);
 	}
 
@@ -143,6 +172,26 @@ export function EditQuotationForm({
 		} finally {
 			setIsSaving(false);
 		}
+	}
+
+	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+		event.preventDefault();
+		const form = event.currentTarget;
+
+		if (saveTimeoutRef.current) {
+			clearTimeout(saveTimeoutRef.current);
+			saveTimeoutRef.current = null;
+		}
+
+		hasChangesRef.current = false;
+		const pendingDraftSave = draftSavePromiseRef.current;
+		if (pendingDraftSave) {
+			await pendingDraftSave;
+		}
+
+		startTransition(() => {
+			formAction(new FormData(form));
+		});
 	}
 
 	function updateField(field: string, value: string) {
@@ -214,7 +263,7 @@ export function EditQuotationForm({
 				type: "note",
 				product_name: "",
 				unit: "",
-				quantity: 0,
+				quantity: 1,
 				unit_price: 0,
 				amount: 0,
 			},
@@ -224,14 +273,11 @@ export function EditQuotationForm({
 	}
 
 	const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
-	const total = items.reduce((sum, item) => {
-		const taxAmount = item.amount * (item.tax_rate / 100);
-		return sum + item.amount + taxAmount;
-	}, 0);
+	const total = subtotal;
 
 	return (
 		<>
-			<form action={formAction} className="space-y-6">
+			<form onSubmit={handleSubmit} className="space-y-6">
 				<div className="flex items-center justify-between">
 					<div>
 						<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
@@ -343,6 +389,11 @@ export function EditQuotationForm({
 					name="quotation_number"
 					value={initialData.quotation_number ?? ""}
 				/>
+				<input
+					type="hidden"
+					name="quotation_id"
+					value={initialData.quotation_id ?? ""}
+				/>
 				<input type="hidden" name="trabajo_id" value={formData.trabajo_id} />
 				<input
 					type="hidden"
@@ -370,6 +421,17 @@ export function EditQuotationForm({
 				{state.error ? (
 					<p className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
 						{state.error}
+					</p>
+				) : null}
+
+				{state.success && !isPending ? (
+					<p
+						role="status"
+						className="rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+					>
+						{isEditing
+							? "Los cambios se guardaron correctamente."
+							: "La cotización se creó correctamente."}
 					</p>
 				) : null}
 

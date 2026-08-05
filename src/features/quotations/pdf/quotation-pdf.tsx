@@ -41,11 +41,7 @@ function extractClientName(project: string | null | undefined): string {
 	return project.trim();
 }
 
-export function QuotationPDF({
-	quotation,
-	items,
-	company,
-}: QuotationPDFProps) {
+export function QuotationPDF({ quotation, items, company }: QuotationPDFProps) {
 	const quotationDate = formatDate(quotation.created_at);
 	const orderDeadline = formatDate(quotation.order_deadline);
 	const clientName = extractClientName(quotation.project);
@@ -65,15 +61,11 @@ export function QuotationPDF({
 					company={company}
 				/>
 
-				<PDFNotes termsAndConditions={quotation.terms_and_conditions} />
-
 				<PDFProductsTable items={items} />
 
-				<PDFTotals
-					items={items}
-					subtotal={quotation.subtotal}
-					total={quotation.total}
-				/>
+				<PDFTotals total={quotation.total} />
+
+				<PDFNotes termsAndConditions={quotation.terms_and_conditions} />
 
 				<PDFFooter company={company} />
 			</Page>

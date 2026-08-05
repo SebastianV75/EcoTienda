@@ -84,7 +84,8 @@ CREATE TABLE quotation_items (
   quantity NUMERIC(10, 2) DEFAULT 1,
   unit TEXT DEFAULT 'pz',
   unit_price NUMERIC(12, 2) DEFAULT 0,
-  tax_rate NUMERIC(5, 2) DEFAULT 16,
+  -- Campo legado: la aplicación ya no captura ni calcula impuestos.
+  tax_rate NUMERIC(5, 2) DEFAULT 0,
   amount NUMERIC(12, 2) DEFAULT 0,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()

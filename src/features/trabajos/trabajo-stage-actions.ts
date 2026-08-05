@@ -8,6 +8,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import {
 	canAdvanceTrabajoStage,
+	canCompleteTrabajoVenta,
 	isTrabajoDescargablesReady,
 	isTrabajoQuotationStageComplete,
 	isTrabajoSaleStageComplete,
@@ -42,7 +43,11 @@ type CotizacionStagePayload = {
 };
 
 type ValidCotizacionInput =
-	| { error: null; values: CotizacionFormValues; stagePayload: CotizacionStagePayload }
+	| {
+			error: null;
+			values: CotizacionFormValues;
+			stagePayload: CotizacionStagePayload;
+	  }
 	| { error: string; values: null; stagePayload?: never };
 
 function getString(formData: FormData, key: string) {
@@ -70,7 +75,8 @@ function validateCotizacionInput(formData: FormData): ValidCotizacionInput {
 
 	if (!values.trabajo_id) missing.push("trabajo");
 	if (!values.scope_summary) missing.push("alcance");
-	if (isNaN(values.amount) || values.amount < 0) missing.push("monto válido");
+	if (!Number.isFinite(values.amount) || values.amount < 0)
+		missing.push("monto válido");
 	if (!values.terms_and_conditions) missing.push("términos y condiciones");
 	if (!values.outcome) missing.push("resultado");
 	if (!values.quotation_type) missing.push("tipo de cotización");
@@ -152,8 +158,8 @@ function validateVentaInput(formData: FormData): ValidVentaInput {
 	if (!values.trabajo_id) missing.push("trabajo");
 	if (!values.quotation_trabajo_id) missing.push("cotización vinculada");
 	if (!values.confirmed_on) missing.push("fecha de confirmación");
-	if (isNaN(values.agreed_amount) || values.agreed_amount < 0) missing.push("monto acordado válido");
-	if (!values.notes) missing.push("notas");
+	if (!Number.isFinite(values.agreed_amount) || values.agreed_amount < 0)
+		missing.push("monto acordado válido");
 
 	if (missing.length > 0) {
 		return { error: `Completa ${missing.join(", ")}.`, values: null };
@@ -198,6 +204,10 @@ type QuotationStageSnapshot = CotizacionStagePayload;
 
 type SaleStageSnapshot = {
 	trabajo_id: string;
+	quotation_trabajo_id: string;
+	confirmed_on: string;
+	agreed_amount: number;
+	notes: string;
 	completed_at: string | null;
 };
 
@@ -214,7 +224,9 @@ async function restoreQuotationStage(
 	snapshot: QuotationStageSnapshot | null,
 ) {
 	if (!snapshot) return;
-	await supabase.from("trabajo_quotation_stage").upsert(snapshot, { onConflict: "trabajo_id" });
+	await supabase
+		.from("trabajo_quotation_stage")
+		.upsert(snapshot, { onConflict: "trabajo_id" });
 }
 
 async function restoreSaleStage(
@@ -222,7 +234,122 @@ async function restoreSaleStage(
 	snapshot: SaleStageSnapshot | null,
 ) {
 	if (!snapshot) return;
-	await supabase.from("trabajo_sale_stage").upsert(snapshot, { onConflict: "trabajo_id" });
+	await supabase
+		.from("trabajo_sale_stage")
+		.upsert(snapshot, { onConflict: "trabajo_id" });
+}
+
+type LegacyQuotationSnapshot = {
+	total: number | string | null;
+	project: string | null;
+	terms_and_conditions: string | null;
+};
+
+async function ensureTrabajoQuotationStage(
+	supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+	trabajoId: string,
+	completedAt: string | null,
+): Promise<{
+	stage: QuotationStageSnapshot | null;
+	created: boolean;
+	error: string | null;
+}> {
+	const { data: existingStage, error: existingStageError } = await supabase
+		.from("trabajo_quotation_stage")
+		.select(
+			"trabajo_id, scope_summary, amount, terms_and_conditions, outcome, quotation_type, rfc, rpu, completed_at",
+		)
+		.eq("trabajo_id", trabajoId)
+		.maybeSingle();
+
+	if (existingStageError) {
+		return {
+			stage: null,
+			created: false,
+			error: existingStageError.message,
+		};
+	}
+
+	if (existingStage) {
+		return {
+			stage: existingStage as QuotationStageSnapshot,
+			created: false,
+			error: null,
+		};
+	}
+
+	const { data: legacyQuotation, error: legacyQuotationError } = await supabase
+		.from("quotations")
+		.select("total, project, terms_and_conditions")
+		.eq("trabajo_id", trabajoId)
+		.order("created_at", { ascending: false })
+		.limit(1)
+		.maybeSingle();
+
+	if (legacyQuotationError || !legacyQuotation) {
+		return {
+			stage: null,
+			created: false,
+			error:
+				legacyQuotationError?.message ??
+				"No existe una cotización vinculada al trabajo.",
+		};
+	}
+
+	const quotation = legacyQuotation as LegacyQuotationSnapshot;
+	const amount = Number(quotation.total);
+	if (!Number.isFinite(amount) || amount < 0) {
+		return {
+			stage: null,
+			created: false,
+			error: "La cotización vinculada no tiene un total válido.",
+		};
+	}
+
+	const payload: QuotationStageSnapshot = {
+		trabajo_id: trabajoId,
+		scope_summary: quotation.project?.trim() || "Cotización aceptada",
+		amount,
+		terms_and_conditions: quotation.terms_and_conditions?.trim() ?? "",
+		outcome: "approved",
+		quotation_type: "Cotización general",
+		rfc: "",
+		rpu: "",
+		completed_at: completedAt,
+	};
+
+	const { data: createdStage, error: createStageError } = await supabase
+		.from("trabajo_quotation_stage")
+		.upsert(payload, { onConflict: "trabajo_id" })
+		.select(
+			"trabajo_id, scope_summary, amount, terms_and_conditions, outcome, quotation_type, rfc, rpu, completed_at",
+		)
+		.single();
+
+	if (createStageError || !createdStage) {
+		return {
+			stage: null,
+			created: false,
+			error:
+				createStageError?.message ?? "No se pudo crear la etapa de cotización.",
+		};
+	}
+
+	return {
+		stage: createdStage as QuotationStageSnapshot,
+		created: true,
+		error: null,
+	};
+}
+
+async function removeCreatedQuotationStage(
+	supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+	trabajoId: string,
+) {
+	await supabase
+		.from("trabajo_quotation_stage")
+		.delete()
+		.eq("trabajo_id", trabajoId);
 }
 
 export async function saveTrabajoCotizacionAction(
@@ -242,28 +369,51 @@ export async function saveTrabajoCotizacionAction(
 	const supabase = await createSupabaseServerClient();
 	const completionIso = result.stagePayload.completed_at;
 
-	const [trabajoSnapshotResult, quotationStageSnapshotResult] = await Promise.all([
-		supabase
-			.from("trabajos")
-			.select("id, current_stage, visita_completed_at, cotizacion_completed_at, venta_completed_at, descargables_completed_at")
-			.eq("id", result.values.trabajo_id)
-			.maybeSingle(),
-		supabase
-			.from("trabajo_quotation_stage")
-			.select("trabajo_id, scope_summary, amount, terms_and_conditions, outcome, quotation_type, rfc, rpu, completed_at")
-			.eq("trabajo_id", result.values.trabajo_id)
-			.maybeSingle(),
-	]);
+	const [trabajoSnapshotResult, quotationStageSnapshotResult] =
+		await Promise.all([
+			supabase
+				.from("trabajos")
+				.select(
+					"id, current_stage, visita_completed_at, cotizacion_completed_at, venta_completed_at, descargables_completed_at",
+				)
+				.eq("id", result.values.trabajo_id)
+				.maybeSingle(),
+			supabase
+				.from("trabajo_quotation_stage")
+				.select(
+					"trabajo_id, scope_summary, amount, terms_and_conditions, outcome, quotation_type, rfc, rpu, completed_at",
+				)
+				.eq("trabajo_id", result.values.trabajo_id)
+				.maybeSingle(),
+		]);
 
 	if (trabajoSnapshotResult.error || quotationStageSnapshotResult.error) {
-		return { error: "No se pudo preparar la cotización para guardarse.", success: null };
+		return {
+			error: "No se pudo preparar la cotización para guardarse.",
+			success: null,
+		};
 	}
 
-	const trabajoSnapshot = (trabajoSnapshotResult.data as TrabajoSnapshot | null) ?? null;
-	const quotationStageSnapshot = (quotationStageSnapshotResult.data as QuotationStageSnapshot | null) ?? null;
+	const trabajoSnapshot =
+		(trabajoSnapshotResult.data as TrabajoSnapshot | null) ?? null;
+	const quotationStageSnapshot =
+		(quotationStageSnapshotResult.data as QuotationStageSnapshot | null) ??
+		null;
 
-	if (!trabajoSnapshot || !canAdvanceTrabajoStage(trabajoSnapshot.current_stage, "cotizacion", !!trabajoSnapshot.visita_completed_at)) {
-		return { error: "La etapa anterior (Visita) debe estar completada antes de avanzar.", success: null };
+	if (
+		!trabajoSnapshot ||
+		!trabajoSnapshot.visita_completed_at ||
+		!canAdvanceTrabajoStage(
+			trabajoSnapshot.current_stage,
+			"venta",
+			!!result.stagePayload.completed_at,
+		)
+	) {
+		return {
+			error:
+				"La visita debe estar completada y el trabajo debe estar en la etapa de Cotización.",
+			success: null,
+		};
 	}
 
 	const { error: cotizacionError } = await supabase
@@ -271,22 +421,35 @@ export async function saveTrabajoCotizacionAction(
 		.upsert(result.stagePayload, { onConflict: "trabajo_id" });
 
 	if (cotizacionError) {
+		console.error("[saveTrabajoCotizacionAction] Error al guardar etapa", {
+			trabajoId: result.values.trabajo_id,
+			code: cotizacionError.code,
+			message: cotizacionError.message,
+			details: cotizacionError.details,
+			hint: cotizacionError.hint,
+		});
 		return { error: "No se pudo guardar la cotización.", success: null };
 	}
 
-	const { error: trabajoError } = await supabase
+	const { error: trabajoError, count: trabajoUpdateCount } = await supabase
 		.from("trabajos")
-		.update({
-			current_stage: "cotizacion",
-			visita_completed_at: completionIso,
-			cotizacion_completed_at: result.stagePayload.completed_at,
-		})
-		.eq("id", result.values.trabajo_id);
+		.update(
+			{
+				current_stage: "venta",
+				cotizacion_completed_at: completionIso,
+			},
+			{ count: "exact" },
+		)
+		.eq("id", result.values.trabajo_id)
+		.eq("current_stage", "cotizacion");
 
-	if (trabajoError) {
+	if (trabajoError || trabajoUpdateCount !== 1) {
 		await restoreTrabajo(supabase, trabajoSnapshot);
 		await restoreQuotationStage(supabase, quotationStageSnapshot);
-		return { error: "Se guardó la cotización, pero no se pudo avanzar el trabajo.", success: null };
+		return {
+			error: "Se guardó la cotización, pero no se pudo avanzar el trabajo.",
+			success: null,
+		};
 	}
 
 	revalidatePath("/admin/trabajos");
@@ -298,7 +461,10 @@ export async function saveTrabajoCotizacionAction(
 	revalidatePath("/admin/documents/ubicacion-cliente/preview");
 	revalidatePath("/admin/documents/diagrama-unifilar/preview");
 
-	return { error: null, success: "Cotización guardada y trabajo avanzado a Cotización." };
+	return {
+		error: null,
+		success: "Cotización confirmada y trabajo avanzado a Venta.",
+	};
 }
 
 export async function saveTrabajoVentaAction(
@@ -316,64 +482,144 @@ export async function saveTrabajoVentaAction(
 	}
 
 	const supabase = await createSupabaseServerClient();
-	const completionIso = result.stagePayload.completed_at;
 
 	const [trabajoSnapshotResult, saleStageSnapshotResult] = await Promise.all([
 		supabase
 			.from("trabajos")
-			.select("id, current_stage, visita_completed_at, cotizacion_completed_at, venta_completed_at, descargables_completed_at")
+			.select(
+				"id, current_stage, visita_completed_at, cotizacion_completed_at, venta_completed_at, descargables_completed_at",
+			)
 			.eq("id", result.values.trabajo_id)
 			.maybeSingle(),
 		supabase
 			.from("trabajo_sale_stage")
-			.select("trabajo_id, completed_at")
+			.select(
+				"trabajo_id, quotation_trabajo_id, confirmed_on, agreed_amount, notes, completed_at",
+			)
 			.eq("trabajo_id", result.values.trabajo_id)
 			.maybeSingle(),
 	]);
 
 	if (trabajoSnapshotResult.error || saleStageSnapshotResult.error) {
-		return { error: "No se pudo preparar la venta para guardarse.", success: null };
+		console.error("[saveTrabajoVentaAction] Error al preparar venta", {
+			trabajoError: trabajoSnapshotResult.error?.message,
+			saleStageError: saleStageSnapshotResult.error?.message,
+		});
+		return {
+			error: "No se pudo preparar la venta para guardarse.",
+			success: null,
+		};
 	}
 
-	const trabajoSnapshot = (trabajoSnapshotResult.data as TrabajoSnapshot | null) ?? null;
-	const saleStageSnapshot = (saleStageSnapshotResult.data as SaleStageSnapshot | null) ?? null;
+	const trabajoSnapshot =
+		(trabajoSnapshotResult.data as TrabajoSnapshot | null) ?? null;
+	const saleStageSnapshot =
+		(saleStageSnapshotResult.data as SaleStageSnapshot | null) ?? null;
 
-	if (!trabajoSnapshot || !canAdvanceTrabajoStage(trabajoSnapshot.current_stage, "venta", !!trabajoSnapshot.cotizacion_completed_at)) {
-		return { error: "La etapa anterior (Cotización) debe estar completada antes de avanzar.", success: null };
+	if (
+		!trabajoSnapshot ||
+		!canCompleteTrabajoVenta(
+			trabajoSnapshot.current_stage,
+			trabajoSnapshot.cotizacion_completed_at,
+		)
+	) {
+		return {
+			error: "La cotización debe estar completada antes de confirmar la venta.",
+			success: null,
+		};
 	}
+
+	const quotationStageResult = await ensureTrabajoQuotationStage(
+		supabase,
+		trabajoSnapshot.id,
+		trabajoSnapshot.cotizacion_completed_at,
+	);
+
+	if (quotationStageResult.error || !quotationStageResult.stage) {
+		console.error(
+			"[saveTrabajoVentaAction] Error al preparar cotización vinculada",
+			{
+				trabajoId: trabajoSnapshot.id,
+				message: quotationStageResult.error,
+			},
+		);
+		return {
+			error: "No existe una cotización vinculada válida para guardar la venta.",
+			success: null,
+		};
+	}
+
+	const salePayload: VentaStagePayload = {
+		...result.stagePayload,
+		quotation_trabajo_id: quotationStageResult.stage.trabajo_id,
+	};
 
 	const { error: ventaError } = await supabase
 		.from("trabajo_sale_stage")
-		.upsert(result.stagePayload, { onConflict: "trabajo_id" });
+		.upsert(salePayload, { onConflict: "trabajo_id" });
 
 	if (ventaError) {
+		console.error("[saveTrabajoVentaAction] Error al guardar etapa de venta", {
+			trabajoId: result.values.trabajo_id,
+			code: ventaError.code,
+			message: ventaError.message,
+			details: ventaError.details,
+			hint: ventaError.hint,
+		});
+		if (quotationStageResult.created) {
+			await removeCreatedQuotationStage(supabase, trabajoSnapshot.id);
+		}
 		return { error: "No se pudo guardar la venta.", success: null };
 	}
 
-	const { error: trabajoError } = await supabase
+	const { error: trabajoError, count: trabajoUpdateCount } = await supabase
 		.from("trabajos")
-		.update({
-			current_stage: "venta",
-			cotizacion_completed_at: completionIso,
-			venta_completed_at: result.stagePayload.completed_at,
-		})
-		.eq("id", result.values.trabajo_id);
+		.update(
+			{
+				current_stage: "venta",
+				venta_completed_at: result.stagePayload.completed_at,
+			},
+			{ count: "exact" },
+		)
+		.eq("id", result.values.trabajo_id)
+		.eq("current_stage", "venta");
 
-	if (trabajoError) {
+	if (trabajoError || trabajoUpdateCount !== 1) {
+		console.error("[saveTrabajoVentaAction] Error al completar trabajo", {
+			trabajoId: result.values.trabajo_id,
+			code: trabajoError?.code,
+			message: trabajoError?.message,
+			details: trabajoError?.details,
+			hint: trabajoError?.hint,
+			count: trabajoUpdateCount,
+		});
 		await restoreTrabajo(supabase, trabajoSnapshot);
 		await restoreSaleStage(supabase, saleStageSnapshot);
-		return { error: "Se guardó la venta, pero no se pudo avanzar el trabajo.", success: null };
+		if (quotationStageResult.created) {
+			await removeCreatedQuotationStage(supabase, trabajoSnapshot.id);
+		}
+		return {
+			error: "Se guardó la venta, pero no se pudo avanzar el trabajo.",
+			success: null,
+		};
 	}
 
 	revalidatePath("/admin/trabajos");
 	revalidatePath(`/admin/trabajos/${result.values.trabajo_id}`);
 	revalidatePath(`/admin/visits/${result.values.trabajo_id}`);
 
-	return { error: null, success: "Venta confirmada y trabajo avanzado a Venta." };
+	return {
+		error: null,
+		success: "Venta confirmada y trabajo avanzado a Venta.",
+	};
 }
 
 function validateDescargablesInput(formData: FormData):
-	| { error: null; values: DescargablesFormValues; stagePayload: { trabajo_id: string; completed_at: string | null } }
+	| {
+			error: null;
+			values: DescargablesFormValues;
+			stagePayload: { trabajo_id: string; completed_at: string | null };
+	  }
 	| { error: string; values: null; stagePayload?: never } {
 	const values: DescargablesFormValues = {
 		trabajo_id: getString(formData, "trabajo_id"),
@@ -412,26 +658,45 @@ export async function saveTrabajoDescargablesAction(
 
 	const { data: trabajoData, error: trabajoSnapshotError } = await supabase
 		.from("trabajos")
-		.select("id, current_stage, visita_completed_at, cotizacion_completed_at, venta_completed_at, descargables_completed_at")
+		.select(
+			"id, current_stage, visita_completed_at, cotizacion_completed_at, venta_completed_at, descargables_completed_at",
+		)
 		.eq("id", result.values.trabajo_id)
 		.maybeSingle();
 
 	if (trabajoSnapshotError) {
-		return { error: "No se pudo preparar Descargables para guardarse.", success: null };
+		return {
+			error: "No se pudo preparar Descargables para guardarse.",
+			success: null,
+		};
 	}
 
 	const trabajoSnapshot = (trabajoData as TrabajoSnapshot | null) ?? null;
 
 	if (!trabajoSnapshot || !isTrabajoDescargablesReady(trabajoSnapshot)) {
-		return { error: "La etapa anterior (Venta) debe estar completada antes de avanzar.", success: null };
+		return {
+			error:
+				"La etapa anterior (Venta) debe estar completada antes de avanzar.",
+			success: null,
+		};
 	}
 
 	if (trabajoSnapshot.descargables_completed_at) {
 		return { error: null, success: "Descargables ya estaba completado." };
 	}
 
-	if (!canAdvanceTrabajoStage(trabajoSnapshot.current_stage, "descargables", !!trabajoSnapshot.venta_completed_at)) {
-		return { error: "La etapa anterior (Venta) debe estar completada antes de avanzar.", success: null };
+	if (
+		!canAdvanceTrabajoStage(
+			trabajoSnapshot.current_stage,
+			"descargables",
+			!!trabajoSnapshot.venta_completed_at,
+		)
+	) {
+		return {
+			error:
+				"La etapa anterior (Venta) debe estar completada antes de avanzar.",
+			success: null,
+		};
 	}
 
 	const { error: trabajoError } = await supabase
@@ -455,5 +720,8 @@ export async function saveTrabajoDescargablesAction(
 	revalidatePath("/admin/documents/ubicacion-cliente/preview");
 	revalidatePath("/admin/documents/diagrama-unifilar/preview");
 
-	return { error: null, success: "Descargables completado y trabajo avanzado a Descargables." };
+	return {
+		error: null,
+		success: "Descargables completado y trabajo avanzado a Descargables.",
+	};
 }

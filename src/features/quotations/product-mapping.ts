@@ -77,7 +77,6 @@ function mapSolarPackage(visita: VisitaData): QuotationItem[] {
 				quantity: 1,
 				unit: "pz",
 				unit_price: 0,
-				tax_rate: 16,
 				amount: 0,
 				sort_order: items.length,
 			});
@@ -91,7 +90,6 @@ function mapSolarPackage(visita: VisitaData): QuotationItem[] {
 				quantity: 1,
 				unit: "pz",
 				unit_price: 0,
-				tax_rate: 16,
 				amount: 0,
 				sort_order: items.length,
 			});
@@ -106,7 +104,6 @@ function mapSolarPackage(visita: VisitaData): QuotationItem[] {
 				quantity: 1,
 				unit: "pz",
 				unit_price: 0,
-				tax_rate: 16,
 				amount: 0,
 				sort_order: items.length,
 			});
@@ -155,7 +152,6 @@ function mapMinisplitPackage(visita: VisitaData): QuotationItem[] {
 			quantity: 1,
 			unit: "pz",
 			unit_price: 0,
-			tax_rate: 16,
 			amount: 0,
 			sort_order: items.length,
 		});
@@ -173,7 +169,6 @@ function mapMinisplitPackage(visita: VisitaData): QuotationItem[] {
 			quantity: 1,
 			unit: "pz",
 			unit_price: 0,
-			tax_rate: 16,
 			amount: 0,
 			sort_order: items.length,
 		});
@@ -208,7 +203,6 @@ function mapPumpPackage(visita: VisitaData): QuotationItem[] {
 			quantity: 1,
 			unit: "pz",
 			unit_price: 0,
-			tax_rate: 16,
 			amount: 0,
 			sort_order: items.length,
 		});
@@ -232,7 +226,6 @@ function mapCambio220Package(visita?: VisitaData): QuotationItem[] {
 			quantity: 1,
 			unit: "pz",
 			unit_price: 0,
-			tax_rate: 16,
 			amount: 0,
 			sort_order: 0,
 		});
@@ -245,7 +238,6 @@ function mapCambio220Package(visita?: VisitaData): QuotationItem[] {
 			quantity: 1,
 			unit: "pz",
 			unit_price: 0,
-			tax_rate: 16,
 			amount: 0,
 			sort_order: items.length,
 		});
@@ -274,7 +266,6 @@ function mapAmpliacionPackage(visita: VisitaData): QuotationItem[] {
 				quantity: panelCount,
 				unit: "pz",
 				unit_price: 0,
-				tax_rate: 16,
 				amount: 0,
 				sort_order: items.length,
 			});

@@ -36,7 +36,7 @@ export function VisitaAttributeImage({ src, alt }: VisitaAttributeImageProps) {
 				<video
 					src={safeSrc}
 					controls
-					className="block max-h-80 w-full rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] object-contain"
+					className="block h-56 w-full rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface)] object-contain"
 					onError={() => setHasError(true)}
 					aria-label={alt}
 				/>
@@ -44,7 +44,7 @@ export function VisitaAttributeImage({ src, alt }: VisitaAttributeImageProps) {
 				<img
 					src={safeSrc}
 					alt={alt}
-					className="block max-h-80 w-full rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] object-contain"
+					className="block h-56 w-full rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface)] object-contain"
 					onError={() => setHasError(true)}
 				/>
 			)}

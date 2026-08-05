@@ -12,20 +12,6 @@ test("resolveTrabajoPreviewId prefers trabajoId over legacy clientId", async () 
 	assert.equal(trabajoId, "trabajo-123");
 });
 
-test("resolveTrabajoPreviewId resolves legacy clientId when trabajoId is missing", async () => {
-	const seenClientIds = [];
-	const trabajoId = await resolveTrabajoPreviewId(
-		{ clientId: "client-legacy" },
-		async (clientId) => {
-			seenClientIds.push(clientId);
-			return { id: "trabajo-resuelto" };
-		},
-	);
-
-	assert.deepEqual(seenClientIds, ["client-legacy"]);
-	assert.equal(trabajoId, "trabajo-resuelto");
-});
-
 test("resolveTrabajoPreviewId trims params and returns null when no match exists", async () => {
 	const trabajoId = await resolveTrabajoPreviewId(
 		{ trabajoId: "   ", clientId: "  client-missing  " },

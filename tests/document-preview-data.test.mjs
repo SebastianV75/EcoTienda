@@ -100,3 +100,12 @@ test("buildTrabajoPreviewSubject keeps work-first identity data without client f
 	assert.equal(subject.panel_count, null);
 	assert.equal(subject.neighborhood, null);
 });
+
+test("document address ignores a coordinate-only visit location", () => {
+	const trabajo = buildTrabajoFixture();
+	trabajo.visita.confirmed_address = "19.4326, -99.1332";
+
+	const subject = buildTrabajoPreviewSubject(trabajo, "diagrama-unifilar");
+
+	assert.equal(subject.address, "Agenda Address");
+});

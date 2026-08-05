@@ -8,7 +8,13 @@ import type {
 	TrabajoVisitaStage,
 } from "@/types/trabajo";
 
-const trabajoStageOrder = ["agenda", "visita", "cotizacion", "venta", "descargables"] as const;
+const trabajoStageOrder = [
+	"agenda",
+	"visita",
+	"cotizacion",
+	"venta",
+	"descargables",
+] as const;
 
 function hasText(value: unknown): value is string {
 	return typeof value === "string" && value.trim().length > 0;
@@ -27,7 +33,12 @@ export function isTrabajoStage(value: string): value is TrabajoStage {
 }
 
 export function isTrabajoStatus(value: string): value is TrabajoStatus {
-	return value === "open" || value === "won" || value === "lost" || value === "archived";
+	return (
+		value === "open" ||
+		value === "won" ||
+		value === "lost" ||
+		value === "archived"
+	);
 }
 
 export function getTrabajoNextStage(stage: TrabajoStage): TrabajoStage | null {
@@ -42,7 +53,16 @@ export function canAdvanceTrabajoStage(
 	nextStage: TrabajoStage,
 	isCurrentStageComplete: boolean,
 ): boolean {
-	return isCurrentStageComplete && getTrabajoNextStage(currentStage) === nextStage;
+	return (
+		isCurrentStageComplete && getTrabajoNextStage(currentStage) === nextStage
+	);
+}
+
+export function canCompleteTrabajoVenta(
+	currentStage: TrabajoStage,
+	quotationCompletedAt: string | null | undefined,
+): boolean {
+	return currentStage === "venta" && Boolean(quotationCompletedAt);
 }
 
 export function isTrabajoAgendaStageComplete(
@@ -107,11 +127,18 @@ export function isTrabajoVisitaStageComplete(
 		return false;
 	}
 
-	if (!hasPayload(stage.house_attributes) || !hasPayload(stage.electrical_attributes) || !hasPayload(stage.roof_attributes)) {
+	if (
+		!hasPayload(stage.house_attributes) ||
+		!hasPayload(stage.electrical_attributes) ||
+		!hasPayload(stage.roof_attributes)
+	) {
 		return false;
 	}
 
-	if (requiresMinisplitBranch(stage.quotation_type) && !hasPayload(stage.minisplit_attributes)) {
+	if (
+		requiresMinisplitBranch(stage.quotation_type) &&
+		!hasPayload(stage.minisplit_attributes)
+	) {
 		return false;
 	}
 
@@ -142,18 +169,22 @@ export function isTrabajoQuotationStageComplete(
 }
 
 export function isTrabajoSaleStageComplete(
-	stage: Pick<TrabajoSaleStage, "quotation_trabajo_id" | "confirmed_on" | "agreed_amount" | "notes">,
+	stage: Pick<
+		TrabajoSaleStage,
+		"quotation_trabajo_id" | "confirmed_on" | "agreed_amount" | "notes"
+	>,
 ): boolean {
 	return (
 		hasText(stage.quotation_trabajo_id) &&
 		hasText(stage.confirmed_on) &&
-		stage.agreed_amount >= 0 &&
-		hasText(stage.notes)
+		stage.agreed_amount >= 0
 	);
 }
 
 export function isTrabajoDescargablesReady(
 	trabajo: Pick<Trabajo, "current_stage" | "venta_completed_at">,
 ): boolean {
-	return trabajo.current_stage === "venta" && hasText(trabajo.venta_completed_at);
+	return (
+		trabajo.current_stage === "venta" && hasText(trabajo.venta_completed_at)
+	);
 }

@@ -8,7 +8,11 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
 import { getVisitSaveRedirectPath } from "./visit-save-redirect";
-import { existingAttributes, existingText, getExistingVisita } from "./visita-action-helpers";
+import {
+	existingAttributes,
+	existingText,
+	getExistingVisita,
+} from "./visita-action-helpers";
 
 export type VisitaPanelesActionState = {
 	error: string | null;
@@ -18,6 +22,15 @@ export type VisitaPanelesActionState = {
 
 function getString(formData: FormData, key: string) {
 	return formData.get(key)?.toString().trim() ?? "";
+}
+
+function isUuid(value: unknown): value is string {
+	return (
+		typeof value === "string" &&
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+			value,
+		)
+	);
 }
 
 export async function saveVisitaPanelesAction(
@@ -30,7 +43,6 @@ export async function saveVisitaPanelesAction(
 
 	const trabajoId = getString(formData, "trabajo_id");
 	const executionDate = getString(formData, "execution_date_date");
-	const executionTime = getString(formData, "execution_date_time");
 	const contactName = getString(formData, "contact_name");
 	const contactPhone = getString(formData, "contact_phone");
 	const email = getString(formData, "email");
@@ -71,22 +83,41 @@ export async function saveVisitaPanelesAction(
 		return { error: "La fecha de realización es obligatoria.", success: null };
 	}
 
-	const executionDateIso = executionTime
-		? `${executionDate}T${executionTime}:00`
-		: executionDate;
+	const parsedExecutionDate = new Date(`${executionDate}T00:00:00Z`);
+	if (
+		!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(executionDate) ||
+		Number.isNaN(parsedExecutionDate.getTime()) ||
+		parsedExecutionDate.toISOString().slice(0, 10) !== executionDate
+	) {
+		return {
+			error: "La fecha de realización no tiene un formato válido.",
+			success: null,
+		};
+	}
+
+	// La tabla guarda únicamente la fecha; la hora del formulario no se persiste.
 
 	const supabase = await createSupabaseServerClient();
 	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
-	const houseAttributes: Record<string, string> = existingAttributes(existingVisita, "house_attributes");
+	const houseAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"house_attributes",
+	);
 	if (hojasVisita) houseAttributes.hojas_visita = hojasVisita;
 	if (houseImage) houseAttributes.house_image = houseImage;
 	if (orientation) houseAttributes.orientation = orientation;
 	if (floors) houseAttributes.floors = floors;
 	if (email) houseAttributes.email = email;
 	if (location) houseAttributes.location = location;
+	if (utilityBill && !isUuid(utilityBill))
+		houseAttributes.utility_bill = utilityBill;
+	if (signature && !isUuid(signature)) houseAttributes.signature = signature;
 
-	const electricalAttributes: Record<string, string> = existingAttributes(existingVisita, "electrical_attributes");
+	const electricalAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"electrical_attributes",
+	);
 	if (meterFar) electricalAttributes.meter_far = meterFar;
 	if (meterClose) electricalAttributes.meter_close = meterClose;
 	if (voltage) electricalAttributes.voltage = voltage;
@@ -95,7 +126,10 @@ export async function saveVisitaPanelesAction(
 	if (loadCenter) electricalAttributes.load_center = loadCenter;
 	if (electricalRise) electricalAttributes.electrical_rise = electricalRise;
 
-	const roofAttributes: Record<string, string> = existingAttributes(existingVisita, "roof_attributes");
+	const roofAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"roof_attributes",
+	);
 	if (hasMarineLadder) roofAttributes.has_marine_ladder = hasMarineLadder;
 	if (roofImage) roofAttributes.roof_image = roofImage;
 	if (roofMaterial) roofAttributes.roof_material = roofMaterial;
@@ -105,26 +139,58 @@ export async function saveVisitaPanelesAction(
 	if (roofMeasurements) roofAttributes.roof_measurements = roofMeasurements;
 	if (structureType) roofAttributes.structure_type = structureType;
 
-	const minisplitAttributes: Record<string, string> = existingAttributes(existingVisita, "minisplit_attributes");
+	const minisplitAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"minisplit_attributes",
+	);
 	if (hasMinisplit) minisplitAttributes.has_minisplit = hasMinisplit;
 	if (minisplitSpecs) minisplitAttributes.minisplit_specs = minisplitSpecs;
 	if (minisplitPhoto) minisplitAttributes.minisplit_photo = minisplitPhoto;
 
+	const utilityBillAssetId = isUuid(utilityBill)
+		? utilityBill
+		: existingVisita && isUuid(existingVisita.utility_bill_asset_id)
+			? existingVisita.utility_bill_asset_id
+			: undefined;
+	const signatureAssetId = isUuid(signature)
+		? signature
+		: existingVisita && isUuid(existingVisita.signature_asset_id)
+			? existingVisita.signature_asset_id
+			: undefined;
+
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: existingText(existingVisita, "execution_date", executionDateIso),
+		execution_date: existingText(
+			existingVisita,
+			"execution_date",
+			executionDate,
+		),
 		contact_name: existingText(existingVisita, "contact_name", contactName),
 		contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
-		confirmed_address: existingText(existingVisita, "confirmed_address", location),
-		interest_package: existingText(existingVisita, "interest_package", interestPackage),
-		quotation_type: existingText(existingVisita, "quotation_type", quotationType),
-		utility_bill_asset_id: utilityBill || existingVisita?.utility_bill_asset_id || null,
+		confirmed_address: existingText(
+			existingVisita,
+			"confirmed_address",
+			location,
+		),
+		interest_package: existingText(
+			existingVisita,
+			"interest_package",
+			interestPackage,
+		),
+		quotation_type: existingText(
+			existingVisita,
+			"quotation_type",
+			quotationType,
+		),
+		...(utilityBillAssetId
+			? { utility_bill_asset_id: utilityBillAssetId }
+			: {}),
 		house_attributes: houseAttributes,
 		electrical_attributes: electricalAttributes,
 		roof_attributes: roofAttributes,
 		minisplit_attributes: minisplitAttributes,
 		notes: existingText(existingVisita, "notes", notes),
-		signature_asset_id: signature || existingVisita?.signature_asset_id || null,
+		...(signatureAssetId ? { signature_asset_id: signatureAssetId } : {}),
 		completed_at: new Date().toISOString(),
 	};
 
@@ -156,10 +222,26 @@ export async function saveVisitaPanelesAction(
 		await createQuotationFromVisita(supabase, {
 			trabajo_id: trabajoId,
 			contact_name: existingText(existingVisita, "contact_name", contactName),
-			contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
-			confirmed_address: existingText(existingVisita, "confirmed_address", location),
-			interest_package: existingText(existingVisita, "interest_package", interestPackage),
-			quotation_type: existingText(existingVisita, "quotation_type", quotationType),
+			contact_phone: existingText(
+				existingVisita,
+				"contact_phone",
+				contactPhone,
+			),
+			confirmed_address: existingText(
+				existingVisita,
+				"confirmed_address",
+				location,
+			),
+			interest_package: existingText(
+				existingVisita,
+				"interest_package",
+				interestPackage,
+			),
+			quotation_type: existingText(
+				existingVisita,
+				"quotation_type",
+				quotationType,
+			),
 			notes: existingText(existingVisita, "notes", notes),
 			house_attributes: houseAttributes,
 			electrical_attributes: electricalAttributes,

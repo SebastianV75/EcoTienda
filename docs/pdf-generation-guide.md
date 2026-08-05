@@ -17,6 +17,7 @@ docs/quotations-schema.sql
 ```
 
 Este script crea:
+
 - Tabla `company_settings` con datos iniciales de EcoTienda
 - Tabla `suppliers` para proveedores
 - Tabla `quotations` con campos `quotation_number` y `pdf_url`
@@ -38,6 +39,7 @@ Este script crea:
 En el bucket `quotations`, ve a **Policies** y crea:
 
 **Policy 1: Authenticated users can upload**
+
 ```sql
 CREATE POLICY "Authenticated users can upload"
   ON storage.objects FOR INSERT TO authenticated
@@ -45,6 +47,7 @@ CREATE POLICY "Authenticated users can upload"
 ```
 
 **Policy 2: Authenticated users can view**
+
 ```sql
 CREATE POLICY "Authenticated users can view"
   ON storage.objects FOR SELECT TO authenticated
@@ -52,6 +55,7 @@ CREATE POLICY "Authenticated users can view"
 ```
 
 **Policy 3: Authenticated users can delete**
+
 ```sql
 CREATE POLICY "Authenticated users can delete"
   ON storage.objects FOR DELETE TO authenticated
@@ -66,10 +70,11 @@ CREATE POLICY "Authenticated users can delete"
 
 1. Navega a `/admin/quotations/new`
 2. Selecciona o crea un proveedor
-3. Agrega productos con cantidades, precios e impuestos
+3. Agrega productos indicando piezas y precio unitario
 4. Click en **"Guardar cotización"**
 
 **Resultado:**
+
 - Se genera automáticamente un número consecutivo: `EcoCotizacion-001`, `EcoCotizacion-002`, etc.
 - Se crea el PDF profesional con todos los datos
 - El PDF se sube a Supabase Storage
@@ -78,9 +83,10 @@ CREATE POLICY "Authenticated users can delete"
 ### Ver Detalles de Cotización
 
 Navega a `/admin/quotations/[id]` para ver:
+
 - Datos del proveedor y cliente
 - Tabla de productos
-- Totales (subtotal, impuestos, total)
+- Totales (subtotal, total)
 - Términos y condiciones
 - Botón **"Descargar PDF"**
 
@@ -112,10 +118,10 @@ El PDF generado incluye:
    - Vendedor, Número de O/C, Fecha de envío, Envío mediante, Punto F.O.B., Términos
 
 5. **Tabla de Productos**
-   - Cantidad, Descripción, Precio unitario, Impuestos, Monto
+   - Piezas, Descripción, Precio unitario, Monto
 
 6. **Totales**
-   - Subtotal, Tasa de impuesto, Impuesto a las ventas, Otros, Total
+   - Subtotal, Total
 
 7. **Pie de Página**
    - Información de contacto
@@ -147,11 +153,13 @@ WHERE id = (SELECT id FROM company_settings LIMIT 1);
 ### Modificar Estilos del PDF
 
 Edita el archivo:
+
 ```
 src/features/quotations/pdf/pdf-styles.ts
 ```
 
 Puedes cambiar:
+
 - Colores (paleta azul institucional)
 - Tamaños de fuente
 - Espaciados
@@ -166,6 +174,7 @@ Puedes cambiar:
 **Causa:** Error en la generación o subida a Storage.
 
 **Solución:**
+
 1. Verifica que el bucket `quotations` existe en Storage
 2. Verifica las políticas del bucket
 3. Revisa los logs del servidor para errores específicos
@@ -175,6 +184,7 @@ Puedes cambiar:
 **Causa:** Problema con la URL pública del Storage.
 
 **Solución:**
+
 1. Ve a **Storage → quotations → Settings**
 2. Verifica que la URL pública esté configurada
 3. Si el bucket es privado, el sistema usa URLs firmadas automáticamente
@@ -184,6 +194,7 @@ Puedes cambiar:
 **Causa:** El ID de cotización no existe o no tienes permisos.
 
 **Solución:**
+
 1. Verifica que estés autenticado como admin
 2. Verifica que el ID de cotización sea correcto
 3. Revisa la tabla `quotations` en Supabase
@@ -238,6 +249,7 @@ src/
 ## Soporte
 
 Si encuentras problemas:
+
 1. Revisa los logs del servidor (`npm run dev`)
 2. Verifica la consola del navegador
 3. Consulta la tabla `quotations` en Supabase para ver si `pdf_url` está poblado

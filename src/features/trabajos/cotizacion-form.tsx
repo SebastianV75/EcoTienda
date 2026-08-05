@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { ActionButton } from "@/components/ui/action-button";
 import { Input, Textarea } from "@/components/ui/field";
@@ -13,7 +14,9 @@ import {
 
 type CotizacionFormProps = {
 	trabajoId: string;
-	defaultValues: Partial<Omit<CotizacionFormValues, "amount">> & { amount?: number | null };
+	defaultValues: Partial<Omit<CotizacionFormValues, "amount">> & {
+		amount?: number | null;
+	};
 };
 
 const initialState: CotizacionActionState = {
@@ -25,11 +28,21 @@ function sectionFieldClass() {
 	return "w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300";
 }
 
-export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps) {
+export function CotizacionForm({
+	trabajoId,
+	defaultValues,
+}: CotizacionFormProps) {
+	const router = useRouter();
 	const [state, formAction] = useActionState(
 		saveTrabajoCotizacionAction,
 		initialState,
 	);
+
+	useEffect(() => {
+		if (state.success) {
+			router.refresh();
+		}
+	}, [router, state.success]);
 
 	return (
 		<form action={formAction} className="space-y-5">
@@ -37,18 +50,27 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 
 			<div className="rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--muted)]">
 				<p>
-					<span className="font-medium text-[var(--brand-deep)]">Etapa actual:</span>{" "}
-					Cotización. <span className="font-medium text-[var(--brand-deep)]">Siguiente etapa:</span>{" "}
+					<span className="font-medium text-[var(--brand-deep)]">
+						Etapa actual:
+					</span>{" "}
+					Cotización.{" "}
+					<span className="font-medium text-[var(--brand-deep)]">
+						Siguiente etapa:
+					</span>{" "}
 					Venta.
 				</p>
 				<p className="mt-1">
-					Completa el alcance, monto, términos, resultado, tipo de cotización y los datos fiscales del trabajo.
+					Completa los datos de la cotización para confirmarla y continuar con
+					la venta.
 				</p>
 			</div>
 
 			<div className="grid gap-4 md:grid-cols-2">
 				<div className="space-y-2.5">
-					<label htmlFor="rfc" className="text-sm font-medium text-[var(--brand-deep)]">
+					<label
+						htmlFor="rfc"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
 						RFC
 					</label>
 					<Input
@@ -62,7 +84,10 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 				</div>
 
 				<div className="space-y-2.5">
-					<label htmlFor="rpu" className="text-sm font-medium text-[var(--brand-deep)]">
+					<label
+						htmlFor="rpu"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
 						RPU
 					</label>
 					<Input
@@ -76,7 +101,10 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 				</div>
 
 				<div className="space-y-2.5">
-					<label htmlFor="quotation_type" className="text-sm font-medium text-[var(--brand-deep)]">
+					<label
+						htmlFor="quotation_type"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
 						Tipo de cotización
 					</label>
 					<Input
@@ -90,7 +118,10 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 				</div>
 
 				<div className="space-y-2.5">
-					<label htmlFor="amount" className="text-sm font-medium text-[var(--brand-deep)]">
+					<label
+						htmlFor="amount"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
 						Monto
 					</label>
 					<Input
@@ -107,7 +138,10 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 				</div>
 
 				<div className="space-y-2.5 md:col-span-2">
-					<label htmlFor="scope_summary" className="text-sm font-medium text-[var(--brand-deep)]">
+					<label
+						htmlFor="scope_summary"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
 						Alcance
 					</label>
 					<Textarea
@@ -122,7 +156,10 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 				</div>
 
 				<div className="space-y-2.5 md:col-span-2">
-					<label htmlFor="terms_and_conditions" className="text-sm font-medium text-[var(--brand-deep)]">
+					<label
+						htmlFor="terms_and_conditions"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
 						Términos y condiciones
 					</label>
 					<Textarea
@@ -137,7 +174,10 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 				</div>
 
 				<div className="space-y-2.5 md:col-span-2">
-					<label htmlFor="outcome" className="text-sm font-medium text-[var(--brand-deep)]">
+					<label
+						htmlFor="outcome"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
 						Resultado
 					</label>
 					<Textarea
@@ -169,7 +209,7 @@ export function CotizacionForm({ trabajoId, defaultValues }: CotizacionFormProps
 				pendingLabel="Guardando..."
 				className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-[var(--brand)] px-5 py-3.5 text-sm font-medium text-white transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70"
 			>
-				Guardar cotización
+				Confirmar cotización y pasar a Venta
 			</ActionButton>
 		</form>
 	);

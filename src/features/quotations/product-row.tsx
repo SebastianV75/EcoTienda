@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
-import { TAX_OPTIONS, type QuotationItem } from "@/types/quotation";
+import type { QuotationItem } from "@/types/quotation";
 import { ProductAutocomplete } from "@/features/quotations/product-autocomplete";
 
 type ProductRowProps = {
@@ -20,37 +18,25 @@ export function ProductRow({
 	onRemove,
 	variant = "table",
 }: ProductRowProps) {
-	const [customTax, setCustomTax] = useState(false);
-	const [customTaxValue, setCustomTaxValue] = useState(0);
-
 	const itemType = item.type || "product";
 
 	function updateField(field: keyof QuotationItem, value: string | number) {
-		const updated = { ...item, [field]: value };
+		const updated = { ...item, [field]: value } as QuotationItem;
 
 		if (field === "quantity" || field === "unit_price") {
-			const qty =
-				field === "quantity" ? Number(value) : updated.quantity;
-			const price =
-				field === "unit_price" ? Number(value) : updated.unit_price;
+			const numericValue = Number(value);
+			if (field === "quantity") {
+				updated.quantity = numericValue;
+			} else {
+				updated.unit_price = numericValue;
+			}
+
+			const qty = field === "quantity" ? numericValue : updated.quantity;
+			const price = field === "unit_price" ? numericValue : updated.unit_price;
 			updated.amount = qty * price;
 		}
 
-		if (field === "tax_rate" && value === -1) {
-			setCustomTax(true);
-			updated.tax_rate = customTaxValue;
-		} else if (field === "tax_rate") {
-			setCustomTax(false);
-			updated.tax_rate = Number(value);
-		}
-
 		onChange(index, updated);
-	}
-
-	function handleCustomTaxChange(value: string) {
-		const numValue = Number(value);
-		setCustomTaxValue(numValue);
-		onChange(index, { ...item, tax_rate: numValue });
 	}
 
 	if (variant === "card") {
@@ -107,18 +93,22 @@ export function ProductRow({
 					/>
 					<div className="grid grid-cols-2 gap-2">
 						<div>
-							<label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">Cantidad</label>
+							<label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
+								Piezas
+							</label>
 							<input
 								type="number"
 								value={item.quantity}
 								onChange={(e) => updateField("quantity", e.target.value)}
-								min="0"
-								step="0.01"
+								min="1"
+								step="1"
 								className="mt-1 w-full rounded-[14px] border border-[var(--border-soft)] bg-white px-3 py-2 text-sm outline-none transition duration-200 focus:border-emerald-300"
 							/>
 						</div>
 						<div>
-							<label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">Unidad</label>
+							<label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
+								Unidad
+							</label>
 							<input
 								type="text"
 								value={item.unit}
@@ -128,48 +118,26 @@ export function ProductRow({
 							/>
 						</div>
 					</div>
-					<div className="grid grid-cols-2 gap-2">
-						<div>
-							<label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">Precio unitario</label>
-							<input
-								type="number"
-								value={item.unit_price}
-								onChange={(e) => updateField("unit_price", e.target.value)}
-								min="0"
-								step="0.01"
-								className="mt-1 w-full rounded-[14px] border border-[var(--border-soft)] bg-white px-3 py-2 text-sm outline-none transition duration-200 focus:border-emerald-300"
-							/>
-						</div>
-						<div>
-							<label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">Impuesto</label>
-							<select
-								value={customTax ? -1 : item.tax_rate}
-								onChange={(e) => updateField("tax_rate", e.target.value)}
-								className="mt-1 w-full rounded-[14px] border border-[var(--border-soft)] bg-white px-3 py-2 text-sm outline-none transition duration-200 focus:border-emerald-300"
-							>
-								{TAX_OPTIONS.map((option) => (
-									<option key={option.value} value={option.value}>
-										{option.label}
-									</option>
-								))}
-							</select>
-							{customTax && (
-								<input
-									type="number"
-									value={customTaxValue}
-									onChange={(e) => handleCustomTaxChange(e.target.value)}
-									min="0"
-									max="100"
-									step="0.01"
-									placeholder="%"
-									className="mt-1 w-full rounded-[14px] border border-emerald-300 bg-white px-3 py-2 text-sm outline-none"
-								/>
-							)}
-						</div>
+					<div>
+						<label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
+							Precio unitario
+						</label>
+						<input
+							type="number"
+							value={item.unit_price}
+							onChange={(e) => updateField("unit_price", e.target.value)}
+							min="0"
+							step="0.01"
+							className="mt-1 w-full rounded-[14px] border border-[var(--border-soft)] bg-white px-3 py-2 text-sm outline-none transition duration-200 focus:border-emerald-300"
+						/>
 					</div>
 					<div className="flex items-center justify-between rounded-[14px] bg-[var(--surface-strong)] px-3 py-2">
-						<span className="text-xs font-medium text-[var(--brand-strong)]">Importe</span>
-						<span className="text-base font-semibold text-[var(--brand-deep)]">$ {item.amount.toFixed(2)}</span>
+						<span className="text-xs font-medium text-[var(--brand-strong)]">
+							Importe
+						</span>
+						<span className="text-base font-semibold text-[var(--brand-deep)]">
+							$ {item.amount.toFixed(2)}
+						</span>
 					</div>
 					<button
 						type="button"
@@ -186,7 +154,7 @@ export function ProductRow({
 	if (itemType === "section") {
 		return (
 			<tr className="border-b border-[var(--border-soft)] bg-[var(--surface-strong)]">
-				<td colSpan={6} className="px-3 py-2">
+				<td colSpan={5} className="px-3 py-2">
 					<input
 						type="text"
 						value={item.product_name}
@@ -211,7 +179,7 @@ export function ProductRow({
 	if (itemType === "note") {
 		return (
 			<tr className="border-b border-[var(--border-soft)] bg-amber-50/40">
-				<td colSpan={6} className="px-3 py-2">
+				<td colSpan={5} className="px-3 py-2">
 					<input
 						type="text"
 						value={item.product_name}
@@ -247,8 +215,8 @@ export function ProductRow({
 					type="number"
 					value={item.quantity}
 					onChange={(e) => updateField("quantity", e.target.value)}
-					min="0"
-					step="0.01"
+					min="1"
+					step="1"
 					className="w-full rounded-[14px] border border-transparent bg-transparent px-2 py-1.5 text-sm text-right outline-none transition duration-200 focus:border-emerald-300 focus:bg-white"
 				/>
 			</td>
@@ -270,33 +238,6 @@ export function ProductRow({
 					step="0.01"
 					className="w-full rounded-[14px] border border-transparent bg-transparent px-2 py-1.5 text-sm text-right outline-none transition duration-200 focus:border-emerald-300 focus:bg-white"
 				/>
-			</td>
-			<td className="px-2 py-2">
-				<div className="flex items-center gap-1">
-					<select
-						value={customTax ? -1 : item.tax_rate}
-						onChange={(e) => updateField("tax_rate", e.target.value)}
-						className="w-full rounded-[14px] border border-transparent bg-transparent px-2 py-1.5 text-sm text-right outline-none transition duration-200 focus:border-emerald-300 focus:bg-white"
-					>
-						{TAX_OPTIONS.map((option) => (
-							<option key={option.value} value={option.value}>
-								{option.label}
-							</option>
-						))}
-					</select>
-					{customTax && (
-						<input
-							type="number"
-							value={customTaxValue}
-							onChange={(e) => handleCustomTaxChange(e.target.value)}
-							min="0"
-							max="100"
-							step="0.01"
-							placeholder="%"
-							className="w-16 rounded-[14px] border border-emerald-300 bg-white px-2 py-1.5 text-sm text-right outline-none"
-						/>
-					)}
-				</div>
 			</td>
 			<td className="px-2 py-2 text-right">
 				<span className="text-sm font-medium text-[var(--brand-deep)] whitespace-nowrap">

@@ -8,7 +8,11 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
 import { getVisitSaveRedirectPath } from "./visit-save-redirect";
-import { existingAttributes, existingText, getExistingVisita } from "./visita-action-helpers";
+import {
+	existingAttributes,
+	existingText,
+	getExistingVisita,
+} from "./visita-action-helpers";
 
 export type PanelesSolaresActionState = {
 	error: string | null;
@@ -48,26 +52,44 @@ export async function savePanelesSolaresAction(
 	const supabase = await createSupabaseServerClient();
 	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
-	const houseAttributes: Record<string, string> = existingAttributes(existingVisita, "house_attributes");
+	const houseAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"house_attributes",
+	);
 	if (email) houseAttributes.email = email;
 	if (location) houseAttributes.location = location;
 	if (housePhoto) houseAttributes.house_photo = housePhoto;
 
-	const electricalAttributes: Record<string, string> = existingAttributes(existingVisita, "electrical_attributes");
+	const electricalAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"electrical_attributes",
+	);
 	if (voltage) electricalAttributes.voltage = voltage;
 	if (meterPhoto) electricalAttributes.meter_photo = meterPhoto;
 
-	const minisplitAttributes: Record<string, string> = existingAttributes(existingVisita, "minisplit_attributes");
+	const minisplitAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"minisplit_attributes",
+	);
 	if (evaporatorPhoto) minisplitAttributes.evaporator_photo = evaporatorPhoto;
 	if (compressorPhoto) minisplitAttributes.compressor_photo = compressorPhoto;
 	if (extra) minisplitAttributes.extra = extra;
 
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: existingText(existingVisita, "execution_date", new Date().toISOString()),
+		// trabajo_visita_stage.execution_date es una columna PostgreSQL tipo date.
+		execution_date: existingText(
+			existingVisita,
+			"execution_date",
+			new Date().toISOString().slice(0, 10),
+		),
 		contact_name: existingText(existingVisita, "contact_name", contactName),
 		contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
-		confirmed_address: existingText(existingVisita, "confirmed_address", location),
+		confirmed_address: existingText(
+			existingVisita,
+			"confirmed_address",
+			location,
+		),
 		interest_package: "Paneles Solares",
 		quotation_type: "Paneles Solares",
 		house_attributes: houseAttributes,
@@ -105,27 +127,23 @@ export async function savePanelesSolaresAction(
 	}
 
 	// Crear automáticamente la cotización vinculada al trabajo
-	const { quotationId, error: quotationError } =
-		await createQuotationFromVisita(supabase, {
-			trabajo_id: trabajoId,
-			contact_name: existingText(existingVisita, "contact_name", contactName),
-			contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
-			confirmed_address: existingText(existingVisita, "confirmed_address", location),
-			interest_package: "Paneles Solares",
-			quotation_type: "Paneles Solares",
-			notes: existingText(existingVisita, "notes", notes),
-			house_attributes: houseAttributes,
-			electrical_attributes: electricalAttributes,
-			roof_attributes: {},
-			minisplit_attributes: minisplitAttributes,
-		});
-
-	if (quotationError) {
-		console.error(
-			"[Paneles Solares] Error creando cotización automática:",
-			quotationError,
-		);
-	}
+	const { quotationId } = await createQuotationFromVisita(supabase, {
+		trabajo_id: trabajoId,
+		contact_name: existingText(existingVisita, "contact_name", contactName),
+		contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
+		confirmed_address: existingText(
+			existingVisita,
+			"confirmed_address",
+			location,
+		),
+		interest_package: "Paneles Solares",
+		quotation_type: "Paneles Solares",
+		notes: existingText(existingVisita, "notes", notes),
+		house_attributes: houseAttributes,
+		electrical_attributes: electricalAttributes,
+		roof_attributes: {},
+		minisplit_attributes: minisplitAttributes,
+	});
 
 	revalidatePath("/admin/visits");
 	revalidatePath(`/admin/visits/${trabajoId}`);

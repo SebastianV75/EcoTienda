@@ -85,6 +85,19 @@ export function DatePicker({
 		return () => document.removeEventListener("mousedown", handleClickOutside);
 	}, []);
 
+	useEffect(() => {
+		if (!isOpen) return;
+
+		function handleEscape(event: KeyboardEvent) {
+			if (event.key === "Escape") {
+				setIsOpen(false);
+			}
+		}
+
+		document.addEventListener("keydown", handleEscape);
+		return () => document.removeEventListener("keydown", handleEscape);
+	}, [isOpen]);
+
 	function handleDateSelect(day: number) {
 		const newDate = formatDate(
 			new Date(currentMonth.year, currentMonth.month, day),
@@ -119,6 +132,12 @@ export function DatePicker({
 		onChange?.(newDate);
 	}
 
+	function handleClear() {
+		setSelectedDate("");
+		setIsOpen(false);
+		onChange?.("");
+	}
+
 	const daysInMonth = getDaysInMonth(currentMonth.year, currentMonth.month);
 	const firstDay = getFirstDayOfMonth(currentMonth.year, currentMonth.month);
 	const days = [];
@@ -138,6 +157,8 @@ export function DatePicker({
 			<button
 				key={day}
 				type="button"
+				aria-label={formatDisplayDate(dateString)}
+				aria-pressed={isSelected}
 				onClick={() => handleDateSelect(day)}
 				className={`h-9 w-9 rounded-full text-sm font-medium transition-colors ${
 					isSelected
@@ -157,9 +178,11 @@ export function DatePicker({
 			<input id={id} type="hidden" name={name} value={selectedDate} />
 			<button
 				type="button"
-				aria-controls={id}
+				aria-controls={`${id}-calendar`}
+				aria-expanded={isOpen}
+				aria-haspopup="dialog"
 				onClick={() => setIsOpen(!isOpen)}
-				className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-left text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+				className={`w-full rounded-[18px] border bg-white px-4 py-3 text-left text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300 ${isOpen ? "border-emerald-300 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]" : "border-[var(--border-soft)]"}`}
 			>
 				<div className="flex items-center justify-between">
 					<span
@@ -186,12 +209,18 @@ export function DatePicker({
 			</button>
 
 			{isOpen && (
-				<div className="absolute left-0 top-full z-50 mt-2 w-full rounded-[18px] border border-[var(--border-soft)] bg-white p-4 shadow-lg">
+				<div
+					id={`${id}-calendar`}
+					role="dialog"
+					aria-label="Calendario de vigencia"
+					className="absolute left-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-[22px] border border-[var(--border-soft)] bg-white p-3 shadow-[0_18px_45px_rgba(13,79,46,0.16)] sm:p-4"
+				>
 					<div className="mb-4 flex items-center justify-between">
 						<button
 							type="button"
+							aria-label="Mes anterior"
 							onClick={handlePreviousMonth}
-							className="rounded-full p-2 hover:bg-[var(--surface)]"
+							className="rounded-full p-2 text-[var(--muted)] transition hover:bg-[var(--surface)] hover:text-[var(--brand-deep)]"
 						>
 							<svg
 								className="h-5 w-5"
@@ -212,8 +241,9 @@ export function DatePicker({
 						</span>
 						<button
 							type="button"
+							aria-label="Mes siguiente"
 							onClick={handleNextMonth}
-							className="rounded-full p-2 hover:bg-[var(--surface)]"
+							className="rounded-full p-2 text-[var(--muted)] transition hover:bg-[var(--surface)] hover:text-[var(--brand-deep)]"
 						>
 							<svg
 								className="h-5 w-5"
@@ -244,13 +274,23 @@ export function DatePicker({
 
 					<div className="grid grid-cols-7 gap-1">{days}</div>
 
-					<button
-						type="button"
-						onClick={handleToday}
-						className="mt-3 w-full rounded-full bg-[var(--surface)] py-2 text-sm font-medium text-[var(--brand-deep)] transition hover:bg-emerald-100"
-					>
-						Hoy
-					</button>
+					<div className="mt-3 grid grid-cols-2 gap-2">
+						<button
+							type="button"
+							onClick={handleToday}
+							className="rounded-full bg-[var(--surface)] py-2 text-sm font-medium text-[var(--brand-deep)] transition hover:bg-emerald-100"
+						>
+							Hoy
+						</button>
+						<button
+							type="button"
+							onClick={handleClear}
+							disabled={!selectedDate}
+							className="rounded-full border border-[var(--border-soft)] py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							Limpiar
+						</button>
+					</div>
 				</div>
 			)}
 		</div>

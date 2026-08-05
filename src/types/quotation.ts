@@ -17,7 +17,6 @@ export type QuotationItem = {
 	quantity: number;
 	unit: string;
 	unit_price: number;
-	tax_rate: number;
 	amount: number;
 	sort_order: number;
 };
@@ -56,17 +55,6 @@ export type QuotationFormValues = {
 	project: string;
 	terms_and_conditions: string;
 };
-
-export type TaxOption = {
-	label: string;
-	value: number;
-};
-
-export const TAX_OPTIONS: TaxOption[] = [
-	{ label: "16%", value: 16 },
-	{ label: "8%", value: 8 },
-	{ label: "Personalizado", value: -1 },
-];
 
 export type CompanySettings = {
 	id: string;

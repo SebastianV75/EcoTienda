@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 type SignaturePadProps = {
 	name: string;
@@ -38,14 +39,15 @@ export function SignaturePad({ name, defaultValue = "" }: SignaturePadProps) {
 		ctx.lineCap = "round";
 		ctx.lineJoin = "round";
 
-		if (defaultValue) {
+		const savedSignature = signature || defaultValue;
+		if (savedSignature) {
 			const img = new Image();
 			img.onload = () => {
 				ctx.drawImage(img, 0, 0);
 			};
-			img.src = defaultValue;
+			img.src = savedSignature;
 		}
-	}, [isVisible, defaultValue]);
+	}, [isVisible, defaultValue, signature]);
 
 	function getPos(event: React.MouseEvent | React.TouchEvent) {
 		const canvas = canvasRef.current;
@@ -95,6 +97,13 @@ export function SignaturePad({ name, defaultValue = "" }: SignaturePadProps) {
 		}
 	}
 
+	function saveSignature() {
+		if (canvasRef.current) {
+			setSignature(canvasRef.current.toDataURL("image/png"));
+		}
+		setIsVisible(false);
+	}
+
 	function clearCanvas() {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
@@ -106,6 +115,61 @@ export function SignaturePad({ name, defaultValue = "" }: SignaturePadProps) {
 		setSignature("");
 	}
 
+	const signatureOverlay =
+		isVisible && typeof document !== "undefined"
+			? createPortal(
+					<div
+						className="fixed inset-0 z-[100] flex items-end bg-black/45 p-3 lg:items-center"
+						role="dialog"
+						aria-modal="true"
+					>
+						<div
+							ref={panelRef}
+							className="relative w-full rounded-[24px] bg-white p-4 shadow-[0_-24px_60px_rgba(10,44,21,0.22)] lg:mx-auto lg:max-w-2xl"
+							style={{ touchAction: "none" }}
+						>
+							<div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-[var(--border-soft)]" />
+							<p className="mb-2 text-sm font-medium text-[var(--brand-deep)]">
+								Dibuja la firma del cliente
+							</p>
+							<div className="space-y-2">
+								<canvas
+									ref={canvasRef}
+									width={800}
+									height={400}
+									onMouseDown={startDrawing}
+									onMouseMove={draw}
+									onMouseUp={stopDrawing}
+									onMouseLeave={stopDrawing}
+									onTouchStart={startDrawing}
+									onTouchMove={draw}
+									onTouchEnd={stopDrawing}
+									className="aspect-[2/1] w-full rounded-[18px] border border-[var(--border-soft)] bg-white"
+									style={{ touchAction: "none" }}
+								/>
+								<div className="flex gap-2">
+									<button
+										type="button"
+										onClick={clearCanvas}
+										className="flex-1 rounded-full bg-[var(--surface)] px-4 py-2 text-sm text-[var(--brand-deep)] transition duration-200 hover:bg-[rgba(239,246,239,0.96)]"
+									>
+										Limpiar
+									</button>
+									<button
+										type="button"
+										onClick={saveSignature}
+										className="flex-1 rounded-full bg-[var(--brand)] px-4 py-2 text-sm text-white transition duration-200 hover:bg-[var(--brand-strong)]"
+									>
+										Guardar firma
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>,
+					document.body,
+				)
+			: null;
+
 	return (
 		<div className="space-y-2">
 			{!isVisible ? (
@@ -116,59 +180,8 @@ export function SignaturePad({ name, defaultValue = "" }: SignaturePadProps) {
 				>
 					✍️ Pulsa para firmar
 				</button>
-			) : (
-				<div
-					className="fixed inset-0 z-50 flex items-end bg-black/45 p-3 lg:items-center"
-					role="dialog"
-					aria-modal="true"
-				>
-					<button
-						type="button"
-						aria-label="Cerrar firma"
-						onClick={() => setIsVisible(false)}
-						className="absolute inset-0 cursor-default"
-					/>
-					<div
-						ref={panelRef}
-						className="relative w-full rounded-[24px] bg-white p-4 shadow-[0_-24px_60px_rgba(10,44,21,0.22)] lg:mx-auto lg:max-w-2xl"
-						style={{ touchAction: "none" }}
-					>
-						<div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-[var(--border-soft)]" />
-						<div className="space-y-2">
-							<canvas
-								ref={canvasRef}
-								width={800}
-								height={400}
-								onMouseDown={startDrawing}
-								onMouseMove={draw}
-								onMouseUp={stopDrawing}
-								onMouseLeave={stopDrawing}
-								onTouchStart={startDrawing}
-								onTouchMove={draw}
-								onTouchEnd={stopDrawing}
-								className="aspect-[2/1] w-full rounded-[18px] border border-[var(--border-soft)] bg-white"
-								style={{ touchAction: "none" }}
-							/>
-							<div className="flex gap-2">
-								<button
-									type="button"
-									onClick={clearCanvas}
-									className="flex-1 rounded-full bg-[var(--surface)] px-4 py-2 text-sm text-[var(--brand-deep)] transition duration-200 hover:bg-[rgba(239,246,239,0.96)]"
-								>
-									Limpiar
-								</button>
-								<button
-									type="button"
-									onClick={() => setIsVisible(false)}
-									className="flex-1 rounded-full border border-[var(--border-soft)] bg-white px-4 py-2 text-sm text-[var(--brand-deep)] transition duration-200 hover:bg-[var(--surface)]"
-								>
-									Cerrar
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			)}
+			) : null}
+			{signatureOverlay}
 			<input type="hidden" name={name} value={signature} />
 		</div>
 	);

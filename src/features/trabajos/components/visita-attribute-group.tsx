@@ -18,7 +18,11 @@ type VisitaAttributeGroupProps = {
  * Muestra pares etiqueta/valor en orden curado, oculta grupos vacíos y
  * renderiza imágenes, booleanos y valores vacíos con el formato esperado.
  */
-export function VisitaAttributeGroup({ group, attributes, title }: VisitaAttributeGroupProps) {
+export function VisitaAttributeGroup({
+	group,
+	attributes,
+	title,
+}: VisitaAttributeGroupProps) {
 	if (Object.keys(attributes).length === 0) {
 		return null;
 	}
@@ -32,20 +36,33 @@ export function VisitaAttributeGroup({ group, attributes, title }: VisitaAttribu
 	const keys = [...knownKeys, ...unknownKeys];
 
 	return (
-		<div className="space-y-3 md:col-span-2">
-			<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">{title}</p>
-			<div className="grid gap-4 md:grid-cols-2">
+		<section className="space-y-4 rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface)] p-4 md:col-span-2 md:p-5">
+			<div className="flex items-center gap-3">
+				<span
+					className="h-2 w-2 rounded-full bg-[var(--brand)]"
+					aria-hidden="true"
+				/>
+				<h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--brand-deep)]">
+					{title}
+				</h3>
+			</div>
+			<div className="grid items-start gap-3 md:grid-cols-2">
 				{keys.map((key) => {
 					const label = getVisitaAttributeLabel(group, key);
 					const value = getVisitaAttributeValue(attributes[key], key);
 
 					return (
-						<div key={key} className="space-y-1.5">
-							<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">{label}</p>
+						<div
+							key={key}
+							className="min-w-0 space-y-2 rounded-[16px] border border-[var(--border-soft)] bg-white p-3.5"
+						>
+							<p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
+								{label}
+							</p>
 							{value.kind === "media" ? (
 								<VisitaAttributeImage src={value.text} alt={label} />
 							) : (
-								<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
+								<p className="text-sm font-medium leading-6 text-[var(--foreground)] whitespace-pre-wrap">
 									{value.text}
 								</p>
 							)}
@@ -53,6 +70,6 @@ export function VisitaAttributeGroup({ group, attributes, title }: VisitaAttribu
 					);
 				})}
 			</div>
-		</div>
+		</section>
 	);
 }

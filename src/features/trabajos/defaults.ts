@@ -1,6 +1,4 @@
-import type {
-	Trabajo,
-} from "@/types/trabajo";
+import type { Trabajo } from "@/types/trabajo";
 
 import type { TrabajoDocumentSource } from "./data";
 
@@ -46,11 +44,33 @@ export type TrabajoDocumentDefaults = {
 };
 
 function pickText(...values: Array<string | null | undefined>): string {
-	return values.find((value) => typeof value === "string" && value.trim().length > 0)?.trim() ?? "";
+	return (
+		values
+			.find((value) => typeof value === "string" && value.trim().length > 0)
+			?.trim() ?? ""
+	);
 }
 
-function pickNumber(...values: Array<number | null | undefined>): number | null {
-	return values.find((value) => typeof value === "number" && Number.isFinite(value)) ?? null;
+function pickAddressText(...values: Array<string | null | undefined>): string {
+	return (
+		values
+			.map((value) => (typeof value === "string" ? value.trim() : ""))
+			.find(
+				(value) =>
+					value.length > 0 &&
+					!/^[+-]?\d+(?:\.\d+)?\s*,\s*[+-]?\d+(?:\.\d+)?$/.test(value),
+			) ?? ""
+	);
+}
+
+function pickNumber(
+	...values: Array<number | null | undefined>
+): number | null {
+	return (
+		values.find(
+			(value) => typeof value === "number" && Number.isFinite(value),
+		) ?? null
+	);
 }
 
 function getAgendaDefaults(
@@ -61,7 +81,9 @@ function getAgendaDefaults(
 		work_type: trabajo.agenda?.work_type ?? "",
 		assignee_worker_id: trabajo.agenda?.assignee_worker_id ?? "",
 		assignee_name:
-			trabajo.agenda?.assignee_worker?.full_name ?? trabajo.agenda?.assignee_name ?? "",
+			trabajo.agenda?.assignee_worker?.full_name ??
+			trabajo.agenda?.assignee_name ??
+			"",
 		note: trabajo.agenda?.note ?? "",
 	};
 }
@@ -94,13 +116,18 @@ function getQuotationDefaults(
 		amount: pickNumber(trabajo.cotizacion?.amount),
 		terms_and_conditions: trabajo.cotizacion?.terms_and_conditions ?? "",
 		outcome: trabajo.cotizacion?.outcome ?? "",
-		quotation_type: trabajo.cotizacion?.quotation_type ?? trabajo.visita?.quotation_type ?? "",
+		quotation_type:
+			trabajo.cotizacion?.quotation_type ??
+			trabajo.visita?.quotation_type ??
+			"",
 		rfc: trabajo.cotizacion?.rfc ?? "",
 		rpu: trabajo.cotizacion?.rpu ?? "",
 	};
 }
 
-function getSaleDefaults(trabajo: TrabajoDocumentSource): TrabajoDocumentDefaults["sale"] {
+function getSaleDefaults(
+	trabajo: TrabajoDocumentSource,
+): TrabajoDocumentDefaults["sale"] {
 	return {
 		confirmed_on: trabajo.venta?.confirmed_on ?? "",
 		agreed_amount: pickNumber(trabajo.venta?.agreed_amount),
@@ -125,7 +152,7 @@ export function composeTrabajoDocumentDefaults(
 			trabajo.agenda?.contact_phone,
 			trabajo.intake_phone,
 		),
-		address_text: pickText(
+		address_text: pickAddressText(
 			trabajo.visita?.confirmed_address,
 			trabajo.agenda?.address_text,
 			trabajo.intake_address_text,

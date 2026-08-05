@@ -358,6 +358,12 @@ export function GoogleMapsPicker({
 						ref={inputRef}
 						type="text"
 						placeholder="Buscar dirección..."
+						onKeyDown={(event) => {
+							if (event.key === "Enter") {
+								event.preventDefault();
+								event.stopPropagation();
+							}
+						}}
 						className="flex-1 rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 					/>
 					<button
