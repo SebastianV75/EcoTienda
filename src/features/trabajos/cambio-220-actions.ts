@@ -8,7 +8,13 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
 import { getVisitSaveRedirectPath } from "./visit-save-redirect";
-import { existingAttributes, existingText, getExistingVisita } from "./visita-action-helpers";
+import {
+	completeVisitWorkflow,
+	existingAttributes,
+	existingText,
+	getExistingVisita,
+	normalizeExecutionDate,
+} from "./visita-action-helpers";
 
 export type Cambio220ActionState = {
 	error: string | null;
@@ -41,16 +47,26 @@ export async function saveCambio220Action(
 	const supabase = await createSupabaseServerClient();
 	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
-	const electricalAttributes: Record<string, string> = existingAttributes(existingVisita, "electrical_attributes");
+	const electricalAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"electrical_attributes",
+	);
 	if (meterPhoto) electricalAttributes.meter_photo = meterPhoto;
 	if (terminalPhoto) electricalAttributes.terminal_photo = terminalPhoto;
 
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: existingText(existingVisita, "execution_date", new Date().toISOString()),
+		execution_date: normalizeExecutionDate(
+			existingText(existingVisita, "execution_date", ""),
+			new Date().toISOString().slice(0, 10),
+		),
 		contact_name: existingText(existingVisita, "contact_name", contactName),
 		contact_phone: "",
-		confirmed_address: existingText(existingVisita, "confirmed_address", address),
+		confirmed_address: existingText(
+			existingVisita,
+			"confirmed_address",
+			address,
+		),
 		interest_package: "Cambio a 220",
 		quotation_type: "Cambio a 220",
 		house_attributes: {},
@@ -72,19 +88,14 @@ export async function saveCambio220Action(
 		};
 	}
 
-	const { error: trabajoError } = await supabase
-		.from("trabajos")
-		.update({
-			current_stage: "cotizacion",
-			visita_completed_at: payload.completed_at,
-		})
-		.eq("id", trabajoId);
+	const workflowError = await completeVisitWorkflow(
+		supabase,
+		trabajoId,
+		payload.completed_at,
+	);
 
-	if (trabajoError) {
-		return {
-			error: "Se guardó la visita, pero no se pudo actualizar el trabajo.",
-			success: null,
-		};
+	if (workflowError) {
+		return { error: workflowError, success: null };
 	}
 
 	// Crear automáticamente la cotización vinculada al trabajo
@@ -93,7 +104,11 @@ export async function saveCambio220Action(
 			trabajo_id: trabajoId,
 			contact_name: existingText(existingVisita, "contact_name", contactName),
 			contact_phone: "",
-			confirmed_address: existingText(existingVisita, "confirmed_address", address),
+			confirmed_address: existingText(
+				existingVisita,
+				"confirmed_address",
+				address,
+			),
 			interest_package: "Cambio a 220",
 			quotation_type: "Cambio a 220",
 			notes: "",

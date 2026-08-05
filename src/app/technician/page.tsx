@@ -176,12 +176,12 @@ export default async function TechnicianPage() {
 								Próximos
 							</div>
 						</div>
-						<div className="rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-4 text-center">
-							<div className="text-3xl font-bold text-gray-700">
+						<div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-4 text-center">
+							<div className="text-3xl font-bold text-[var(--brand-deep)]">
 								{trabajos.length - readyCount}
 							</div>
-							<div className="mt-1 text-xs font-medium text-gray-600">
-								En proceso
+							<div className="mt-1 text-xs font-medium text-[var(--muted)]">
+								En otras etapas
 							</div>
 						</div>
 					</div>
@@ -208,7 +208,7 @@ export default async function TechnicianPage() {
 											/>
 										</svg>
 									</div>
-									<h2 className="text-lg font-semibold text-gray-900">
+									<h2 className="text-lg font-semibold text-[var(--brand-deep)]">
 										Visitas de hoy
 									</h2>
 								</div>
@@ -238,7 +238,7 @@ export default async function TechnicianPage() {
 											/>
 										</svg>
 									</div>
-									<h2 className="text-lg font-semibold text-gray-900">
+									<h2 className="text-lg font-semibold text-[var(--brand-deep)]">
 										Próximos días
 									</h2>
 								</div>
@@ -253,9 +253,9 @@ export default async function TechnicianPage() {
 						{groupedTrabajos.later.length > 0 && (
 							<section>
 								<div className="mb-3 flex items-center gap-2">
-									<div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+									<div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface)]">
 										<svg
-											className="h-5 w-5 text-gray-600"
+											className="h-5 w-5 text-[var(--muted)]"
 											fill="none"
 											viewBox="0 0 24 24"
 											stroke="currentColor"
@@ -268,7 +268,7 @@ export default async function TechnicianPage() {
 											/>
 										</svg>
 									</div>
-									<h2 className="text-lg font-semibold text-gray-900">
+									<h2 className="text-lg font-semibold text-[var(--brand-deep)]">
 										Más adelante
 									</h2>
 								</div>
@@ -281,10 +281,10 @@ export default async function TechnicianPage() {
 						)}
 					</div>
 				) : (
-					<section className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
-						<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50">
+					<section className="rounded-panel border border-dashed border-[var(--border-soft)] bg-white p-12 text-center shadow-panel">
+						<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[var(--surface)]">
 							<svg
-								className="h-10 w-10 text-gray-400"
+								className="h-10 w-10 text-[var(--muted)]"
 								fill="none"
 								viewBox="0 0 24 24"
 								stroke="currentColor"
@@ -297,10 +297,10 @@ export default async function TechnicianPage() {
 								/>
 							</svg>
 						</div>
-						<h3 className="text-lg font-semibold text-gray-900">
+						<h3 className="text-lg font-semibold text-[var(--brand-deep)]">
 							No tienes visitas asignadas
 						</h3>
-						<p className="mt-2 text-sm text-gray-600">
+						<p className="mt-2 text-sm text-[var(--muted)]">
 							Cuando te asignen una visita, aparecerá aquí.
 						</p>
 					</section>
@@ -321,17 +321,17 @@ function TrabajoCard({
 		trabajo.current_stage === "agenda" || trabajo.current_stage === "visita";
 
 	return (
-		<article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+		<article className="rounded-card border border-[var(--border-soft)] bg-white p-4 shadow-card transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-[rgba(13,79,46,0.14)] hover:shadow-card-hover motion-reduce:transform-none">
 			<div className="flex flex-col gap-4">
 				{/* Encabezado */}
 				<div>
 					<div className="flex items-start justify-between gap-3">
 						<div className="flex-1">
-							<h3 className="text-lg font-semibold text-gray-900">
+							<h3 className="text-lg font-semibold text-[var(--brand-deep)]">
 								{trabajo.intake_name}
 							</h3>
 							{appointmentLabel && (
-								<div className="mt-1 flex items-center gap-1.5 text-sm text-gray-600">
+								<div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--muted)]">
 									<svg
 										className="h-4 w-4"
 										fill="none"
@@ -358,9 +358,9 @@ function TrabajoCard({
 				</div>
 
 				{/* Dirección */}
-				<div className="flex items-start gap-2 text-sm text-gray-600">
+				<div className="flex items-start gap-2 text-sm text-[var(--muted)]">
 					<svg
-						className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400"
+						className="mt-0.5 h-4 w-4 flex-shrink-0 text-[var(--muted)]"
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke="currentColor"
@@ -409,7 +409,7 @@ function TrabajoCard({
 						Iniciar visita
 					</Link>
 				) : (
-					<div className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+					<div className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--muted)]">
 						<svg
 							className="h-5 w-5"
 							fill="none"

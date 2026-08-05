@@ -80,6 +80,7 @@ export function EditQuotationForm({
 		initialData.quotation_id ?? null,
 	);
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
+	const [draftError, setDraftError] = useState<string | null>(null);
 	const [isSaving, setIsSaving] = useState(false);
 	const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const draftSavePromiseRef = useRef<Promise<void> | null>(null);
@@ -166,9 +167,12 @@ export function EditQuotationForm({
 					setQuotationId(result.quotationId);
 				}
 				setLastSaved(new Date());
+				setDraftError(null);
+			} else {
+				setDraftError(result.error ?? "No se pudo guardar el borrador.");
 			}
-		} catch (error) {
-			console.error("Error al guardar borrador:", error);
+		} catch {
+			setDraftError("No se pudo guardar el borrador. Intenta de nuevo.");
 		} finally {
 			setIsSaving(false);
 		}
@@ -293,13 +297,25 @@ export function EditQuotationForm({
 							</svg>
 							{isEditing ? "Editar" : "Nueva cotización"}
 						</h2>
-						{(isSaving || lastSaved) && (
-							<p className="mt-1 text-xs text-[var(--muted)]">
-								{isSaving
-									? "Guardando..."
-									: `Último guardado: ${lastSaved?.toLocaleTimeString("es-MX")}`}
-							</p>
-						)}
+						{isSaving || lastSaved || draftError ? (
+							<div className="mt-2 space-y-1">
+								{isSaving ? (
+									<p className="text-xs text-[var(--muted)]">
+										Guardando borrador…
+									</p>
+								) : lastSaved ? (
+									<p className="text-xs text-emerald-700">
+										Borrador guardado a las{" "}
+										{lastSaved.toLocaleTimeString("es-MX")}
+									</p>
+								) : null}
+								{draftError ? (
+									<p role="alert" className="text-xs text-rose-700">
+										{draftError}
+									</p>
+								) : null}
+							</div>
+						) : null}
 					</div>
 				</div>
 

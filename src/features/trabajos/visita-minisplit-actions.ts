@@ -8,7 +8,13 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
 import { getVisitSaveRedirectPath } from "./visit-save-redirect";
-import { existingAttributes, existingText, getExistingVisita } from "./visita-action-helpers";
+import {
+	completeVisitWorkflow,
+	existingAttributes,
+	existingText,
+	getExistingVisita,
+	normalizeExecutionDate,
+} from "./visita-action-helpers";
 
 export type VisitaMinisplitActionState = {
 	error: string | null;
@@ -48,26 +54,42 @@ export async function saveVisitaMinisplitAction(
 	const supabase = await createSupabaseServerClient();
 	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
-	const houseAttributes: Record<string, string> = existingAttributes(existingVisita, "house_attributes");
+	const houseAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"house_attributes",
+	);
 	if (email) houseAttributes.email = email;
 	if (location) houseAttributes.location = location;
 	if (housePhoto) houseAttributes.house_photo = housePhoto;
 
-	const electricalAttributes: Record<string, string> = existingAttributes(existingVisita, "electrical_attributes");
+	const electricalAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"electrical_attributes",
+	);
 	if (voltage) electricalAttributes.voltage = voltage;
 	if (meterPhoto) electricalAttributes.meter_photo = meterPhoto;
 
-	const minisplitAttributes: Record<string, string> = existingAttributes(existingVisita, "minisplit_attributes");
+	const minisplitAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"minisplit_attributes",
+	);
 	if (evaporatorPhoto) minisplitAttributes.evaporator_photo = evaporatorPhoto;
 	if (compressorPhoto) minisplitAttributes.compressor_photo = compressorPhoto;
 	if (extra) minisplitAttributes.extra = extra;
 
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: existingText(existingVisita, "execution_date", new Date().toISOString()),
+		execution_date: normalizeExecutionDate(
+			existingText(existingVisita, "execution_date", ""),
+			new Date().toISOString().slice(0, 10),
+		),
 		contact_name: existingText(existingVisita, "contact_name", contactName),
 		contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
-		confirmed_address: existingText(existingVisita, "confirmed_address", location),
+		confirmed_address: existingText(
+			existingVisita,
+			"confirmed_address",
+			location,
+		),
 		interest_package: "Minisplit",
 		quotation_type: "Minisplit",
 		house_attributes: houseAttributes,
@@ -89,19 +111,14 @@ export async function saveVisitaMinisplitAction(
 		};
 	}
 
-	const { error: trabajoError } = await supabase
-		.from("trabajos")
-		.update({
-			current_stage: "cotizacion",
-			visita_completed_at: payload.completed_at,
-		})
-		.eq("id", trabajoId);
+	const workflowError = await completeVisitWorkflow(
+		supabase,
+		trabajoId,
+		payload.completed_at,
+	);
 
-	if (trabajoError) {
-		return {
-			error: "Se guardó la visita, pero no se pudo actualizar el trabajo.",
-			success: null,
-		};
+	if (workflowError) {
+		return { error: workflowError, success: null };
 	}
 
 	// Crear automáticamente la cotización vinculada al trabajo
@@ -109,8 +126,16 @@ export async function saveVisitaMinisplitAction(
 		await createQuotationFromVisita(supabase, {
 			trabajo_id: trabajoId,
 			contact_name: existingText(existingVisita, "contact_name", contactName),
-			contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
-			confirmed_address: existingText(existingVisita, "confirmed_address", location),
+			contact_phone: existingText(
+				existingVisita,
+				"contact_phone",
+				contactPhone,
+			),
+			confirmed_address: existingText(
+				existingVisita,
+				"confirmed_address",
+				location,
+			),
 			interest_package: "Minisplit",
 			quotation_type: "Minisplit",
 			notes: existingText(existingVisita, "notes", notes),

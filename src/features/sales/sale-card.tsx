@@ -7,6 +7,7 @@ import { ActionButton } from "@/components/ui/action-button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { StatusFeedback } from "@/components/ui/status-feedback";
+import { formatDisplayDate } from "@/lib/date-utils";
 import type { SaleListItem } from "./data";
 import {
 	confirmSaleAction,
@@ -134,11 +135,7 @@ export function SaleCard({ sale }: SaleCardProps) {
 					</div>
 					{sale.completed && (
 						<Badge className="border-emerald-200 bg-emerald-50 text-emerald-800">
-							<svg
-								className="h-3 w-3"
-								fill="currentColor"
-								viewBox="0 0 20 20"
-							>
+							<svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
 								<path
 									fillRule="evenodd"
 									d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -253,11 +250,7 @@ export function SaleCard({ sale }: SaleCardProps) {
 						</svg>
 						<span>
 							Confirmada:{" "}
-							{new Date(sale.confirmed_on).toLocaleDateString("es-MX", {
-								day: "2-digit",
-								month: "short",
-								year: "numeric",
-							})}
+							{formatDisplayDate(sale.confirmed_on, { month: "short" })}
 						</span>
 					</div>
 				)}
@@ -310,8 +303,11 @@ export function SaleCard({ sale }: SaleCardProps) {
 							{isPending ? "Procesando..." : "Venta no realizada"}
 						</ActionButton>
 					</div>
-					) : (
-					<StatusFeedback variant="success" className="flex items-center justify-center gap-2">
+				) : (
+					<StatusFeedback
+						variant="success"
+						className="flex items-center justify-center gap-2"
+					>
 						<svg
 							className="h-5 w-5"
 							fill="none"
@@ -331,16 +327,12 @@ export function SaleCard({ sale }: SaleCardProps) {
 
 				{/* Messages */}
 				{state.error && (
-					<StatusFeedback variant="warning">
-						{state.error}
-					</StatusFeedback>
+					<StatusFeedback variant="warning">{state.error}</StatusFeedback>
 				)}
 				{state.success && (
-					<StatusFeedback variant="success">
-						{state.success}
-						</StatusFeedback>
-					)}
-				</div>
+					<StatusFeedback variant="success">{state.success}</StatusFeedback>
+				)}
+			</div>
 		</Card>
 	);
 }

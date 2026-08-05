@@ -1,13 +1,11 @@
 import { cache } from "react";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type {
-	AgendaItem,
-	AgendaItemType,
-} from "@/types/agenda";
+import type { AgendaItem, AgendaItemType } from "@/types/agenda";
 import type { WorkerSummary } from "@/types/worker";
 
 import { getMonthRange } from "./calendar-utils";
+import { shouldIncludeLegacyVisit } from "./visit-legacy-filter";
 
 type AgendaWorkerSummaryRow = WorkerSummary | WorkerSummary[] | null;
 
@@ -94,14 +92,12 @@ const workflowAgendaSelect = `
 	updated_at
 `;
 
-function normalizeWorker(
-	worker: AgendaWorkerSummaryRow,
-): WorkerSummary | null {
+function normalizeWorker(worker: AgendaWorkerSummaryRow): WorkerSummary | null {
 	if (!worker) {
 		return null;
 	}
 
-	return Array.isArray(worker) ? worker[0] ?? null : worker;
+	return Array.isArray(worker) ? (worker[0] ?? null) : worker;
 }
 
 function normalizeAgendaItem(row: AgendaItemRow): AgendaItem {
@@ -167,7 +163,10 @@ function sortAgendaItems(items: AgendaItem[]) {
 		const leftStamp = left.appointment_at ?? `${left.fecha}T00:00:00.000Z`;
 		const rightStamp = right.appointment_at ?? `${right.fecha}T00:00:00.000Z`;
 
-		return leftStamp.localeCompare(rightStamp) || left.created_at.localeCompare(right.created_at);
+		return (
+			leftStamp.localeCompare(rightStamp) ||
+			left.created_at.localeCompare(right.created_at)
+		);
 	});
 }
 
@@ -175,9 +174,15 @@ async function mergeAgendaSources(
 	workflowSource: Promise<AgendaItem[]>,
 	legacySource: Promise<AgendaItem[]>,
 ) {
-	const [workflowResult, legacyResult] = await Promise.allSettled([workflowSource, legacySource]);
+	const [workflowResult, legacyResult] = await Promise.allSettled([
+		workflowSource,
+		legacySource,
+	]);
 
-	if (workflowResult.status === "rejected" && legacyResult.status === "rejected") {
+	if (
+		workflowResult.status === "rejected" &&
+		legacyResult.status === "rejected"
+	) {
 		throw workflowResult.reason ?? legacyResult.reason;
 	}
 
@@ -200,61 +205,71 @@ async function mergeAgendaSources(
 	return sortAgendaItems([...itemsById.values()]);
 }
 
-export const getAgendaItemsForMonth = cache(async (year: number, month: number) => {
-	const { firstDayIso, lastDayIso } = getMonthRange(year, month);
+export const getAgendaItemsForMonth = cache(
+	async (year: number, month: number) => {
+		const { firstDayIso, lastDayIso } = getMonthRange(year, month);
 
-	return mergeAgendaSources(
-		(async () => {
-			const supabase = await createSupabaseServerClient();
-			// Primero obtener los trabajos en etapa agenda
-			const { data: trabajosData, error: trabajosError } = await supabase
-				.from("trabajos")
-				.select("id")
-				.eq("current_stage", "agenda");
+		return mergeAgendaSources(
+			(async () => {
+				const supabase = await createSupabaseServerClient();
+				// Primero obtener los trabajos en etapa agenda
+				const { data: trabajosData, error: trabajosError } = await supabase
+					.from("trabajos")
+					.select("id")
+					.eq("current_stage", "agenda");
 
-			if (trabajosError) {
-				throw new Error(`No se pudieron cargar los trabajos de agenda. ${trabajosError.message}`);
-			}
+				if (trabajosError) {
+					throw new Error(
+						`No se pudieron cargar los trabajos de agenda. ${trabajosError.message}`,
+					);
+				}
 
-			const trabajoIds = (trabajosData ?? []).map((t) => t.id);
+				const trabajoIds = (trabajosData ?? []).map((t) => t.id);
 
-			if (trabajoIds.length === 0) {
-				return [];
-			}
+				if (trabajoIds.length === 0) {
+					return [];
+				}
 
-			const { data, error } = await supabase
-				.from("trabajo_agenda_stage")
-				.select(workflowAgendaSelect)
-				.in("trabajo_id", trabajoIds)
-				.gte("appointment_at", firstDayIso)
-				.lte("appointment_at", lastDayIso)
-				.order("appointment_at", { ascending: true })
-				.order("created_at", { ascending: true });
+				const { data, error } = await supabase
+					.from("trabajo_agenda_stage")
+					.select(workflowAgendaSelect)
+					.in("trabajo_id", trabajoIds)
+					.gte("appointment_at", firstDayIso)
+					.lte("appointment_at", lastDayIso)
+					.order("appointment_at", { ascending: true })
+					.order("created_at", { ascending: true });
 
-			if (error) {
-				throw new Error(`No se pudieron cargar los trabajos de agenda del mes. ${error.message}`);
-			}
+				if (error) {
+					throw new Error(
+						`No se pudieron cargar los trabajos de agenda del mes. ${error.message}`,
+					);
+				}
 
-			return ((data ?? []) as WorkflowAgendaItemRow[]).map(normalizeWorkflowAgendaItem);
-		})(),
-		(async () => {
-			const supabase = await createSupabaseServerClient();
-			const { data, error } = await supabase
-				.from("agenda_items")
-				.select(agendaSelect)
-				.gte("fecha", firstDayIso)
-				.lte("fecha", lastDayIso)
-				.order("fecha", { ascending: true })
-				.order("created_at", { ascending: true });
+				return ((data ?? []) as WorkflowAgendaItemRow[]).map(
+					normalizeWorkflowAgendaItem,
+				);
+			})(),
+			(async () => {
+				const supabase = await createSupabaseServerClient();
+				const { data, error } = await supabase
+					.from("agenda_items")
+					.select(agendaSelect)
+					.gte("fecha", firstDayIso)
+					.lte("fecha", lastDayIso)
+					.order("fecha", { ascending: true })
+					.order("created_at", { ascending: true });
 
-			if (error) {
-				throw new Error(`No se pudieron cargar los elementos de agenda del mes. ${error.message}`);
-			}
+				if (error) {
+					throw new Error(
+						`No se pudieron cargar los elementos de agenda del mes. ${error.message}`,
+					);
+				}
 
-			return ((data ?? []) as AgendaItemRow[]).map(normalizeAgendaItem);
-		})(),
-	);
-});
+				return ((data ?? []) as AgendaItemRow[]).map(normalizeAgendaItem);
+			})(),
+		);
+	},
+);
 
 export const getPendingAgendaItems = cache(async () => {
 	return mergeAgendaSources(
@@ -267,7 +282,9 @@ export const getPendingAgendaItems = cache(async () => {
 				.eq("current_stage", "agenda");
 
 			if (trabajosError) {
-				throw new Error(`No se pudieron cargar los trabajos de agenda. ${trabajosError.message}`);
+				throw new Error(
+					`No se pudieron cargar los trabajos de agenda. ${trabajosError.message}`,
+				);
 			}
 
 			const trabajoIds = (trabajosData ?? []).map((t) => t.id);
@@ -285,10 +302,14 @@ export const getPendingAgendaItems = cache(async () => {
 				.order("created_at", { ascending: true });
 
 			if (error) {
-				throw new Error(`No se pudieron cargar los pendientes de agenda. ${error.message}`);
+				throw new Error(
+					`No se pudieron cargar los pendientes de agenda. ${error.message}`,
+				);
 			}
 
-			return ((data ?? []) as WorkflowAgendaItemRow[]).map(normalizeWorkflowAgendaItem);
+			return ((data ?? []) as WorkflowAgendaItemRow[]).map(
+				normalizeWorkflowAgendaItem,
+			);
 		})(),
 		(async () => {
 			const supabase = await createSupabaseServerClient();
@@ -300,7 +321,9 @@ export const getPendingAgendaItems = cache(async () => {
 				.order("created_at", { ascending: true });
 
 			if (error) {
-				throw new Error(`No se pudieron cargar los pendientes de agenda. ${error.message}`);
+				throw new Error(
+					`No se pudieron cargar los pendientes de agenda. ${error.message}`,
+				);
 			}
 
 			return ((data ?? []) as AgendaItemRow[]).map(normalizeAgendaItem);
@@ -319,10 +342,44 @@ export const getAgendaItemsByType = cache(async (tipo: AgendaItemType) => {
 			.order("created_at", { ascending: true });
 
 		if (error) {
-			throw new Error(`No se pudieron cargar los elementos de agenda por tipo. ${error.message}`);
+			throw new Error(
+				`No se pudieron cargar los elementos de agenda por tipo. ${error.message}`,
+			);
 		}
 
-		return ((data ?? []) as AgendaItemRow[]).map(normalizeAgendaItem);
+		const items = ((data ?? []) as AgendaItemRow[]).map(normalizeAgendaItem);
+		if (tipo !== "visita_tecnica") {
+			return items;
+		}
+
+		const linkedWorkIds = [
+			...new Set(
+				items
+					.map((item) => item.visit_id)
+					.filter((visitId): visitId is string => Boolean(visitId)),
+			),
+		];
+		if (linkedWorkIds.length === 0) {
+			return items;
+		}
+
+		const { data: linkedWorks, error: linkedWorksError } = await supabase
+			.from("trabajos")
+			.select("id, current_stage")
+			.in("id", linkedWorkIds);
+
+		if (linkedWorksError) {
+			throw new Error(
+				`No se pudieron validar las visitas vinculadas. ${linkedWorksError.message}`,
+			);
+		}
+
+		const linkedWorkStages = new Map(
+			(linkedWorks ?? []).map((work) => [work.id, work.current_stage]),
+		);
+		return items.filter((item) =>
+			shouldIncludeLegacyVisit(item, linkedWorkStages),
+		);
 	})();
 
 	if (tipo !== "visita_tecnica") {
@@ -338,7 +395,9 @@ export const getAgendaItemsByType = cache(async (tipo: AgendaItemType) => {
 			.eq("current_stage", "visita");
 
 		if (trabajosError) {
-			throw new Error(`No se pudieron cargar los trabajos de visita. ${trabajosError.message}`);
+			throw new Error(
+				`No se pudieron cargar los trabajos de visita. ${trabajosError.message}`,
+			);
 		}
 
 		const trabajoIds = (trabajosData ?? []).map((t) => t.id);
@@ -356,10 +415,14 @@ export const getAgendaItemsByType = cache(async (tipo: AgendaItemType) => {
 			.order("created_at", { ascending: true });
 
 		if (error) {
-			throw new Error(`No se pudieron cargar los trabajos de agenda por tipo. ${error.message}`);
+			throw new Error(
+				`No se pudieron cargar los trabajos de agenda por tipo. ${error.message}`,
+			);
 		}
 
-		return ((data ?? []) as WorkflowAgendaItemRow[]).map(normalizeWorkflowAgendaItem);
+		return ((data ?? []) as WorkflowAgendaItemRow[]).map(
+			normalizeWorkflowAgendaItem,
+		);
 	})();
 
 	return mergeAgendaSources(workflow, legacy);
@@ -376,10 +439,14 @@ export const getAgendaItemById = cache(async (id: string) => {
 				.maybeSingle();
 
 			if (error) {
-				throw new Error(`No se pudo cargar el trabajo de agenda. ${error.message}`);
+				throw new Error(
+					`No se pudo cargar el trabajo de agenda. ${error.message}`,
+				);
 			}
 
-			return data ? normalizeWorkflowAgendaItem(data as WorkflowAgendaItemRow) : null;
+			return data
+				? normalizeWorkflowAgendaItem(data as WorkflowAgendaItemRow)
+				: null;
 		})(),
 		(async () => {
 			const supabase = await createSupabaseServerClient();
@@ -390,7 +457,9 @@ export const getAgendaItemById = cache(async (id: string) => {
 				.maybeSingle();
 
 			if (error) {
-				throw new Error(`No se pudo cargar el elemento de agenda. ${error.message}`);
+				throw new Error(
+					`No se pudo cargar el elemento de agenda. ${error.message}`,
+				);
 			}
 
 			return data ? normalizeAgendaItem(data as AgendaItemRow) : null;

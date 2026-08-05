@@ -33,13 +33,20 @@ type LocationMessage = {
 	text: string;
 };
 
-function buildFullName(firstName: string, paternalLastName: string, maternalLastName: string) {
+function buildFullName(
+	firstName: string,
+	paternalLastName: string,
+	maternalLastName: string,
+) {
 	return [firstName.trim(), paternalLastName.trim(), maternalLastName.trim()]
 		.filter(Boolean)
 		.join(" ");
 }
 
-function resolveWorkTypeLabel(choice: AgendaWorkTypeOption, otherValue: string) {
+function resolveWorkTypeLabel(
+	choice: AgendaWorkTypeOption,
+	otherValue: string,
+) {
 	if (choice === "otro") {
 		return otherValue.trim() || agendaWorkTypeLabels.otro;
 	}
@@ -68,14 +75,19 @@ export function AgendaItemForm({
 			return defaultValues.assignee_worker_id;
 		}
 
-		return workers.find((worker) => worker.full_name === defaultValues.assignee_name)?.id ?? "";
+		return (
+			workers.find((worker) => worker.full_name === defaultValues.assignee_name)
+				?.id ?? ""
+		);
 	}, [defaultValues.assignee_name, defaultValues.assignee_worker_id, workers]);
 	const [selectedWorkerId, setSelectedWorkerId] = useState(initialWorkerId);
 	const [title, setTitle] = useState(defaultValues.title);
 	const [workTypeChoice, setWorkTypeChoice] = useState<AgendaWorkTypeOption>(
 		defaultValues.work_type_choice,
 	);
-	const [workTypeOther, setWorkTypeOther] = useState(defaultValues.work_type_other);
+	const [workTypeOther, setWorkTypeOther] = useState(
+		defaultValues.work_type_other,
+	);
 	const [firstName, setFirstName] = useState(defaultValues.first_name);
 	const [paternalLastName, setPaternalLastName] = useState(
 		defaultValues.paternal_last_name,
@@ -110,9 +122,13 @@ export function AgendaItemForm({
 		() => workers.find((worker) => worker.id === selectedWorkerId) ?? null,
 		[workers, selectedWorkerId],
 	);
-	const assigneeSnapshot = selectedWorker?.full_name ?? defaultValues.assignee_name;
+	const assigneeSnapshot =
+		selectedWorker?.full_name ?? defaultValues.assignee_name;
 
-	function syncGeneratedTitle(nextWorkTypeLabel: string, nextContactName: string) {
+	function syncGeneratedTitle(
+		nextWorkTypeLabel: string,
+		nextContactName: string,
+	) {
 		if (isTitleManuallyEdited) {
 			return;
 		}
@@ -381,7 +397,9 @@ export function AgendaItemForm({
 							id="work_type_other"
 							name="work_type_other"
 							value={workTypeOther}
-							onChange={(event) => handleWorkTypeOtherChange(event.target.value)}
+							onChange={(event) =>
+								handleWorkTypeOtherChange(event.target.value)
+							}
 							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 							placeholder="Describe el tipo de trabajo si hace falta"
 						/>
@@ -417,7 +435,9 @@ export function AgendaItemForm({
 						id="paternal_last_name"
 						name="paternal_last_name"
 						value={paternalLastName}
-						onChange={(event) => handlePaternalLastNameChange(event.target.value)}
+						onChange={(event) =>
+							handlePaternalLastNameChange(event.target.value)
+						}
 						required
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						placeholder="Apellido paterno"
@@ -435,46 +455,30 @@ export function AgendaItemForm({
 						id="maternal_last_name"
 						name="maternal_last_name"
 						value={maternalLastName}
-						onChange={(event) => handleMaternalLastNameChange(event.target.value)}
+						onChange={(event) =>
+							handleMaternalLastNameChange(event.target.value)
+						}
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						placeholder="Apellido materno (opcional)"
 					/>
 				</div>
 
-<div className="space-y-2.5">
-				<label
-					htmlFor="contact_phone"
-					className="text-sm font-medium text-[var(--brand-deep)]"
-				>
-					Teléfono
-				</label>
-				<Input
-					id="contact_phone"
-					name="contact_phone"
-					defaultValue={defaultValues.contact_phone}
-					required
-					className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-					placeholder="Teléfono de contacto"
-				/>
-			</div>
-
-			<div className="space-y-2.5">
-				<label
-					htmlFor="email"
-					className="text-sm font-medium text-[var(--brand-deep)]"
-				>
-					Email
-				</label>
-				<Input
-					id="email"
-					name="email"
-					type="email"
-					value={email}
-					onChange={(event) => setEmail(event.target.value)}
-					className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-					placeholder="email@ejemplo.com"
-				/>
-			</div>
+				<div className="space-y-2.5">
+					<label
+						htmlFor="contact_phone"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
+						Teléfono
+					</label>
+					<Input
+						id="contact_phone"
+						name="contact_phone"
+						defaultValue={defaultValues.contact_phone}
+						required
+						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						placeholder="Teléfono de contacto"
+					/>
+				</div>
 
 				<div className="space-y-2.5">
 					<label
@@ -626,7 +630,9 @@ export function AgendaItemForm({
 				pendingLabel={mode === "create" ? "Guardando..." : "Actualizando..."}
 				className="w-full rounded-full bg-[var(--brand)] px-5 py-3.5 font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
 			>
-				{mode === "create" ? "Crear trabajo en Agenda" : "Guardar ajuste de Agenda"}
+				{mode === "create"
+					? "Crear trabajo en Agenda"
+					: "Guardar ajuste de Agenda"}
 			</ActionButton>
 		</form>
 	);
