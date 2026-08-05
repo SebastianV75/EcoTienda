@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { EmptyState } from "@/components/empty-state";
 import { TrabajoCard } from "@/features/trabajos/components/trabajo-card";
 import { TrabajoListFilters } from "@/features/trabajos/components/trabajo-list-filters";
+import { TrabajosRealtimeListener } from "@/features/trabajos/components/trabajos-realtime-listener";
 import { getTrabajosForList } from "@/features/trabajos/data";
 import { parseTrabajoListFilters } from "@/features/trabajos/list-filters";
 import { getActiveWorkers } from "@/features/workers/data";
@@ -42,6 +43,8 @@ export default async function TrabajosPage({
 		>
 			<div className="space-y-4">
 				<TrabajoListFilters initialFilters={filters} workers={workers} />
+
+				<TrabajosRealtimeListener />
 
 				{trabajos.length > 0 ? (
 					<section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

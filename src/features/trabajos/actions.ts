@@ -435,3 +435,103 @@ export async function saveTrabajoVisitaAction(
 			: `/agenda/${result.values.trabajo_id}`,
 	);
 }
+
+export async function deleteTrabajoAction(
+	_previousState: { error: string | null; success: boolean },
+	trabajoId: string,
+): Promise<{ error: string | null; success: boolean }> {
+	if (hasSupabaseEnv()) {
+		await requireRole(["admin"]);
+	}
+
+	if (!trabajoId) {
+		return { error: "ID de trabajo no válido.", success: false };
+	}
+
+	const supabase = await createSupabaseServerClient();
+
+	// Verificar que el trabajo existe antes de intentar eliminarlo
+	const { data: existingTrabajo, error: existingError } = await supabase
+		.from("trabajos")
+		.select("id")
+		.eq("id", trabajoId)
+		.maybeSingle();
+
+	if (existingError || !existingTrabajo) {
+		return { error: "El trabajo no existe o no se puede acceder.", success: false };
+	}
+
+	// Paso 1: Eliminar trabajo_sale_stage PRIMERO
+	// Tiene FK restrict hacia trabajo_quotation_stage, debe eliminarse antes
+	const { error: saleError } = await supabase
+		.from("trabajo_sale_stage")
+		.delete()
+		.eq("trabajo_id", trabajoId);
+
+	if (saleError) {
+		console.error("[deleteTrabajoAction] Error eliminando sale stage:", saleError);
+		return { error: "No se pudo eliminar la etapa de venta.", success: false };
+	}
+
+	// Paso 2: Eliminar todo lo demás en paralelo
+	// quotation_items se elimina en cascade con quotations
+	const results = await Promise.all([
+		supabase.from("quotations").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_quotation_stage").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_visita_stage").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_agenda_stage").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_media_assets").delete().eq("trabajo_id", trabajoId),
+		supabase.from("trabajo_document_overrides").delete().eq("trabajo_id", trabajoId),
+		supabase.from("agenda_items").delete().eq("id", trabajoId),
+	]);
+
+	const stageNames = [
+		"quotations",
+		"trabajo_quotation_stage",
+		"trabajo_visita_stage",
+		"trabajo_agenda_stage",
+		"trabajo_media_assets",
+		"trabajo_document_overrides",
+		"agenda_items",
+	];
+
+	for (let i = 0; i < results.length; i++) {
+		if (results[i].error) {
+			console.error(
+				`[deleteTrabajoAction] Error eliminando ${stageNames[i]}:`,
+				results[i].error,
+			);
+			return { error: `No se pudo eliminar ${stageNames[i]}.`, success: false };
+		}
+	}
+
+	// Paso 3: Finalmente eliminar el trabajo
+	const { error, count } = await supabase
+		.from("trabajos")
+		.delete()
+		.eq("id", trabajoId)
+		.select();
+
+	if (error) {
+		console.error("[deleteTrabajoAction] Error eliminando trabajo:", error);
+		return { error: "No se pudo eliminar el trabajo.", success: false };
+	}
+
+	if (!count || count === 0) {
+		return { error: "El trabajo no pudo ser eliminado. Verificá los permisos.", success: false };
+	}
+
+	// Revalidar todas las rutas relevantes para actualización instantánea
+	revalidatePath("/admin/trabajos");
+	revalidatePath("/admin/trabajos/[id]", "page");
+	revalidatePath("/agenda");
+	revalidatePath("/agenda/[id]", "page");
+	revalidatePath("/admin/visits");
+	revalidatePath("/admin/visits/[id]", "page");
+	revalidatePath("/admin/quotations");
+	revalidatePath("/admin/quotations/[id]", "page");
+	revalidatePath("/admin/sales");
+	revalidatePath("/");
+
+	return { error: null, success: true };
+}

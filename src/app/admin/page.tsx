@@ -12,6 +12,7 @@ import {
 } from "@/features/trabajos/data";
 import { StageButtons } from "@/components/stage-buttons";
 import { hasSupabaseEnv } from "@/lib/env";
+import { StatusFeedback } from "@/components/ui/status-feedback";
 
 const emptyActiveTrabajos: ActiveTrabajoDashboardItem[] = [];
 
@@ -62,9 +63,7 @@ export default async function AdminPage() {
 		>
 			<div className="space-y-4">
 				{loadingNotice ? (
-					<section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-						{loadingNotice}
-					</section>
+					<StatusFeedback variant="warning">{loadingNotice}</StatusFeedback>
 				) : null}
 
 				{/* Botones de estadísticas por etapa */}
@@ -85,7 +84,6 @@ export default async function AdminPage() {
 					</p>
 					<div className="mt-3 flex flex-wrap gap-2">
 						{[
-							{ href: "/admin/clients", label: "Clientes" },
 							{ href: "/admin/workers", label: "Trabajadores" },
 							{ href: "/admin/documents", label: "Documentos" },
 							{ href: "/admin/quotations", label: "Cotizaciones" },

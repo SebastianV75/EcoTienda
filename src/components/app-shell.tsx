@@ -17,14 +17,15 @@ import {
 	DocumentText,
 	Home,
 	Location,
+	Money,
 	Profile,
 	Settings,
-	Users,
 } from "reicon-react";
 
 import { AuthStatus } from "@/components/auth-status";
 import { MobileBottomNavigation } from "@/components/mobile-bottom-navigation";
 import { MobileSignOut } from "@/components/mobile-sign-out";
+import { ActionButton } from "@/components/ui/action-button";
 import { signOutAction } from "@/features/auth/actions";
 import { roleConfig } from "@/features/auth/roles";
 import type { AppRole } from "@/types/auth";
@@ -67,7 +68,6 @@ const supportNavigation: NavigationItem[] = [
 		roles: ["admin"],
 		icon: DocumentText,
 	},
-	{ href: "/admin/clients", label: "Clientes", roles: ["admin"], icon: Users },
 	{
 		href: "/admin/workers",
 		label: "Trabajadores",
@@ -79,6 +79,12 @@ const supportNavigation: NavigationItem[] = [
 		label: "Cotizaciones",
 		roles: ["admin"],
 		icon: Clipboard,
+	},
+	{
+		href: "/admin/sales",
+		label: "Ventas",
+		roles: ["admin"],
+		icon: Money,
 	},
 	{
 		href: "/admin/settings",
@@ -280,12 +286,13 @@ export function AppShell({
 							</div>
 							{email ? (
 								<form action={signOutAction} className="shrink-0">
-									<button
+									<ActionButton
 										type="submit"
+										pendingLabel="Cerrando…"
 										className="ui-secondary-action"
 									>
 										Cerrar sesión
-									</button>
+									</ActionButton>
 								</form>
 							) : null}
 						</div>

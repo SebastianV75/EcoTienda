@@ -1,4 +1,7 @@
 import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
+import { MotionSafe } from "@/components/ui/motion-safe";
 import { trabajoStageLabels, trabajoStages } from "@/types/trabajo";
 import type { StageStats } from "@/features/trabajos/data";
 
@@ -100,22 +103,28 @@ const stageIcons: Record<string, React.ReactNode> = {
 
 export function StageButtons({ stats }: StageButtonsProps) {
 	return (
-		<div className="flex gap-1.5">
+		<MotionSafe className="flex gap-1.5">
 			{trabajoStages.map((stage) => (
-				<Link
+				<Button
 					key={stage}
-					href={stageRoutes[stage]}
-					className="group flex flex-1 flex-col items-center rounded-lg border border-gray-200 bg-white px-1 py-2 transition-all duration-200 hover:border-emerald-300 hover:shadow-sm active:scale-[0.98]"
+					asChild
+					variant="secondary"
+					size="sm"
+					className="group flex h-auto flex-1 flex-col rounded-lg px-1 py-2"
 				>
-					<div className="mb-1 text-gray-400 transition-colors duration-200 group-hover:text-emerald-600">
-						{stageIcons[stage]}
-					</div>
-					<div className="text-base font-bold text-gray-900">{stats[stage]}</div>
-					<div className="mt-0.5 text-[9px] font-medium leading-tight text-gray-500 group-hover:text-gray-700">
-						{trabajoStageLabels[stage]}
-					</div>
-				</Link>
+					<Link href={stageRoutes[stage]}>
+						<div className="mb-1 text-gray-400 transition-colors duration-200 group-hover:text-emerald-600">
+							{stageIcons[stage]}
+						</div>
+						<div className="text-base font-bold text-gray-900">
+							{stats[stage]}
+						</div>
+						<div className="mt-0.5 text-[9px] font-medium leading-tight text-gray-500 group-hover:text-gray-700">
+							{trabajoStageLabels[stage]}
+						</div>
+					</Link>
+				</Button>
 			))}
-		</div>
+		</MotionSafe>
 	);
 }

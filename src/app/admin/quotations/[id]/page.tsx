@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
 import { QuotationStatusBadge } from "@/features/quotations/quotation-status";
+import { calculateQuotationTotals } from "@/features/quotations/quotation-items";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Quotation, QuotationItem } from "@/types/quotation";
 
@@ -45,8 +46,11 @@ export default async function QuotationDetailPage({
 		.eq("quotation_id", id)
 		.order("sort_order", { ascending: true });
 
-	const quotationData = quotation as Quotation;
 	const itemsData = (items ?? []) as QuotationItem[];
+	const quotationData = {
+		...(quotation as Quotation),
+		...calculateQuotationTotals(itemsData, Number(quotation.subtotal)),
+	};
 	const overviewCards = [
 		{
 			label: "Proveedor",
@@ -89,12 +93,14 @@ export default async function QuotationDetailPage({
 					>
 						Volver a cotizaciones
 					</Link>
-					<a
+					<Link
 						href={`/api/quotations/${id}/pdf`}
+						target="_blank"
+						prefetch={false}
 						className="inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
 					>
 						Descargar PDF
-					</a>
+					</Link>
 				</div>
 
 				<section className="rounded-panel border border-[var(--border-soft)] bg-white p-5 shadow-panel sm:p-6">
@@ -112,7 +118,10 @@ export default async function QuotationDetailPage({
 									{quotationData.project ? ` · ${quotationData.project}` : ""}
 								</p>
 							</div>
-							<QuotationStatusBadge status={quotationData.status} className="mt-1" />
+							<QuotationStatusBadge
+								status={quotationData.status}
+								className="mt-1"
+							/>
 						</div>
 
 						<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -124,7 +133,9 @@ export default async function QuotationDetailPage({
 									<p className="text-[11px] font-semibold uppercase tracking-eyebrow text-[var(--brand-strong)]">
 										{card.label}
 									</p>
-									<p className="mt-2 text-sm leading-6 text-[var(--brand-deep)]">{card.value}</p>
+									<p className="mt-2 text-sm leading-6 text-[var(--brand-deep)]">
+										{card.value}
+									</p>
 								</div>
 							))}
 						</div>
@@ -140,7 +151,7 @@ export default async function QuotationDetailPage({
 									</p>
 								</div>
 								<Link
-									href={`/agenda/${quotationData.trabajo_id}`}
+									href={`/admin/trabajos/${quotationData.trabajo_id}`}
 									className="text-sm font-medium text-[var(--brand-strong)] underline-offset-4 hover:underline"
 								>
 									Abrir trabajo vinculado
@@ -165,13 +176,10 @@ export default async function QuotationDetailPage({
 											Producto
 										</th>
 										<th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
-											Cantidad
+											Piezas
 										</th>
 										<th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
 											Precio unitario
-										</th>
-										<th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
-											Impuestos
 										</th>
 										<th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
 											Importe
@@ -193,9 +201,6 @@ export default async function QuotationDetailPage({
 											<td className="px-4 py-3 text-sm text-[var(--foreground)]">
 												$ {item.unit_price.toFixed(2)}
 											</td>
-											<td className="px-4 py-3 text-sm text-[var(--foreground)]">
-												{item.tax_rate}%
-											</td>
 											<td className="px-4 py-3 text-right text-sm font-medium text-[var(--brand-deep)]">
 												$ {item.amount.toFixed(2)}
 											</td>
@@ -210,14 +215,18 @@ export default async function QuotationDetailPage({
 								<div key={item.id} className="px-4 py-3">
 									<div className="flex items-start justify-between gap-3">
 										<div className="min-w-0 flex-1">
-											<p className="text-sm font-medium text-[var(--foreground)]">{item.product_name}</p>
+											<p className="text-sm font-medium text-[var(--foreground)]">
+												{item.product_name}
+											</p>
 											<p className="mt-1 text-xs text-[var(--muted)]">
-												{item.quantity} {item.unit} &times; $ {item.unit_price.toFixed(2)}
+												{item.quantity} {item.unit} &times; ${" "}
+												{item.unit_price.toFixed(2)}
 											</p>
 										</div>
 										<div className="text-right">
-											<p className="text-sm font-semibold text-[var(--brand-deep)]">$ {item.amount.toFixed(2)}</p>
-											<p className="text-[11px] text-[var(--muted)]">IVA {item.tax_rate}%</p>
+											<p className="text-sm font-semibold text-[var(--brand-deep)]">
+												$ {item.amount.toFixed(2)}
+											</p>
 										</div>
 									</div>
 								</div>

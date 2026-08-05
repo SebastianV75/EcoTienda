@@ -14,6 +14,7 @@ import {
 
 type PanelesSolaresFormProps = {
 	trabajoId: string;
+	googleMapsApiKey?: string | null;
 };
 
 const initialState: PanelesSolaresActionState = {
@@ -29,7 +30,13 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 	);
 }
 
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+function FieldLabel({
+	children,
+	required,
+}: {
+	children: React.ReactNode;
+	required?: boolean;
+}) {
 	return (
 		<label className="flex items-center gap-1 text-sm font-medium text-[var(--brand-deep)]">
 			{children}
@@ -42,7 +49,10 @@ function sectionFieldClass() {
 	return "w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300";
 }
 
-export function PanelesSolaresForm({ trabajoId }: PanelesSolaresFormProps) {
+export function PanelesSolaresForm({
+	trabajoId,
+	googleMapsApiKey = null,
+}: PanelesSolaresFormProps) {
 	const [state, formAction, isPending] = useActionState(
 		savePanelesSolaresAction,
 		initialState,
@@ -87,7 +97,10 @@ export function PanelesSolaresForm({ trabajoId }: PanelesSolaresFormProps) {
 
 					<div className="space-y-2.5 md:col-span-2">
 						<FieldLabel>Ubicación</FieldLabel>
-						<GoogleMapsPicker name="location" />
+						<GoogleMapsPicker
+							name="location"
+							googleMapsApiKey={googleMapsApiKey}
+						/>
 					</div>
 				</div>
 			</div>
@@ -98,27 +111,45 @@ export function PanelesSolaresForm({ trabajoId }: PanelesSolaresFormProps) {
 					<div className="space-y-2.5">
 						<FieldLabel>Voltaje</FieldLabel>
 						<ToggleGroup name="voltage" options={["110v", "220v"]} />
-						<p className="text-xs text-[var(--muted)]">Se puede observar en el medidor: F1 o F2</p>
+						<p className="text-xs text-[var(--muted)]">
+							Se puede observar en el medidor: F1 o F2
+						</p>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto del medidor</FieldLabel>
-						<ImageUpload name="meter_photo" trabajoId={trabajoId} fieldName="meter_photo" />
+						<ImageUpload
+							name="meter_photo"
+							trabajoId={trabajoId}
+							fieldName="meter_photo"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto de casa</FieldLabel>
-						<ImageUpload name="house_photo" trabajoId={trabajoId} fieldName="house_photo" />
+						<ImageUpload
+							name="house_photo"
+							trabajoId={trabajoId}
+							fieldName="house_photo"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto del lugar donde va el evaporador</FieldLabel>
-						<ImageUpload name="evaporator_photo" trabajoId={trabajoId} fieldName="evaporator_photo" />
+						<ImageUpload
+							name="evaporator_photo"
+							trabajoId={trabajoId}
+							fieldName="evaporator_photo"
+						/>
 					</div>
 
 					<div className="space-y-2.5">
 						<FieldLabel>Foto de donde va el compresor</FieldLabel>
-						<ImageUpload name="compressor_photo" trabajoId={trabajoId} fieldName="compressor_photo" />
+						<ImageUpload
+							name="compressor_photo"
+							trabajoId={trabajoId}
+							fieldName="compressor_photo"
+						/>
 					</div>
 				</div>
 			</div>

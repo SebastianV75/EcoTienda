@@ -8,6 +8,7 @@ type TrabajoStageSectionProps = {
 	title: string;
 	stage: TrabajoStage;
 	isCompleted: boolean;
+	isCurrentStage?: boolean;
 	children: ReactNode;
 	expandable?: boolean;
 };
@@ -21,10 +22,11 @@ export function TrabajoStageSection({
 	title,
 	stage,
 	isCompleted,
+	isCurrentStage = false,
 	children,
 	expandable = true,
 }: TrabajoStageSectionProps) {
-	const [isOpen, setIsOpen] = useState(() => isCompleted || !expandable);
+	const [isOpen, setIsOpen] = useState(() => isCurrentStage || !expandable);
 	const contentId = useId();
 	const stageInitial = trabajoStageLabels[stage].slice(0, 1);
 	const statusLabel = isCompleted ? "Completado" : "Pendiente";

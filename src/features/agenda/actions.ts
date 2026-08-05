@@ -27,7 +27,7 @@ type AgendaBridgeSnapshot = {
 	tipo: AgendaItemFormValues["tipo"];
 	estado: AgendaItemFormValues["estado"];
 	descripcion: string | null;
-	client_id: string | null;
+
 	visit_id: string | null;
 	assignee_worker_id: string | null;
 	assignee_name: string | null;
@@ -48,7 +48,7 @@ type TrabajoSnapshot = {
 	intake_latitude: number | null;
 	intake_longitude: number | null;
 	work_type: string | null;
-	client_id: string | null;
+
 	agenda_completed_at?: string | null;
 	visita_completed_at?: string | null;
 	created_at?: string;
@@ -70,7 +70,7 @@ type AgendaStageSnapshot = {
 	address_text: string;
 	latitude: number;
 	longitude: number;
-	client_id: string | null;
+
 	completed_at: string | null;
 	created_at?: string;
 	updated_at?: string;
@@ -262,7 +262,7 @@ function getWorkflowStagePayload(
 		address_text: values.addressText,
 		latitude: values.latitude,
 		longitude: values.longitude,
-		client_id: null,
+		
 		completed_at: null,
 	};
 }
@@ -338,6 +338,7 @@ export async function createAgendaItemAction(
 	}
 
 	const trabajoId = globalThis.crypto.randomUUID();
+	const now = new Date().toISOString();
 
 	const { error: trabajoError } = await supabase.from("trabajos").insert({
 		id: trabajoId,
@@ -352,7 +353,7 @@ export async function createAgendaItemAction(
 		intake_latitude: values.latitude,
 		intake_longitude: values.longitude,
 		work_type: values.work_type,
-		client_id: null,
+		agenda_completed_at: now,
 	});
 
 	if (trabajoError) {
@@ -378,7 +379,7 @@ export async function createAgendaItemAction(
 		tipo: values.tipo,
 		estado: values.estado,
 		descripcion: values.descripcion,
-		client_id: null,
+		
 		visit_id: trabajoId,
 		assignee_worker_id: values.assigneeWorkerId,
 		assignee_name: assigneeWorker.full_name,
@@ -436,7 +437,7 @@ export async function updateAgendaItemAction(
 		tipo: values.tipo,
 		estado: values.estado,
 		descripcion: values.descripcion,
-		client_id: null,
+		
 		visit_id: agendaItemId,
 		assignee_worker_id: values.assigneeWorkerId,
 		assignee_name: assigneeWorker.full_name,
@@ -453,21 +454,21 @@ export async function updateAgendaItemAction(
 				supabase
 					.from("trabajos")
 					.select(
-						"id, current_stage, status, intake_name, intake_first_name, intake_paternal_last_name, intake_maternal_last_name, intake_phone, intake_address_text, intake_latitude, intake_longitude, work_type, client_id, agenda_completed_at, visita_completed_at",
+						"id, current_stage, status, intake_name, intake_first_name, intake_paternal_last_name, intake_maternal_last_name, intake_phone, intake_address_text, intake_latitude, intake_longitude, work_type, agenda_completed_at, visita_completed_at",
 					)
 					.eq("id", agendaItemId)
 					.maybeSingle(),
 				supabase
 					.from("trabajo_agenda_stage")
 					.select(
-						"trabajo_id, appointment_at, work_type, first_name, paternal_last_name, maternal_last_name, assignee_worker_id, assignee_name, note, contact_name, contact_phone, address_text, latitude, longitude, client_id, completed_at",
+						"trabajo_id, appointment_at, work_type, first_name, paternal_last_name, maternal_last_name, assignee_worker_id, assignee_name, note, contact_name, contact_phone, address_text, latitude, longitude, completed_at",
 					)
 					.eq("trabajo_id", agendaItemId)
 					.maybeSingle(),
 				supabase
 					.from("agenda_items")
 					.select(
-						"id, fecha, titulo, tipo, estado, descripcion, client_id, visit_id, assignee_worker_id, assignee_name",
+						"id, fecha, titulo, tipo, estado, descripcion, visit_id, assignee_worker_id, assignee_name",
 					)
 					.eq("id", agendaItemId)
 					.maybeSingle(),
@@ -500,7 +501,7 @@ export async function updateAgendaItemAction(
 				intake_latitude: values.latitude,
 				intake_longitude: values.longitude,
 				work_type: values.work_type,
-				client_id: null,
+				
 			})
 			.eq("id", agendaItemId);
 

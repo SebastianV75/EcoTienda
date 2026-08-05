@@ -3,22 +3,33 @@ import { notFound } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
+import { buildTrabajoPreviewSubject } from "@/features/documents/preview-data";
 import { getDescargablesDocumentReadiness } from "@/features/documents/descargables-readiness";
 import { composeTrabajoDocumentDefaults } from "@/features/trabajos/defaults";
 import { DescargablesCompletionForm } from "@/features/trabajos/descargables-completion-form";
 import { CotizacionForm } from "@/features/trabajos/cotizacion-form";
 import { isTrabajoDescargablesReady } from "@/features/trabajos/rules";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
+import { getQuotationByTrabajoId } from "@/features/quotations/data";
+import { DeleteTrabajoButton } from "@/features/trabajos/delete-trabajo-button";
+import { TrabajoDetailRealtimeListener } from "@/features/trabajos/components/trabajo-detail-realtime-listener";
 
 import { trabajoStageLabels } from "@/types/trabajo";
 import { TrabajoTimeline } from "@/features/trabajos/trabajo-timeline";
 import { TrabajoStageSection } from "@/features/trabajos/components/trabajo-stage-section";
 import { VisitaAttributeGroup } from "@/features/trabajos/components/visita-attribute-group";
+import { VisitaAttributeImage } from "@/features/trabajos/components/visita-attribute-image";
 import { VentaForm } from "@/features/trabajos/venta-form";
+import { ConfirmQuotationButton } from "@/features/trabajos/components/confirm-quotation-button";
+import { DocumentInfoForm } from "@/features/trabajos/document-info-form";
 
 function formatDate(dateString: string | null | undefined) {
 	if (!dateString) return "—";
-	return new Date(dateString).toLocaleDateString("es-MX", {
+	// Date-only values represent a calendar day, not UTC midnight.
+	const date = /^\d{4}-\d{2}-\d{2}$/.test(dateString)
+		? new Date(`${dateString}T12:00:00`)
+		: new Date(dateString);
+	return date.toLocaleDateString("es-MX", {
 		day: "2-digit",
 		month: "2-digit",
 		year: "numeric",
@@ -59,6 +70,7 @@ export default async function TrabajoDetailPage({
 	const { id } = await params;
 
 	const trabajo = await getTrabajoDocumentById(id);
+	const linkedQuotation = await getQuotationByTrabajoId(id);
 
 	if (!trabajo) {
 		notFound();
@@ -66,19 +78,32 @@ export default async function TrabajoDetailPage({
 
 	const currentStage = trabajo.current_stage;
 	const completedStages = [
-		...(trabajo.agenda ? ["agenda"] : []),
-		...(trabajo.visita ? ["visita"] : []),
-		...(trabajo.cotizacion?.completed_at ? ["cotizacion"] : []),
-		...(trabajo.venta ? ["venta"] : []),
+		...(trabajo.agenda_completed_at ? ["agenda"] : []),
+		...(trabajo.visita_completed_at ? ["visita"] : []),
+		...(trabajo.cotizacion_completed_at ? ["cotizacion"] : []),
+		...(trabajo.venta_completed_at ? ["venta"] : []),
 		...(trabajo.descargables_completed_at ? ["descargables"] : []),
 	];
 
-	const clientName = trabajo.client?.full_name ?? trabajo.intake_name;
+	const documentDefaults = composeTrabajoDocumentDefaults(trabajo);
+	const clientName = documentDefaults.client_name;
 	const completedStageCount = completedStages.length;
-	const quotationDefaults = composeTrabajoDocumentDefaults(trabajo).quotation;
-	const isCotizacionEditable = currentStage === "cotizacion" && !trabajo.cotizacion?.completed_at;
+	const quotationDefaults = documentDefaults.quotation;
+	const isCotizacionEditable =
+		currentStage === "cotizacion" && !trabajo.cotizacion?.completed_at;
 	const isDescargablesReady = isTrabajoDescargablesReady(trabajo);
 	const documentReadiness = getDescargablesDocumentReadiness(trabajo);
+	const documentMissingFields = Array.from(
+		new Set(
+			Object.values(documentReadiness).flatMap(
+				(readiness) => readiness.missing,
+			),
+		),
+	);
+	const documentPreviewSubject = buildTrabajoPreviewSubject(
+		trabajo,
+		"diagrama-unifilar",
+	);
 	const descargablesDocuments = [
 		{
 			key: "carta-poder",
@@ -90,14 +115,16 @@ export default async function TrabajoDetailPage({
 		{
 			key: "ubicacion-cliente",
 			title: "Ubicación del cliente",
-			description: "Revisa la ubicación guardada antes de imprimir o compartir.",
+			description:
+				"Revisa la ubicación guardada antes de imprimir o compartir.",
 			href: `/admin/documents/ubicacion-cliente/preview?trabajoId=${trabajo.id}`,
 			readiness: documentReadiness["ubicacion-cliente"],
 		},
 		{
 			key: "diagrama-unifilar",
 			title: "Diagrama unifilar",
-			description: "Verifica el panel de datos del sistema antes de cerrar la etapa.",
+			description:
+				"Verifica el panel de datos del sistema antes de cerrar la etapa.",
 			href: `/admin/documents/diagrama-unifilar/preview?trabajoId=${trabajo.id}`,
 			readiness: documentReadiness["diagrama-unifilar"],
 		},
@@ -135,9 +162,16 @@ export default async function TrabajoDetailPage({
 								</div>
 							</div>
 
-							<Link href="/admin/trabajos" className="ui-secondary-action shrink-0">
-								Volver a Trabajos
-							</Link>
+							<div className="flex gap-2">
+								<DeleteTrabajoButton trabajoId={trabajo.id} />
+								<Link
+									href="/admin/trabajos"
+									className="ui-secondary-action shrink-0"
+								>
+									Volver a Trabajos
+								</Link>
+							</div>
+							<TrabajoDetailRealtimeListener trabajoId={trabajo.id} />
 						</div>
 
 						<div className="rounded-card border border-[rgba(13,79,46,0.08)] bg-[rgba(244,247,244,0.72)] px-3 py-4 sm:px-4">
@@ -155,6 +189,7 @@ export default async function TrabajoDetailPage({
 						title="Agenda"
 						stage="agenda"
 						isCompleted={completedStages.includes("agenda")}
+						isCurrentStage={currentStage === "agenda"}
 					>
 						{!trabajo.agenda ? (
 							<p className="text-sm text-[var(--muted)]">
@@ -222,9 +257,24 @@ export default async function TrabajoDetailPage({
 											rel="noopener noreferrer"
 											className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-[var(--brand-deep)] transition-colors hover:bg-emerald-100"
 										>
-											<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+											<svg
+												className="h-4 w-4"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+												/>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+												/>
 											</svg>
 											Ver en Google Maps
 										</a>
@@ -239,6 +289,7 @@ export default async function TrabajoDetailPage({
 						title="Visita Técnica"
 						stage="visita"
 						isCompleted={completedStages.includes("visita")}
+						isCurrentStage={currentStage === "visita"}
 					>
 						{!trabajo.visita ? (
 							<p className="text-sm text-[var(--muted)]">
@@ -307,9 +358,29 @@ export default async function TrabajoDetailPage({
 										<p className="text-xs font-medium text-[var(--brand-strong)]">
 											Recibo de luz
 										</p>
-										<p className="text-sm text-[var(--foreground)]">
-											Asset ID: {trabajo.visita.utility_bill_asset_id}
+										{/^https?:\/\/|^data:image\//i.test(
+											trabajo.visita.utility_bill_asset_id,
+										) ? (
+											<VisitaAttributeImage
+												src={trabajo.visita.utility_bill_asset_id}
+												alt="Recibo de luz"
+											/>
+										) : (
+											<p className="text-sm text-[var(--foreground)]">
+												Asset ID: {trabajo.visita.utility_bill_asset_id}
+											</p>
+										)}
+									</div>
+								)}
+								{trabajo.visita.signature_asset_id && (
+									<div className="space-y-2 md:col-span-2">
+										<p className="text-xs font-medium text-[var(--brand-strong)]">
+											Firma
 										</p>
+										<VisitaAttributeImage
+											src={trabajo.visita.signature_asset_id}
+											alt="Firma del cliente"
+										/>
 									</div>
 								)}
 								<VisitaAttributeGroup
@@ -341,8 +412,58 @@ export default async function TrabajoDetailPage({
 						title="Cotización"
 						stage="cotizacion"
 						isCompleted={completedStages.includes("cotizacion")}
+						isCurrentStage={currentStage === "cotizacion"}
 					>
-						{isCotizacionEditable ? (
+						{linkedQuotation ? (
+							<div className="space-y-3">
+								<div className="flex items-center justify-between rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3">
+									<div>
+										<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
+											Cotización activa
+										</p>
+										<p className="mt-1 text-sm font-medium text-[var(--foreground)]">
+											{linkedQuotation.quotation_number ?? "Sin número"}
+											<span className="ml-2 text-xs text-[var(--muted)]">
+												{linkedQuotation.status === "draft"
+													? "Borrador"
+													: linkedQuotation.status === "sent"
+														? "Enviada"
+														: linkedQuotation.status === "accepted"
+															? "Aceptada"
+															: linkedQuotation.status}
+											</span>
+										</p>
+										<p className="mt-0.5 text-sm text-[var(--brand-deep)] font-semibold">
+											${linkedQuotation.total.toFixed(2)} MXN
+										</p>
+									</div>
+									<div className="flex gap-2">
+										{linkedQuotation.pdf_url && (
+											<a
+												href={`/api/quotations/${linkedQuotation.id}/pdf`}
+												className="rounded-full border border-[var(--brand)] bg-white px-4 py-2 text-sm font-medium text-[var(--brand)] transition duration-200 ease-out hover:bg-[var(--surface)]"
+											>
+												Descargar PDF
+											</a>
+										)}
+										<Link
+											href={`/admin/quotations/${linkedQuotation.id}/edit`}
+											className="rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
+										>
+											Editar cotización
+										</Link>
+									</div>
+								</div>
+								{currentStage === "cotizacion" ? (
+									<div className="flex justify-end">
+										<ConfirmQuotationButton
+											quotationId={linkedQuotation.id}
+											trabajoId={trabajo.id}
+										/>
+									</div>
+								) : null}
+							</div>
+						) : isCotizacionEditable ? (
 							<CotizacionForm
 								trabajoId={trabajo.id}
 								defaultValues={quotationDefaults}
@@ -421,6 +542,7 @@ export default async function TrabajoDetailPage({
 						title="Venta"
 						stage="venta"
 						isCompleted={completedStages.includes("venta")}
+						isCurrentStage={currentStage === "venta"}
 					>
 						{!trabajo.venta ? (
 							currentStage === "venta" ? (
@@ -474,6 +596,13 @@ export default async function TrabajoDetailPage({
 								</div>
 							</div>
 						)}
+						{currentStage === "venta" ? (
+							<DocumentInfoForm
+								trabajoId={trabajo.id}
+								defaults={documentPreviewSubject}
+								missing={documentMissingFields}
+							/>
+						) : null}
 					</TrabajoStageSection>
 
 					{/* DESCARGABLES */}
@@ -481,6 +610,7 @@ export default async function TrabajoDetailPage({
 						title="Descargables"
 						stage="descargables"
 						isCompleted={completedStages.includes("descargables")}
+						isCurrentStage={currentStage === "descargables"}
 					>
 						<div className="space-y-4">
 							<div className="grid gap-3 md:grid-cols-3">
@@ -523,9 +653,12 @@ export default async function TrabajoDetailPage({
 
 							{trabajo.descargables_completed_at ? (
 								<div className="rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-4">
-									<p className="text-sm font-medium text-emerald-900">Descargables completado</p>
+									<p className="text-sm font-medium text-emerald-900">
+										Descargables completado
+									</p>
 									<p className="mt-1 text-sm text-emerald-800">
-										Se marcó el {formatDateTime(trabajo.descargables_completed_at)}.
+										Se marcó el{" "}
+										{formatDateTime(trabajo.descargables_completed_at)}.
 									</p>
 								</div>
 							) : (
@@ -533,7 +666,9 @@ export default async function TrabajoDetailPage({
 									<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 										<div className="space-y-1">
 											<p className="text-sm font-medium text-[var(--brand-deep)]">
-												{isDescargablesReady ? "Listo para completar" : "Aún no se puede completar"}
+												{isDescargablesReady
+													? "Listo para completar"
+													: "Aún no se puede completar"}
 											</p>
 											<p className="text-sm text-[var(--muted)]">
 												{isDescargablesReady
@@ -541,7 +676,9 @@ export default async function TrabajoDetailPage({
 													: "La etapa se habilita cuando Venta esté completada."}
 											</p>
 										</div>
-										{isDescargablesReady ? <DescargablesCompletionForm trabajoId={trabajo.id} /> : null}
+										{isDescargablesReady ? (
+											<DescargablesCompletionForm trabajoId={trabajo.id} />
+										) : null}
 									</div>
 								</div>
 							)}

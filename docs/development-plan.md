@@ -21,7 +21,7 @@ Build a private internal web platform for EcoTienda that works well on mobile de
 ## Team ownership
 
 | Area | Owner | Notes |
-|------|-------|-------|
+| ------ | ------- | ------- |
 | Downloadable documents | Sebas | Highest priority |
 | Quotations | Darian | Second priority |
 | Technical visits | Shared later | Third priority, depends on foundation |
@@ -36,7 +36,7 @@ Build a private internal web platform for EcoTienda that works well on mobile de
 ## Official stack
 
 | Layer | Decision |
-|-------|----------|
+| ------- | ---------- |
 | App framework | Next.js |
 | Language | TypeScript |
 | UI | Tailwind CSS |
@@ -243,7 +243,7 @@ Exit criteria:
 ## Proposed first milestones
 
 | Milestone | Goal |
-|-----------|------|
+| ----------- | ------ |
 | M1 | Repo + app bootstrap + Supabase connection |
 | M2 | Auth + roles + protected app shell |
 | M3 | First downloadable document end to end |
@@ -257,6 +257,14 @@ Exit criteria:
 - Finish shared foundation before parallelizing complex module work.
 - Do not start technical visits before auth, roles, PDF flow, and shared data patterns are stable.
 - Protect review scope to avoid oversized changes.
+
+## Workflow compatibility notes
+
+The current workflow is centered on `Trabajo` while preserving a temporary compatibility bridge for legacy data.
+
+- Agenda still bridges into `agenda_items` where needed.
+- `client_id` can remain optional for late compatibility on legacy records.
+- Document previews should prefer `trabajoId` templates and fall back to older client-based entry points only when required.
 
 ## Open decisions
 

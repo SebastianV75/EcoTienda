@@ -1,15 +1,8 @@
 import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { Skeleton } from "@/components/ui/feedback";
 
-function Skeleton({ className = "" }: { className?: string }) {
-	return (
-		<div
-			aria-hidden="true"
-			className={`animate-pulse motion-reduce:animate-none rounded-none bg-[rgba(13,79,46,0.08)] ${className}`}
-		/>
-	);
-}
 
 function StageCardSkeleton({ children }: { children: ReactNode }) {
 	return (

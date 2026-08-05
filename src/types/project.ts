@@ -18,16 +18,8 @@ export const postSaleSteps = [
 
 export type PostSaleStep = (typeof postSaleSteps)[number];
 
-export type ProjectClientSummary = {
-	id: string;
-	full_name: string;
-	phone: string;
-	rpu: string;
-};
-
 export type Project = {
 	id: string;
-	client_id: string;
 	stage: ProjectStage;
 	post_sale_step: PostSaleStep | null;
 	quotation_id: string | null;
@@ -36,7 +28,6 @@ export type Project = {
 	stage_entered_at: string;
 	created_at: string;
 	updated_at: string;
-	client?: ProjectClientSummary | null;
 };
 
 export const projectStageLabels: Record<ProjectStage, string> = {

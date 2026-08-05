@@ -2,6 +2,9 @@
 
 import { useActionState, useMemo, useState } from "react";
 
+import { ActionButton } from "@/components/ui/action-button";
+import { Input, Select, Textarea } from "@/components/ui/field";
+
 import {
 	createAgendaItemAction,
 	updateAgendaItemAction,
@@ -59,7 +62,7 @@ export function AgendaItemForm({
 }: AgendaItemFormProps) {
 	const action =
 		mode === "create" ? createAgendaItemAction : updateAgendaItemAction;
-	const [state, formAction, isPending] = useActionState(action, initialState);
+	const [state, formAction] = useActionState(action, initialState);
 	const initialWorkerId = useMemo(() => {
 		if (defaultValues.assignee_worker_id.trim()) {
 			return defaultValues.assignee_worker_id;
@@ -230,14 +233,14 @@ export function AgendaItemForm({
 	return (
 		<form action={formAction} className="space-y-5">
 			{mode === "edit" && agendaItemId ? (
-				<input type="hidden" name="id" value={agendaItemId} />
+				<Input type="hidden" name="id" value={agendaItemId} />
 			) : null}
-			<input type="hidden" name="tipo" value={defaultValues.tipo} />
-			<input type="hidden" name="estado" value={defaultValues.estado} />
-			<input type="hidden" name="assignee_name" value={assigneeSnapshot} />
-			<input type="hidden" name="work_type" value={workTypeLabel} />
-			<input type="hidden" name="contact_name" value={contactName} />
-			<input type="hidden" name="email" value={email} />
+			<Input type="hidden" name="tipo" value={defaultValues.tipo} />
+			<Input type="hidden" name="estado" value={defaultValues.estado} />
+			<Input type="hidden" name="assignee_name" value={assigneeSnapshot} />
+			<Input type="hidden" name="work_type" value={workTypeLabel} />
+			<Input type="hidden" name="contact_name" value={contactName} />
+			<Input type="hidden" name="email" value={email} />
 
 			<div className="rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-4 sm:px-5">
 				<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
@@ -263,7 +266,7 @@ export function AgendaItemForm({
 					>
 						Título del trabajo
 					</label>
-					<input
+					<Input
 						id="title"
 						name="title"
 						value={title}
@@ -285,7 +288,7 @@ export function AgendaItemForm({
 					>
 						Fecha
 					</label>
-					<input
+					<Input
 						id="fecha"
 						name="fecha"
 						type="date"
@@ -302,7 +305,7 @@ export function AgendaItemForm({
 					>
 						Hora
 					</label>
-					<input
+					<Input
 						id="hora"
 						name="hora"
 						type="time"
@@ -319,7 +322,7 @@ export function AgendaItemForm({
 					>
 						Tipo de trabajo
 					</label>
-					<select
+					<Select
 						id="work_type_choice"
 						name="work_type_choice"
 						value={workTypeChoice}
@@ -336,7 +339,7 @@ export function AgendaItemForm({
 								{label}
 							</option>
 						))}
-					</select>
+					</Select>
 				</div>
 
 				<div className="space-y-2.5">
@@ -346,7 +349,7 @@ export function AgendaItemForm({
 					>
 						Trabajador asignado
 					</label>
-					<select
+					<Select
 						id="assignee_worker_id"
 						name="assignee_worker_id"
 						value={selectedWorkerId}
@@ -360,7 +363,7 @@ export function AgendaItemForm({
 								{worker.full_name} · {workerRoleLabels[worker.role]}
 							</option>
 						))}
-					</select>
+					</Select>
 					<p className="text-xs leading-6 text-[var(--muted)]">
 						Se guarda el nombre del trabajador como snapshot legible.
 					</p>
@@ -374,7 +377,7 @@ export function AgendaItemForm({
 						>
 							Otro tipo de trabajo
 						</label>
-						<input
+						<Input
 							id="work_type_other"
 							name="work_type_other"
 							value={workTypeOther}
@@ -392,7 +395,7 @@ export function AgendaItemForm({
 					>
 						Nombre
 					</label>
-					<input
+					<Input
 						id="first_name"
 						name="first_name"
 						value={firstName}
@@ -410,7 +413,7 @@ export function AgendaItemForm({
 					>
 						Apellido paterno
 					</label>
-					<input
+					<Input
 						id="paternal_last_name"
 						name="paternal_last_name"
 						value={paternalLastName}
@@ -428,7 +431,7 @@ export function AgendaItemForm({
 					>
 						Apellido materno
 					</label>
-					<input
+					<Input
 						id="maternal_last_name"
 						name="maternal_last_name"
 						value={maternalLastName}
@@ -445,7 +448,7 @@ export function AgendaItemForm({
 				>
 					Teléfono
 				</label>
-				<input
+				<Input
 					id="contact_phone"
 					name="contact_phone"
 					defaultValue={defaultValues.contact_phone}
@@ -462,7 +465,7 @@ export function AgendaItemForm({
 				>
 					Email
 				</label>
-				<input
+				<Input
 					id="email"
 					name="email"
 					type="email"
@@ -480,7 +483,7 @@ export function AgendaItemForm({
 					>
 						Email
 					</label>
-					<input
+					<Input
 						id="email"
 						name="email"
 						type="email"
@@ -498,7 +501,7 @@ export function AgendaItemForm({
 					>
 						Dirección
 					</label>
-					<textarea
+					<Textarea
 						id="address_text"
 						name="address_text"
 						value={addressText}
@@ -531,7 +534,7 @@ export function AgendaItemForm({
 					>
 						Latitud
 					</label>
-					<input
+					<Input
 						id="latitude"
 						name="latitude"
 						type="number"
@@ -551,7 +554,7 @@ export function AgendaItemForm({
 					>
 						Longitud
 					</label>
-					<input
+					<Input
 						id="longitude"
 						name="longitude"
 						type="number"
@@ -586,7 +589,7 @@ export function AgendaItemForm({
 					>
 						Nota
 					</label>
-					<textarea
+					<Textarea
 						id="descripcion"
 						name="descripcion"
 						defaultValue={defaultValues.descripcion}
@@ -618,19 +621,13 @@ export function AgendaItemForm({
 				</p>
 			) : null}
 
-			<button
+			<ActionButton
 				type="submit"
-				disabled={isPending}
+				pendingLabel={mode === "create" ? "Guardando..." : "Actualizando..."}
 				className="w-full rounded-full bg-[var(--brand)] px-5 py-3.5 font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
 			>
-				{isPending
-					? mode === "create"
-						? "Guardando..."
-						: "Actualizando..."
-					: mode === "create"
-						? "Crear trabajo en Agenda"
-						: "Guardar ajuste de Agenda"}
-			</button>
+				{mode === "create" ? "Crear trabajo en Agenda" : "Guardar ajuste de Agenda"}
+			</ActionButton>
 		</form>
 	);
 }

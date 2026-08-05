@@ -61,3 +61,9 @@ on public.agenda_items
 for update
 using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
 with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+drop policy if exists "admins can delete agenda items" on public.agenda_items;
+create policy "admins can delete agenda items"
+on public.agenda_items
+for delete
+using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');

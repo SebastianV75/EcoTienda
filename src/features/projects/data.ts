@@ -5,7 +5,6 @@ import {
 	projectStageLabels,
 	type PostSaleStep,
 	type Project,
-	type ProjectClientSummary,
 	type ProjectStage,
 } from "@/types/project";
 
@@ -15,7 +14,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 type ProjectRow = {
 	id: string;
-	client_id: string;
 	stage: ProjectStage;
 	post_sale_step: PostSaleStep | null;
 	quotation_id: string | null;
@@ -24,12 +22,10 @@ type ProjectRow = {
 	stage_entered_at: string;
 	created_at: string;
 	updated_at: string;
-	client: ProjectClientSummary | ProjectClientSummary[] | null;
 };
 
 const projectSelect = `
 	id,
-	client_id,
 	stage,
 	post_sale_step,
 	quotation_id,
@@ -37,33 +33,12 @@ const projectSelect = `
 	activated_at,
 	stage_entered_at,
 	created_at,
-	updated_at,
-	client:clients (
-		id,
-		full_name,
-		phone,
-		rpu
-	)
+	updated_at
 `;
-
-function normalizeClient(
-	client: ProjectRow["client"],
-): ProjectClientSummary | null {
-	if (!client) {
-		return null;
-	}
-
-	if (Array.isArray(client)) {
-		return client[0] ?? null;
-	}
-
-	return client;
-}
 
 function normalizeProject(row: ProjectRow): Project {
 	return {
 		id: row.id,
-		client_id: row.client_id,
 		stage: row.stage,
 		post_sale_step: row.post_sale_step,
 		quotation_id: row.quotation_id,
@@ -72,7 +47,6 @@ function normalizeProject(row: ProjectRow): Project {
 		stage_entered_at: row.stage_entered_at,
 		created_at: row.created_at,
 		updated_at: row.updated_at,
-		client: normalizeClient(row.client),
 	};
 }
 
@@ -149,7 +123,7 @@ export const getFollowUpProjects = cache(async (): Promise<FollowUpProject[]> =>
 
 	const { data: notDoneVisits, error } = await supabase
 		.from("agenda_items")
-		.select("client_id")
+		.select("id")
 		.eq("tipo", "visita_tecnica")
 		.eq("estado", "no_realizada");
 
@@ -157,19 +131,11 @@ export const getFollowUpProjects = cache(async (): Promise<FollowUpProject[]> =>
 		throw new Error(`No se pudieron cargar las visitas no realizadas. ${error.message}`);
 	}
 
-	const notDoneClientIds = new Set(
-		(notDoneVisits ?? []).map((visit) => visit.client_id),
-	);
 	const followUpBoundary = Date.now() - FOLLOW_UP_AFTER_DAYS * DAY_MS;
 
 	const followUps: FollowUpProject[] = [];
 
 	for (const project of candidates) {
-		if (project.stage === "visita" && notDoneClientIds.has(project.client_id)) {
-			followUps.push({ project, reason: "Visita no realizada" });
-			continue;
-		}
-
 		const stageEnteredAt = new Date(project.stage_entered_at).getTime();
 
 		if (stageEnteredAt <= followUpBoundary) {

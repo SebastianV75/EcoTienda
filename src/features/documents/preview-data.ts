@@ -1,9 +1,7 @@
-import type { ClientRecord } from "@/types/client";
-
 import { composeTrabajoDocumentDefaults } from "@/features/trabajos/defaults";
 import type { TrabajoDocumentSource } from "@/features/trabajos/data";
 
-import type { DocumentTemplateSlug } from "./client-preview-selector";
+import type { DocumentTemplateSlug } from "./trabajo-preview-selector";
 
 export type DocumentPreviewSubject = {
 	full_name: string;
@@ -21,55 +19,30 @@ export type DocumentPreviewSubject = {
 	estimated_monthly_generation: string | null;
 };
 
-function pickText(...values: Array<string | null | undefined>): string {
-	return (
-		values.find((value) => typeof value === "string" && value.trim().length > 0)?.trim() ?? ""
-	);
-}
-
-function toNullableNumber(value: unknown): number | null {
-	if (typeof value === "number" && Number.isFinite(value)) {
-		return value;
-	}
-
-	return null;
-}
-
 const numericPreviewFields = new Set<keyof DocumentPreviewSubject>([
 	"latitude",
 	"longitude",
 ]);
 
-function coercePreviewValue(
-	fieldKey: keyof DocumentPreviewSubject,
-	value: unknown,
-): string | number | null {
-	if (value === null) {
+function coerceNumericPreviewValue(value: unknown): number | null {
+	if (typeof value === "number" && Number.isFinite(value)) {
+		return value;
+	}
+
+	if (typeof value !== "string") {
 		return null;
 	}
 
-	if (typeof value === "boolean") {
-		return value ? "true" : "false";
-	}
-
-	if (numericPreviewFields.has(fieldKey)) {
-		if (typeof value === "number" && Number.isFinite(value)) {
-			return value;
-		}
-
-		if (typeof value === "string") {
-			const trimmed = value.trim();
-			if (!trimmed) {
-				return null;
-			}
-
-			const parsed = Number(trimmed);
-			return Number.isFinite(parsed) ? parsed : null;
-		}
-
+	const trimmed = value.trim();
+	if (!trimmed) {
 		return null;
 	}
 
+	const parsed = Number(trimmed);
+	return Number.isFinite(parsed) ? parsed : null;
+}
+
+function coerceTextPreviewValue(value: unknown): string | null {
 	if (typeof value === "string") {
 		const trimmed = value.trim();
 		return trimmed.length > 0 ? trimmed : null;
@@ -80,6 +53,23 @@ function coercePreviewValue(
 	}
 
 	return null;
+}
+
+function coercePreviewValue(
+	fieldKey: keyof DocumentPreviewSubject,
+	value: unknown,
+): string | number | null {
+	if (value === null || value === undefined) {
+		return null;
+	}
+
+	if (typeof value === "boolean") {
+		return value ? "true" : "false";
+	}
+
+	return numericPreviewFields.has(fieldKey)
+		? coerceNumericPreviewValue(value)
+		: coerceTextPreviewValue(value);
 }
 
 function applyOverrides(
@@ -105,51 +95,31 @@ function applyOverrides(
 	return next;
 }
 
-export function buildClientPreviewSubject(
-	client: ClientRecord,
-): DocumentPreviewSubject {
-	return {
-		full_name: client.full_name,
-		phone: client.phone,
-		address: client.address,
-		neighborhood: client.neighborhood,
-		rfc: client.rfc,
-		rpu: client.rpu,
-		latitude: toNullableNumber(client.latitude),
-		longitude: toNullableNumber(client.longitude),
-		panel_count: client.panel_count,
-		panel_power: client.panel_power,
-		inverter: client.inverter,
-		installed_capacity: client.installed_capacity,
-		estimated_monthly_generation: client.estimated_monthly_generation,
-	};
-}
-
 export function buildTrabajoPreviewSubject(
 	trabajo: TrabajoDocumentSource,
 	template: DocumentTemplateSlug,
 ): DocumentPreviewSubject {
 	const defaults = composeTrabajoDocumentDefaults(trabajo);
-	const client = trabajo.client;
 	const subject: DocumentPreviewSubject = {
-		full_name: pickText(defaults.client_name, client?.full_name, trabajo.intake_name),
-		phone: pickText(defaults.client_phone, client?.phone, trabajo.intake_phone),
-		address: pickText(defaults.address_text, client?.address, trabajo.intake_address_text),
-		neighborhood: client?.neighborhood ?? null,
-		rfc: pickText(defaults.quotation.rfc, client?.rfc),
-		rpu: pickText(defaults.quotation.rpu, client?.rpu),
-		latitude: defaults.latitude ?? client?.latitude ?? null,
-		longitude: defaults.longitude ?? client?.longitude ?? null,
-		panel_count: client?.panel_count ?? null,
-		panel_power: client?.panel_power ?? null,
-		inverter: client?.inverter ?? null,
-		installed_capacity: client?.installed_capacity ?? null,
-		estimated_monthly_generation: client?.estimated_monthly_generation ?? null,
+		full_name: defaults.client_name,
+		phone: defaults.client_phone,
+		address: defaults.address_text,
+		neighborhood: null,
+		rfc: defaults.quotation.rfc,
+		rpu: defaults.quotation.rpu,
+		latitude: defaults.latitude,
+		longitude: defaults.longitude,
+		panel_count: null,
+		panel_power: null,
+		inverter: null,
+		installed_capacity: null,
+		estimated_monthly_generation: null,
 	};
 
 	const templateOverrides = trabajo.document_overrides.filter(
 		(override) =>
-			override.template_key === template && override.export_instance_key === "preview",
+			override.template_key === template &&
+			override.export_instance_key === "preview",
 	);
 
 	return applyOverrides(subject, templateOverrides);

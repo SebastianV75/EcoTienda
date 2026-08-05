@@ -1,6 +1,7 @@
 import { cache } from "react";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { calculateQuotationTotals } from "./quotation-items";
 import type { Supplier } from "@/types/quotation";
 
 export type QuotationListItem = {
@@ -24,7 +25,6 @@ export type QuotationItem = {
 	quantity: number;
 	unit: string;
 	unit_price: number;
-	tax_rate: number;
 	amount: number;
 	sort_order: number;
 };
@@ -88,7 +88,7 @@ export const getSupplierById = cache(async (id: string) => {
 
 export const getQuotations = cache(async (query?: string) => {
 	const supabase = await createSupabaseServerClient();
-	
+
 	// Primero obtener los trabajos en etapa cotizacion
 	const { data: trabajosData, error: trabajosError } = await supabase
 		.from("trabajos")
@@ -96,7 +96,9 @@ export const getQuotations = cache(async (query?: string) => {
 		.eq("current_stage", "cotizacion");
 
 	if (trabajosError) {
-		throw new Error("No se pudieron cargar los trabajos en etapa de cotización.");
+		throw new Error(
+			"No se pudieron cargar los trabajos en etapa de cotización.",
+		);
 	}
 
 	const trabajoIds = (trabajosData ?? []).map((t) => t.id);
@@ -106,7 +108,12 @@ export const getQuotations = cache(async (query?: string) => {
 		.select(
 			"id, quotation_number, trabajo_id, supplier_name, project, subtotal, total, status, created_at, pdf_url",
 		)
-		.in("trabajo_id", trabajoIds.length > 0 ? trabajoIds : ["00000000-0000-0000-0000-000000000000"])
+		.in(
+			"trabajo_id",
+			trabajoIds.length > 0
+				? trabajoIds
+				: ["00000000-0000-0000-0000-000000000000"],
+		)
 		.order("created_at", { ascending: false });
 
 	if (query) {
@@ -124,7 +131,35 @@ export const getQuotations = cache(async (query?: string) => {
 		throw new Error("No se pudieron cargar las cotizaciones.");
 	}
 
-	return (data ?? []) as QuotationListItem[];
+	const quotations = (data ?? []) as QuotationListItem[];
+	if (quotations.length === 0) {
+		return quotations;
+	}
+
+	const quotationIds = quotations.map((quotation) => quotation.id);
+	const { data: itemRows, error: itemRowsError } = await supabase
+		.from("quotation_items")
+		.select("quotation_id, amount")
+		.in("quotation_id", quotationIds);
+
+	if (itemRowsError) {
+		throw new Error("No se pudieron cargar los productos de las cotizaciones.");
+	}
+
+	const itemsByQuotation = new Map<string, Array<{ amount: number }>>();
+	for (const item of itemRows ?? []) {
+		const items = itemsByQuotation.get(item.quotation_id) ?? [];
+		items.push({ amount: Number(item.amount) });
+		itemsByQuotation.set(item.quotation_id, items);
+	}
+
+	return quotations.map((quotation) => ({
+		...quotation,
+		...calculateQuotationTotals(
+			itemsByQuotation.get(quotation.id) ?? [],
+			Number(quotation.subtotal),
+		),
+	}));
 });
 
 export const getQuotationById = cache(async (id: string) => {
@@ -150,8 +185,57 @@ export const getQuotationById = cache(async (id: string) => {
 		throw new Error("No se pudieron cargar los productos.");
 	}
 
+	const quotationItems = (items ?? []) as QuotationItem[];
 	return {
 		...quotation,
-		items: (items ?? []) as QuotationItem[],
+		...calculateQuotationTotals(quotationItems, Number(quotation.subtotal)),
+		items: quotationItems,
 	} as QuotationDetail;
+});
+
+export const getQuotationByTrabajoId = cache(async (trabajoId: string) => {
+	const supabase = await createSupabaseServerClient();
+
+	const { data: quotation, error } = await supabase
+		.from("quotations")
+		.select("id, quotation_number, status, subtotal, total, pdf_url")
+		.eq("trabajo_id", trabajoId)
+		.order("created_at", { ascending: false })
+		.limit(1)
+		.maybeSingle();
+
+	if (error || !quotation) {
+		return null;
+	}
+
+	const { data: items, error: itemsError } = await supabase
+		.from("quotation_items")
+		.select("amount")
+		.eq("quotation_id", quotation.id);
+
+	if (itemsError) {
+		return quotation as {
+			id: string;
+			quotation_number: string | null;
+			status: string;
+			total: number;
+			pdf_url: string | null;
+		};
+	}
+
+	const { total } = calculateQuotationTotals(
+		(items ?? []).map((item) => ({ amount: Number(item.amount) })),
+		Number(quotation.subtotal),
+	);
+
+	return {
+		...quotation,
+		total,
+	} as {
+		id: string;
+		quotation_number: string | null;
+		status: string;
+		total: number;
+		pdf_url: string | null;
+	};
 });

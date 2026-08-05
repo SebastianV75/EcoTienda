@@ -1,6 +1,7 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 
 import { QuotationPDF } from "./pdf/quotation-pdf";
+import { calculateQuotationTotals } from "./quotation-items";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
 	Quotation,
@@ -62,42 +63,48 @@ async function getQuotationData(quotationId: string): Promise<{
 		throw new Error("No se pudieron cargar los productos.");
 	}
 
+	const quotationItems = (items ?? []) as QuotationItem[];
 	return {
-		quotation: quotation as Quotation,
-		items: (items ?? []) as QuotationItem[],
+		quotation: {
+			...(quotation as Quotation),
+			...calculateQuotationTotals(quotationItems, Number(quotation.subtotal)),
+		},
+		items: quotationItems,
 	};
 }
 
 export async function generateQuotationPDF(
 	quotationId: string,
 ): Promise<Buffer> {
-	console.log('[PDF Generator] === Iniciando generación de PDF ===');
-	console.log('[PDF Generator] Quotation ID:', quotationId);
-	
-	console.log('[PDF Generator] Paso 1: Obteniendo datos de cotización...');
+	console.log("[PDF Generator] === Iniciando generación de PDF ===");
+	console.log("[PDF Generator] Quotation ID:", quotationId);
+
+	console.log("[PDF Generator] Paso 1: Obteniendo datos de cotización...");
 	const { quotation, items } = await getQuotationData(quotationId);
-	console.log('[PDF Generator] Datos obtenidos:', {
+	console.log("[PDF Generator] Datos obtenidos:", {
 		quotationNumber: quotation.quotation_number,
-		itemsCount: items.length
+		itemsCount: items.length,
 	});
-	
-	console.log('[PDF Generator] Paso 2: Obteniendo configuración de compañía...');
-	const company = await getCompanySettings();
-	console.log('[PDF Generator] Compañía:', company.company_name);
-	
-	console.log('[PDF Generator] Paso 3: Creando documento PDF...');
-	const document = (
-		<QuotationPDF
-			quotation={quotation}
-			items={items}
-			company={company}
-		/>
+
+	console.log(
+		"[PDF Generator] Paso 2: Obteniendo configuración de compañía...",
 	);
-	
-	console.log('[PDF Generator] Paso 4: Renderizando PDF a buffer...');
+	const company = await getCompanySettings();
+	console.log("[PDF Generator] Compañía:", company.company_name);
+
+	console.log("[PDF Generator] Paso 3: Creando documento PDF...");
+	const document = (
+		<QuotationPDF quotation={quotation} items={items} company={company} />
+	);
+
+	console.log("[PDF Generator] Paso 4: Renderizando PDF a buffer...");
 	const buffer = await renderToBuffer(document);
-	console.log('[PDF Generator] PDF generado exitosamente, tamaño:', buffer.length, 'bytes');
-	
+	console.log(
+		"[PDF Generator] PDF generado exitosamente, tamaño:",
+		buffer.length,
+		"bytes",
+	);
+
 	return buffer;
 }
 
@@ -105,10 +112,10 @@ export async function uploadPDFToStorage(
 	buffer: Buffer,
 	filename: string,
 ): Promise<string> {
-	console.log('[PDF Generator] Paso 5: Subiendo PDF a Storage...');
-	console.log('[PDF Generator] Filename:', filename);
-	console.log('[PDF Generator] Buffer size:', buffer.length, 'bytes');
-	
+	console.log("[PDF Generator] Paso 5: Subiendo PDF a Storage...");
+	console.log("[PDF Generator] Filename:", filename);
+	console.log("[PDF Generator] Buffer size:", buffer.length, "bytes");
+
 	const supabase = await createSupabaseServerClient();
 
 	const { data, error } = await supabase.storage
@@ -119,29 +126,29 @@ export async function uploadPDFToStorage(
 		});
 
 	if (error) {
-		console.error('[PDF Generator] Error en upload:', error.message);
-		console.error('[PDF Generator] Error details:', error);
+		console.error("[PDF Generator] Error en upload:", error.message);
+		console.error("[PDF Generator] Error details:", error);
 		throw new Error(`No se pudo subir el PDF: ${error.message}`);
 	}
 
-	console.log('[PDF Generator] PDF subido exitosamente, path:', data.path);
+	console.log("[PDF Generator] PDF subido exitosamente, path:", data.path);
 
 	const { data: urlData } = supabase.storage
 		.from("quotations")
 		.getPublicUrl(data.path);
 
-	console.log('[PDF Generator] URL pública:', urlData.publicUrl);
+	console.log("[PDF Generator] URL pública:", urlData.publicUrl);
 
 	return urlData.publicUrl;
 }
 
 export async function generateAndSavePDF(quotationId: string): Promise<string> {
-	console.log('[PDF Generator] === generateAndSavePDF ===');
-	console.log('[PDF Generator] Quotation ID:', quotationId);
-	
+	console.log("[PDF Generator] === generateAndSavePDF ===");
+	console.log("[PDF Generator] Quotation ID:", quotationId);
+
 	const supabase = await createSupabaseServerClient();
 
-	console.log('[PDF Generator] Obteniendo quotation_number...');
+	console.log("[PDF Generator] Obteniendo quotation_number...");
 	const { data: quotation, error } = await supabase
 		.from("quotations")
 		.select("quotation_number")
@@ -149,38 +156,41 @@ export async function generateAndSavePDF(quotationId: string): Promise<string> {
 		.single();
 
 	if (error) {
-		console.error('[PDF Generator] Error obteniendo quotation:', error.message);
+		console.error("[PDF Generator] Error obteniendo quotation:", error.message);
 		throw new Error(`No se pudo obtener la cotización: ${error.message}`);
 	}
 
 	if (!quotation?.quotation_number) {
-		console.error('[PDF Generator] quotation_number es null o undefined');
-		throw new Error('quotation_number no encontrado');
+		console.error("[PDF Generator] quotation_number es null o undefined");
+		throw new Error("quotation_number no encontrado");
 	}
 
-	console.log('[PDF Generator] Quotation number:', quotation.quotation_number);
+	console.log("[PDF Generator] Quotation number:", quotation.quotation_number);
 
 	const filename = `${quotation.quotation_number}.pdf`;
-	console.log('[PDF Generator] Generando PDF...');
-	
+	console.log("[PDF Generator] Generando PDF...");
+
 	const buffer = await generateQuotationPDF(quotationId);
-	
-	console.log('[PDF Generator] Subiendo a Storage...');
+
+	console.log("[PDF Generator] Subiendo a Storage...");
 	const pdfUrl = await uploadPDFToStorage(buffer, filename);
 
-	console.log('[PDF Generator] Actualizando pdf_url en base de datos...');
+	console.log("[PDF Generator] Actualizando pdf_url en base de datos...");
 	const { error: updateError } = await supabase
 		.from("quotations")
 		.update({ pdf_url: pdfUrl })
 		.eq("id", quotationId);
 
 	if (updateError) {
-		console.error('[PDF Generator] Error actualizando pdf_url:', updateError.message);
+		console.error(
+			"[PDF Generator] Error actualizando pdf_url:",
+			updateError.message,
+		);
 		throw new Error(`No se pudo actualizar pdf_url: ${updateError.message}`);
 	}
 
-	console.log('[PDF Generator] === Proceso completado exitosamente ===');
-	console.log('[PDF Generator] PDF URL:', pdfUrl);
+	console.log("[PDF Generator] === Proceso completado exitosamente ===");
+	console.log("[PDF Generator] PDF URL:", pdfUrl);
 
 	return pdfUrl;
 }

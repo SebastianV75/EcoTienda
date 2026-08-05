@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
+import { EmptyState } from "@/components/empty-state";
 import { SaleCard } from "@/features/sales/sale-card";
 import { getSales, type SaleListItem } from "@/features/sales/data";
 import { requireRole } from "@/features/auth/session";
@@ -19,7 +20,7 @@ export default async function SalesPage({
 		<AppShell
 			role="admin"
 			title="Ventas"
-			description="Trabajos en etapa de venta. Confirma las ventas para avanzar a descargables."
+			description="Gestiona las ventas confirmadas y marca las que no se concretaron."
 			email={user.email}
 		>
 			<div className="space-y-3">
@@ -32,14 +33,22 @@ export default async function SalesPage({
 							</h1>
 							<div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--muted)]">
 								<span>
-									<strong className="font-semibold text-[var(--brand-deep)]">{sales.length}</strong>{" "}
-									en etapa de venta
+									<strong className="font-semibold text-[var(--brand-deep)]">
+										{sales.length}
+									</strong>{" "}
+									trabajos en venta
 								</span>
 								<span>
 									<strong className="font-semibold text-[var(--brand-deep)]">
 										{sales.filter((s) => s.completed).length}
 									</strong>{" "}
-									completadas
+									ventas realizadas
+								</span>
+								<span>
+									<strong className="font-semibold text-[var(--brand-deep)]">
+										{sales.filter((s) => !s.completed).length}
+									</strong>{" "}
+									pendientes de confirmar
 								</span>
 							</div>
 						</div>
@@ -80,41 +89,24 @@ export default async function SalesPage({
 						))}
 					</section>
 				) : (
-					<section className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
-						<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
-							<svg
-								className="h-10 w-10 text-green-400"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-								/>
-							</svg>
-						</div>
-						<h3 className="text-lg font-semibold text-gray-900">
-							{query
-								? "No se encontraron ventas"
-								: "No hay ventas pendientes"}
-						</h3>
-						<p className="mt-2 text-sm text-gray-600">
-							{query
+					<EmptyState
+						eyebrow="Sin resultados"
+						title={
+							query ? "No se encontraron ventas" : "No hay ventas pendientes"
+						}
+						description={
+							query
 								? "Intenta con otra búsqueda."
-								: "Las ventas aparecerán aquí cuando se confirme una cotización."}
-						</p>
-						{!query && (
-							<Link
-								href="/admin/quotations"
-								className="mt-4 inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-green-700"
-							>
-								Ir a Cotizaciones
-							</Link>
-						)}
-					</section>
+								: "Las ventas aparecerán aquí cuando se confirme una cotización."
+						}
+						action={
+							!query ? (
+								<Link href="/admin/quotations" className="ui-secondary-action">
+									Ir a Cotizaciones
+								</Link>
+							) : undefined
+						}
+					/>
 				)}
 			</div>
 		</AppShell>

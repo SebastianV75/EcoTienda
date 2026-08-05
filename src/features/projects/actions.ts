@@ -28,31 +28,9 @@ export async function createProjectAction(
 		await requireRole(["admin"]);
 	}
 
-	const clientId = formData.get("client_id")?.toString().trim() ?? "";
-
-	if (!clientId) {
-		return { error: "Selecciona un cliente para crear el trabajo." };
-	}
-
 	const supabase = await createSupabaseServerClient();
 
-	const { data: existing, error: existingError } = await supabase
-		.from("projects")
-		.select("id")
-		.eq("client_id", clientId)
-		.is("activated_at", null)
-		.maybeSingle();
-
-	if (existingError) {
-		return { error: "No se pudo verificar los trabajos del cliente." };
-	}
-
-	if (existing) {
-		return { error: "Este cliente ya tiene un trabajo activo." };
-	}
-
 	const { error } = await supabase.from("projects").insert({
-		client_id: clientId,
 		stage: "agenda",
 	});
 

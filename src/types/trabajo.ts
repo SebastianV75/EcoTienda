@@ -47,7 +47,6 @@ export type Trabajo = {
 	intake_latitude: number | null;
 	intake_longitude: number | null;
 	work_type: string | null;
-	client_id: string | null;
 	agenda_completed_at: string | null;
 	visita_completed_at: string | null;
 	cotizacion_completed_at: string | null;
@@ -73,7 +72,6 @@ export type TrabajoAgendaStage = {
 	address_text: string;
 	latitude: number | null;
 	longitude: number | null;
-	client_id: string | null;
 	completed_at: string | null;
 	created_at: string;
 	updated_at: string;

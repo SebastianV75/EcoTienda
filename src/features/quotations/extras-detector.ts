@@ -124,13 +124,15 @@ export function detectRequiredExtras(visita: VisitaData): ExtraSuggestion[] {
 /**
  * Convierte las sugerencias de extras en items de cotización
  */
-export function extrasToQuotationItems(extras: ExtraSuggestion[], startOrder: number): QuotationItem[] {
+export function extrasToQuotationItems(
+	extras: ExtraSuggestion[],
+	startOrder: number,
+): QuotationItem[] {
 	return extras.map((extra, index) => ({
 		product_name: extra.product_name,
 		quantity: extra.quantity,
 		unit: "pz",
 		unit_price: extra.unit_price,
-		tax_rate: 16,
 		amount: extra.unit_price * extra.quantity,
 		sort_order: startOrder + index,
 	}));
@@ -143,7 +145,10 @@ function needsAcometida220(visita: VisitaData): boolean {
 	const pkg = visita.interest_package.toLowerCase();
 
 	// Si el voltaje actual es 110v y se necesita 220v
-	if (voltage === "110v" && (pkg.includes("minisplit") || pkg.includes("solar"))) {
+	if (
+		voltage === "110v" &&
+		(pkg.includes("minisplit") || pkg.includes("solar"))
+	) {
 		return true;
 	}
 
@@ -168,7 +173,9 @@ function needsCentroCarga(visita: VisitaData): boolean {
 }
 
 function needsDoubleStructure(visita: VisitaData): boolean {
-	const structureType = visita.roof_attributes.structure_type as string | undefined;
+	const structureType = visita.roof_attributes.structure_type as
+		| string
+		| undefined;
 	const floors = visita.house_attributes.floors as string | undefined;
 
 	// Si hay 2 niveles o estructura de 2 niveles
@@ -203,7 +210,10 @@ function needsExtraRefrigerant(visita: VisitaData): boolean {
 	const location = visita.house_attributes.location as string | undefined;
 
 	// Heurística: si la ubicación menciona distancias grandes
-	if (location && (location.includes("lejos") || location.includes("distancia"))) {
+	if (
+		location &&
+		(location.includes("lejos") || location.includes("distancia"))
+	) {
 		return true;
 	}
 
@@ -225,7 +235,10 @@ function needsExtraWiring(visita: VisitaData): boolean {
 	const location = visita.house_attributes.location as string | undefined;
 
 	// Heurística: si el centro de carga está lejos
-	if (location && (location.includes("lejos") || location.includes("distancia"))) {
+	if (
+		location &&
+		(location.includes("lejos") || location.includes("distancia"))
+	) {
 		return true;
 	}
 
@@ -233,7 +246,9 @@ function needsExtraWiring(visita: VisitaData): boolean {
 }
 
 function needsWaterproofing(visita: VisitaData): boolean {
-	const roofMaterial = visita.roof_attributes.roof_material as string | undefined;
+	const roofMaterial = visita.roof_attributes.roof_material as
+		| string
+		| undefined;
 
 	// Si el techo es de lámina o madera, puede necesitar impermeabilizante
 	if (roofMaterial === "Lámina" || roofMaterial === "Madera") {

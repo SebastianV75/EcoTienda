@@ -7,6 +7,12 @@ import { requireRole } from "@/features/auth/session";
 import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
+import { getVisitSaveRedirectPath } from "./visit-save-redirect";
+import {
+	existingAttributes,
+	existingText,
+	getExistingVisita,
+} from "./visita-action-helpers";
 
 export type VisitaPanelesActionState = {
 	error: string | null;
@@ -18,17 +24,25 @@ function getString(formData: FormData, key: string) {
 	return formData.get(key)?.toString().trim() ?? "";
 }
 
+function isUuid(value: unknown): value is string {
+	return (
+		typeof value === "string" &&
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+			value,
+		)
+	);
+}
+
 export async function saveVisitaPanelesAction(
 	_prevState: VisitaPanelesActionState,
 	formData: FormData,
 ): Promise<VisitaPanelesActionState> {
-	if (hasSupabaseEnv()) {
-		await requireRole(["admin", "technician"]);
-	}
+	const user = hasSupabaseEnv()
+		? await requireRole(["admin", "technician"])
+		: null;
 
 	const trabajoId = getString(formData, "trabajo_id");
 	const executionDate = getString(formData, "execution_date_date");
-	const executionTime = getString(formData, "execution_date_time");
 	const contactName = getString(formData, "contact_name");
 	const contactPhone = getString(formData, "contact_phone");
 	const email = getString(formData, "email");
@@ -69,21 +83,41 @@ export async function saveVisitaPanelesAction(
 		return { error: "La fecha de realización es obligatoria.", success: null };
 	}
 
-	const executionDateIso = executionTime
-		? `${executionDate}T${executionTime}:00`
-		: executionDate;
+	const parsedExecutionDate = new Date(`${executionDate}T00:00:00Z`);
+	if (
+		!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(executionDate) ||
+		Number.isNaN(parsedExecutionDate.getTime()) ||
+		parsedExecutionDate.toISOString().slice(0, 10) !== executionDate
+	) {
+		return {
+			error: "La fecha de realización no tiene un formato válido.",
+			success: null,
+		};
+	}
+
+	// La tabla guarda únicamente la fecha; la hora del formulario no se persiste.
 
 	const supabase = await createSupabaseServerClient();
+	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
-	const houseAttributes: Record<string, string> = {};
+	const houseAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"house_attributes",
+	);
 	if (hojasVisita) houseAttributes.hojas_visita = hojasVisita;
 	if (houseImage) houseAttributes.house_image = houseImage;
 	if (orientation) houseAttributes.orientation = orientation;
 	if (floors) houseAttributes.floors = floors;
 	if (email) houseAttributes.email = email;
 	if (location) houseAttributes.location = location;
+	if (utilityBill && !isUuid(utilityBill))
+		houseAttributes.utility_bill = utilityBill;
+	if (signature && !isUuid(signature)) houseAttributes.signature = signature;
 
-	const electricalAttributes: Record<string, string> = {};
+	const electricalAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"electrical_attributes",
+	);
 	if (meterFar) electricalAttributes.meter_far = meterFar;
 	if (meterClose) electricalAttributes.meter_close = meterClose;
 	if (voltage) electricalAttributes.voltage = voltage;
@@ -92,7 +126,10 @@ export async function saveVisitaPanelesAction(
 	if (loadCenter) electricalAttributes.load_center = loadCenter;
 	if (electricalRise) electricalAttributes.electrical_rise = electricalRise;
 
-	const roofAttributes: Record<string, string> = {};
+	const roofAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"roof_attributes",
+	);
 	if (hasMarineLadder) roofAttributes.has_marine_ladder = hasMarineLadder;
 	if (roofImage) roofAttributes.roof_image = roofImage;
 	if (roofMaterial) roofAttributes.roof_material = roofMaterial;
@@ -102,26 +139,58 @@ export async function saveVisitaPanelesAction(
 	if (roofMeasurements) roofAttributes.roof_measurements = roofMeasurements;
 	if (structureType) roofAttributes.structure_type = structureType;
 
-	const minisplitAttributes: Record<string, string> = {};
+	const minisplitAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"minisplit_attributes",
+	);
 	if (hasMinisplit) minisplitAttributes.has_minisplit = hasMinisplit;
 	if (minisplitSpecs) minisplitAttributes.minisplit_specs = minisplitSpecs;
 	if (minisplitPhoto) minisplitAttributes.minisplit_photo = minisplitPhoto;
 
+	const utilityBillAssetId = isUuid(utilityBill)
+		? utilityBill
+		: existingVisita && isUuid(existingVisita.utility_bill_asset_id)
+			? existingVisita.utility_bill_asset_id
+			: undefined;
+	const signatureAssetId = isUuid(signature)
+		? signature
+		: existingVisita && isUuid(existingVisita.signature_asset_id)
+			? existingVisita.signature_asset_id
+			: undefined;
+
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: executionDateIso,
-		contact_name: contactName,
-		contact_phone: contactPhone,
-		confirmed_address: location,
-		interest_package: interestPackage,
-		quotation_type: quotationType,
-		utility_bill_asset_id: utilityBill || null,
+		execution_date: existingText(
+			existingVisita,
+			"execution_date",
+			executionDate,
+		),
+		contact_name: existingText(existingVisita, "contact_name", contactName),
+		contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
+		confirmed_address: existingText(
+			existingVisita,
+			"confirmed_address",
+			location,
+		),
+		interest_package: existingText(
+			existingVisita,
+			"interest_package",
+			interestPackage,
+		),
+		quotation_type: existingText(
+			existingVisita,
+			"quotation_type",
+			quotationType,
+		),
+		...(utilityBillAssetId
+			? { utility_bill_asset_id: utilityBillAssetId }
+			: {}),
 		house_attributes: houseAttributes,
 		electrical_attributes: electricalAttributes,
 		roof_attributes: roofAttributes,
 		minisplit_attributes: minisplitAttributes,
-		notes: notes,
-		signature_asset_id: signature || null,
+		notes: existingText(existingVisita, "notes", notes),
+		...(signatureAssetId ? { signature_asset_id: signatureAssetId } : {}),
 		completed_at: new Date().toISOString(),
 	};
 
@@ -149,22 +218,42 @@ export async function saveVisitaPanelesAction(
 	}
 
 	// Crear automáticamente la cotización vinculada al trabajo
-	const { quotationId, error: quotationError } = await createQuotationFromVisita(supabase, {
-		trabajo_id: trabajoId,
-		contact_name: contactName,
-		contact_phone: contactPhone,
-		confirmed_address: location,
-		interest_package: interestPackage,
-		quotation_type: quotationType,
-		notes: notes,
-		house_attributes: houseAttributes,
-		electrical_attributes: electricalAttributes,
-		roof_attributes: roofAttributes,
-		minisplit_attributes: minisplitAttributes,
-	});
+	const { quotationId, error: quotationError } =
+		await createQuotationFromVisita(supabase, {
+			trabajo_id: trabajoId,
+			contact_name: existingText(existingVisita, "contact_name", contactName),
+			contact_phone: existingText(
+				existingVisita,
+				"contact_phone",
+				contactPhone,
+			),
+			confirmed_address: existingText(
+				existingVisita,
+				"confirmed_address",
+				location,
+			),
+			interest_package: existingText(
+				existingVisita,
+				"interest_package",
+				interestPackage,
+			),
+			quotation_type: existingText(
+				existingVisita,
+				"quotation_type",
+				quotationType,
+			),
+			notes: existingText(existingVisita, "notes", notes),
+			house_attributes: houseAttributes,
+			electrical_attributes: electricalAttributes,
+			roof_attributes: roofAttributes,
+			minisplit_attributes: minisplitAttributes,
+		});
 
 	if (quotationError) {
-		console.error("[Visita Paneles] Error creando cotización automática:", quotationError);
+		console.error(
+			"[Visita Paneles] Error creando cotización automática:",
+			quotationError,
+		);
 		// No fallar completamente, la visita ya se guardó
 	}
 
@@ -174,10 +263,20 @@ export async function saveVisitaPanelesAction(
 	revalidatePath(`/agenda/${trabajoId}`);
 	revalidatePath("/admin/quotations");
 
-	// Redirigir a la cotización creada
-	if (quotationId) {
-		redirect(`/admin/quotations/${quotationId}/edit`);
+	if (user) {
+		redirect(
+			getVisitSaveRedirectPath({
+				role: user.role,
+				trabajoId,
+				quotationId,
+			}),
+		);
 	}
 
-	return { error: null, success: "Visita de paneles guardada correctamente. Cotización creada automáticamente.", quotationId };
+	return {
+		error: null,
+		success:
+			"Visita de paneles guardada correctamente. Cotización creada automáticamente.",
+		quotationId,
+	};
 }

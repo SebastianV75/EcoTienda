@@ -1,7 +1,6 @@
 import { cache } from "react";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { AgendaItemClientSummary } from "@/types/agenda";
 import type { WorkerSummary } from "@/types/worker";
 import type {
 	Trabajo,
@@ -16,22 +15,6 @@ import type {
 } from "@/types/trabajo";
 import { trabajoStageLabels } from "@/types/trabajo";
 
-type TrabajoDocumentClient = {
-	full_name: string;
-	phone: string | null;
-	address: string | null;
-	neighborhood: string | null;
-	rfc: string | null;
-	rpu: string | null;
-	latitude: number | null;
-	longitude: number | null;
-	panel_count: string | null;
-	panel_power: string | null;
-	inverter: string | null;
-	installed_capacity: string | null;
-	estimated_monthly_generation: string | null;
-};
-
 export type TrabajoStageSnapshots = {
 	agenda: TrabajoAgendaStage | null;
 	visita: TrabajoVisitaStage | null;
@@ -41,7 +24,6 @@ export type TrabajoStageSnapshots = {
 
 export type TrabajoDocumentSource = Trabajo &
 	TrabajoStageSnapshots & {
-		client: TrabajoDocumentClient | null;
 		media_assets: TrabajoMediaAsset[];
 		document_overrides: TrabajoDocumentOverride[];
 	};
@@ -53,8 +35,6 @@ export type TrabajoDocumentSelectionItem = {
 	intake_name: string;
 	intake_phone: string;
 	intake_address_text: string;
-	client_name: string | null;
-	client_phone: string | null;
 };
 
 export type TrabajoDashboardSummary = {
@@ -116,7 +96,6 @@ export type TrabajoListItem = {
 	intake_name: string;
 	intake_address_text: string;
 	created_at: string;
-	client_name: string | null;
 	agenda_work_type: string | null;
 	assigned_worker_name: string | null;
 	appointment_at: string | null;
@@ -186,247 +165,190 @@ type TrabajoAgendaStageRow = Omit<TrabajoAgendaStage, "assignee_worker"> & {
 type TrabajoVisitaRow = Trabajo & {
 	agenda: TrabajoAgendaStageRow | TrabajoAgendaStageRow[] | null;
 	visita: TrabajoVisitaStage | TrabajoVisitaStage[] | null;
-	client: AgendaItemClientSummary | AgendaItemClientSummary[] | null;
 };
 
 const trabajoVisitaSelect = `
-	id,
-	current_stage,
-	status,
-	intake_name,
-	intake_phone,
-	intake_address_text,
-	intake_latitude,
-	intake_longitude,
+id,
+current_stage,
+status,
+intake_name,
+intake_phone,
+intake_address_text,
+intake_latitude,
+intake_longitude,
+work_type,
+agenda_completed_at,
+visita_completed_at,
+cotizacion_completed_at,
+venta_completed_at,
+descargables_completed_at,
+created_at,
+updated_at,
+agenda:trabajo_agenda_stage (
+	trabajo_id,
+	appointment_at,
 	work_type,
-	client_id,
-	agenda_completed_at,
-	visita_completed_at,
-	cotizacion_completed_at,
-	venta_completed_at,
-	descargables_completed_at,
-	created_at,
-	updated_at,
-	agenda:trabajo_agenda_stage (
-		trabajo_id,
-		appointment_at,
-		work_type,
-		assignee_worker_id,
-		assignee_name,
-		assignee_worker:workers (
-			id,
-			full_name,
-			role,
-			active
-		),
-		note,
-		contact_name,
-		contact_phone,
-		address_text,
-		latitude,
-		longitude,
-		client_id,
-		completed_at,
-		created_at,
-		updated_at
-	),
-	visita:trabajo_visita_stage (
-		trabajo_id,
-		execution_date,
-		contact_name,
-		contact_phone,
-		confirmed_address,
-		utility_bill_asset_id,
-		interest_package,
-		quotation_type,
-		minisplit_attributes,
-		house_attributes,
-		electrical_attributes,
-		roof_attributes,
-		notes,
-		signature_asset_id,
-		completed_at,
-		created_at,
-		updated_at
-	),
-	client:clients (
+	assignee_worker_id,
+	assignee_name,
+	assignee_worker:workers (
 		id,
 		full_name,
-		phone,
-		rpu
-	)
+		role,
+		active
+	),
+	note,
+	contact_name,
+	contact_phone,
+	address_text,
+	latitude,
+	longitude,
+	completed_at,
+	created_at,
+	updated_at
+),
+visita:trabajo_visita_stage (
+	trabajo_id,
+	execution_date,
+	contact_name,
+	contact_phone,
+	confirmed_address,
+	utility_bill_asset_id,
+	interest_package,
+	quotation_type,
+	minisplit_attributes,
+	house_attributes,
+	electrical_attributes,
+	roof_attributes,
+	notes,
+	signature_asset_id,
+	completed_at,
+	created_at,
+	updated_at
+)
 `;
 
 const trabajoListSelect = `
-	id,
-	current_stage,
-	status,
-	intake_name,
-	intake_address_text,
+id,
+current_stage,
+status,
+intake_name,
+intake_address_text,
+work_type,
+created_at,
+agenda:trabajo_agenda_stage (
 	work_type,
-	created_at,
-	agenda:trabajo_agenda_stage (
-		work_type,
-		appointment_at,
-		assignee_name,
-		assignee_worker:workers (
-			full_name
-		)
-	),
-	client:clients (
+	appointment_at,
+	assignee_name,
+	assignee_worker:workers (
 		full_name
 	)
+)
 `;
 
 const trabajoDocumentSelect = `
-	id,
-	current_stage,
-	status,
-	intake_name,
-	intake_phone,
-	intake_address_text,
-	intake_latitude,
-	intake_longitude,
+id,
+current_stage,
+status,
+intake_name,
+intake_phone,
+intake_address_text,
+intake_latitude,
+intake_longitude,
+work_type,
+agenda_completed_at,
+visita_completed_at,
+cotizacion_completed_at,
+venta_completed_at,
+descargables_completed_at,
+created_at,
+updated_at,
+agenda:trabajo_agenda_stage (
+	trabajo_id,
+	appointment_at,
 	work_type,
-	client_id,
-	agenda_completed_at,
-	visita_completed_at,
-	cotizacion_completed_at,
-	venta_completed_at,
-	descargables_completed_at,
-	created_at,
-	updated_at,
-	agenda:trabajo_agenda_stage (
-		trabajo_id,
-		appointment_at,
-		work_type,
-		assignee_worker_id,
-		assignee_name,
-		assignee_worker:workers (
-			id,
-			full_name,
-			role,
-			active
-		),
-		note,
-		contact_name,
-		contact_phone,
-		address_text,
-		latitude,
-		longitude,
-		client_id,
-		completed_at,
-		created_at,
-		updated_at
-	),
-	visita:trabajo_visita_stage (
-		trabajo_id,
-		execution_date,
-		contact_name,
-		contact_phone,
-		confirmed_address,
-		utility_bill_asset_id,
-		interest_package,
-		quotation_type,
-		minisplit_attributes,
-		house_attributes,
-		electrical_attributes,
-		roof_attributes,
-		notes,
-		signature_asset_id,
-		completed_at,
-		created_at,
-		updated_at
-	),
-	cotizacion:trabajo_quotation_stage (
-		trabajo_id,
-		scope_summary,
-		amount,
-		terms_and_conditions,
-		outcome,
-		quotation_type,
-		rfc,
-		rpu,
-		completed_at,
-		created_at,
-		updated_at
-	),
-	venta:trabajo_sale_stage (
-		trabajo_id,
-		quotation_trabajo_id,
-		confirmed_on,
-		agreed_amount,
-		notes,
-		completed_at,
-		created_at,
-		updated_at
-	),
-	media_assets:trabajo_media_assets (
+	assignee_worker_id,
+	assignee_name,
+	assignee_worker:workers (
 		id,
-		trabajo_id,
-		stage,
-		kind,
-		storage_path,
-		mime_type,
-		size_bytes,
-		capture_metadata,
-		created_at,
-		updated_at
-	),
-	document_overrides:trabajo_document_overrides (
-		id,
-		trabajo_id,
-		template_key,
-		export_instance_key,
-		field_key,
-		field_value,
-		created_at,
-		updated_at
-	),
-	client:clients (
 		full_name,
-		phone,
-		address,
-		neighborhood,
-		rfc,
-		rpu,
-		latitude,
-		longitude,
-		panel_count,
-		panel_power,
-		inverter,
-		installed_capacity,
-		estimated_monthly_generation
-	)
+		role,
+		active
+	),
+	note,
+	contact_name,
+	contact_phone,
+	address_text,
+	latitude,
+	longitude,
+	completed_at,
+	created_at,
+	updated_at
+),
+visita:trabajo_visita_stage (
+	trabajo_id,
+	execution_date,
+	contact_name,
+	contact_phone,
+	confirmed_address,
+	utility_bill_asset_id,
+	interest_package,
+	quotation_type,
+	minisplit_attributes,
+	house_attributes,
+	electrical_attributes,
+	roof_attributes,
+	notes,
+	signature_asset_id,
+	completed_at,
+	created_at,
+	updated_at
+),
+cotizacion:trabajo_quotation_stage (
+	trabajo_id,
+	scope_summary,
+	amount,
+	terms_and_conditions,
+	outcome,
+	quotation_type,
+	rfc,
+	rpu,
+	completed_at,
+	created_at,
+	updated_at
+),
+venta:trabajo_sale_stage (
+	trabajo_id,
+	quotation_trabajo_id,
+	confirmed_on,
+	agreed_amount,
+	notes,
+	completed_at,
+	created_at,
+	updated_at
+),
+media_assets:trabajo_media_assets (
+	id,
+	trabajo_id,
+	stage,
+	kind,
+	storage_path,
+	mime_type,
+	size_bytes,
+	capture_metadata,
+	created_at,
+	updated_at
+),
+document_overrides:trabajo_document_overrides (
+	id,
+	trabajo_id,
+	template_key,
+	export_instance_key,
+	field_key,
+	field_value,
+	created_at,
+	updated_at
+)
 `;
-
-function normalizeClient(
-	client: TrabajoVisitaRow["client"],
-): AgendaItemClientSummary | null {
-	if (!client) {
-		return null;
-	}
-
-	if (Array.isArray(client)) {
-		return client[0] ?? null;
-	}
-
-	return client;
-}
-
-function normalizeDocumentClient(
-	client: TrabajoDocumentClient | TrabajoDocumentClient[] | null,
-): TrabajoDocumentClient | null {
-	if (!client) {
-		return null;
-	}
-
-	if (Array.isArray(client)) {
-		return (client[0] ?? null) as TrabajoDocumentClient | null;
-	}
-
-	return client as TrabajoDocumentClient;
-}
 
 function normalizeOneToOne<T>(value: T | T[] | null): T | null {
 	if (!value) {
@@ -460,7 +382,6 @@ function normalizeTrabajoAgendaStage(
 export type TrabajoVisitaRecord = Trabajo & {
 	agenda: TrabajoAgendaStage | null;
 	visita: TrabajoVisitaStage | null;
-	client: AgendaItemClientSummary | null;
 };
 
 export type TrabajoDocumentRecord = TrabajoDocumentSource & {
@@ -468,7 +389,6 @@ export type TrabajoDocumentRecord = TrabajoDocumentSource & {
 	visita: TrabajoVisitaStage | null;
 	cotizacion: TrabajoQuotationStage | null;
 	venta: TrabajoSaleStage | null;
-	client: TrabajoDocumentClient | null;
 	media_assets: TrabajoMediaAsset[];
 	document_overrides: TrabajoDocumentOverride[];
 };
@@ -478,7 +398,6 @@ function normalizeTrabajoVisitaRow(row: TrabajoVisitaRow): TrabajoVisitaRecord {
 		...row,
 		agenda: normalizeTrabajoAgendaStage(row.agenda),
 		visita: normalizeOneToOne(row.visita),
-		client: normalizeClient(row.client),
 	};
 }
 
@@ -501,13 +420,9 @@ type TrabajoListRow = {
 	work_type: string | null;
 	created_at: string;
 	agenda: TrabajoListAgendaRow | TrabajoListAgendaRow[] | null;
-	client: { full_name: string } | { full_name: string }[] | null;
 };
 
 function normalizeTrabajoListRow(row: TrabajoListRow): TrabajoListItem {
-	const client = Array.isArray(row.client)
-		? (row.client[0] ?? null)
-		: row.client;
 	const agenda = Array.isArray(row.agenda)
 		? (row.agenda[0] ?? null)
 		: row.agenda;
@@ -523,7 +438,6 @@ function normalizeTrabajoListRow(row: TrabajoListRow): TrabajoListItem {
 		intake_name: row.intake_name,
 		intake_address_text: row.intake_address_text,
 		created_at: row.created_at,
-		client_name: client?.full_name ?? null,
 		agenda_work_type: row.work_type ?? agenda?.work_type ?? null,
 		assigned_worker_name:
 			agendaWorker?.full_name ?? agenda?.assignee_name?.trim() ?? null,
@@ -574,16 +488,6 @@ export const getTrabajosForList = cache(
 					/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 				if (uuidPattern.test(normalized)) {
 					textConditions.unshift(`id.eq.${normalized}`);
-				}
-
-				const { data: matchingClients } = await supabase
-					.from("clients")
-					.select("id")
-					.ilike("full_name", pattern);
-
-				const clientIds = (matchingClients ?? []).map((c) => c.id);
-				if (clientIds.length > 0) {
-					textConditions.push(`client_id.in.(${clientIds.join(",")})`);
 				}
 
 				request = request.or(textConditions.join(","));
@@ -665,7 +569,7 @@ export const getTrabajoVisitaById = cache(async (id: string) => {
 		return null;
 	}
 
-	return normalizeTrabajoVisitaRow(data as TrabajoVisitaRow);
+	return normalizeTrabajoVisitaRow(data as unknown as TrabajoVisitaRow);
 });
 
 type TrabajoDocumentRow = Trabajo & {
@@ -673,7 +577,6 @@ type TrabajoDocumentRow = Trabajo & {
 	visita: TrabajoVisitaStage | TrabajoVisitaStage[] | null;
 	cotizacion: TrabajoQuotationStage | TrabajoQuotationStage[] | null;
 	venta: TrabajoSaleStage | TrabajoSaleStage[] | null;
-	client: TrabajoDocumentClient | TrabajoDocumentClient[] | null;
 	media_assets: TrabajoMediaAsset[] | null;
 	document_overrides: TrabajoDocumentOverride[] | null;
 };
@@ -685,7 +588,6 @@ type TrabajoDocumentSelectionRow = {
 	intake_name: string;
 	intake_phone: string;
 	intake_address_text: string;
-	client: { full_name: string; phone: string | null } | null;
 };
 
 function normalizeDocumentCollection<T>(value: T[] | null): T[] {
@@ -701,7 +603,6 @@ function normalizeTrabajoDocumentRow(
 		visita: normalizeOneToOne(row.visita),
 		cotizacion: normalizeOneToOne(row.cotizacion),
 		venta: normalizeOneToOne(row.venta),
-		client: normalizeDocumentClient(row.client),
 		media_assets: normalizeDocumentCollection(row.media_assets),
 		document_overrides: normalizeDocumentCollection(row.document_overrides),
 	};
@@ -710,10 +611,6 @@ function normalizeTrabajoDocumentRow(
 function normalizeTrabajoDocumentSelectionRow(
 	row: TrabajoDocumentSelectionRow,
 ): TrabajoDocumentSelectionItem {
-	const client = Array.isArray(row.client)
-		? (row.client[0] ?? null)
-		: row.client;
-
 	return {
 		id: row.id,
 		current_stage: row.current_stage,
@@ -721,8 +618,6 @@ function normalizeTrabajoDocumentSelectionRow(
 		intake_name: row.intake_name,
 		intake_phone: row.intake_phone,
 		intake_address_text: row.intake_address_text,
-		client_name: client?.full_name ?? null,
-		client_phone: client?.phone ?? null,
 	};
 }
 
@@ -769,16 +664,14 @@ export const getTrabajoDocumentById = cache(async (id: string) => {
 		return null;
 	}
 
-	return normalizeTrabajoDocumentRow(data as TrabajoDocumentRow);
+	return normalizeTrabajoDocumentRow(data as unknown as TrabajoDocumentRow);
 });
 
 export const getTrabajosForDocumentSelection = cache(async () => {
 	const supabase = await createSupabaseServerClient();
 	const { data, error } = await supabase
 		.from("trabajos")
-		.select(
-			`id, current_stage, status, intake_name, intake_phone, intake_address_text, client:clients ( full_name, phone )`,
-		)
+		.select("id, current_stage, status, intake_name, intake_phone, intake_address_text")
 		.order("updated_at", { ascending: false });
 
 	if (error) {

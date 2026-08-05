@@ -22,15 +22,18 @@ export function QuotationTable({
 }: QuotationTableProps) {
 	return (
 		<section className="rounded-[28px] border border-[var(--border-soft)] bg-white shadow-sm">
-			<div className="hidden overflow-x-auto sm:block">
+			<div
+				className="hidden overflow-x-auto overscroll-x-contain touch-pan-x sm:block"
+				tabIndex={0}
+				aria-label="Tabla de cotizaciones desplazable horizontalmente"
+			>
 				<table className="w-full table-fixed">
 					<colgroup>
 						<col className="w-[42%]" />
-						<col className="w-[8%]" />
-						<col className="w-[8%]" />
-						<col className="w-[13%]" />
-						<col className="w-[11%]" />
-						<col className="w-[12%]" />
+						<col className="w-[10%]" />
+						<col className="w-[10%]" />
+						<col className="w-[15%]" />
+						<col className="w-[17%]" />
 						<col className="w-[6%]" />
 					</colgroup>
 					<thead>
@@ -39,16 +42,13 @@ export function QuotationTable({
 								Producto
 							</th>
 							<th className="px-2 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
-								Cant.
+								Piezas
 							</th>
 							<th className="px-2 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
 								UdM
 							</th>
 							<th className="px-2 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
 								Precio
-							</th>
-							<th className="px-2 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
-								Imp.
 							</th>
 							<th className="px-2 py-3 text-right text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
 								Importe
@@ -71,7 +71,7 @@ export function QuotationTable({
 						) : (
 							<tr>
 								<td
-									colSpan={7}
+									colSpan={6}
 									className="px-4 py-12 text-center text-sm text-[var(--muted)]"
 								>
 									No hay productos agregados. Usa los botones de abajo para
@@ -97,8 +97,8 @@ export function QuotationTable({
 					))
 				) : (
 					<div className="px-4 py-12 text-center text-sm text-[var(--muted)]">
-						No hay productos agregados. Usa los botones de abajo para
-						agregar productos, secciones o notas.
+						No hay productos agregados. Usa los botones de abajo para agregar
+						productos, secciones o notas.
 					</div>
 				)}
 			</div>

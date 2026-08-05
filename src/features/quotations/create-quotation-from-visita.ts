@@ -1,6 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateQuotationNumber } from "@/features/quotations/quotation-number";
-import { autofillQuotationFromVisita, type VisitaData } from "./quotation-autofill";
+import {
+	calculateQuotationTotals,
+	normalizeQuotationItems,
+	toQuotationItemRows,
+} from "./quotation-items";
+import {
+	autofillQuotationFromVisita,
+	type VisitaData,
+} from "./quotation-autofill";
 
 /**
  * Crea automáticamente una cotización vinculada al trabajo después de completar la visita técnica.
@@ -29,10 +37,18 @@ export async function createQuotationFromVisita(
 		// Autocompletar cotización usando el orquestador
 		const autofillResult = autofillQuotationFromVisita(visita);
 
+		const itemsResult = normalizeQuotationItems(autofillResult.items);
+		if (itemsResult.error) {
+			return { quotationId: null, error: itemsResult.error };
+		}
+
+		const items = itemsResult.items;
+		const { subtotal, total } = calculateQuotationTotals(items);
+
 		// Log del autocompletado
 		console.log("[Visita→Cotización] Autocompletado:", {
-			items: autofillResult.summary.totalItems,
-			total: autofillResult.summary.totalAmount,
+			items: items.length,
+			total,
 			hasTemplate: autofillResult.summary.hasTemplate,
 			hasExtras: autofillResult.summary.hasExtras,
 			warnings: autofillResult.warnings.length,
@@ -46,38 +62,37 @@ export async function createQuotationFromVisita(
 				trabajo_id: visita.trabajo_id,
 				project: autofillResult.projectName,
 				terms_and_conditions: autofillResult.termsAndConditions,
-				subtotal: autofillResult.summary.totalAmount,
-				total: autofillResult.summary.totalAmount * 1.16, // IVA
+				subtotal,
+				total,
 				status: "draft",
 			})
 			.select("id")
 			.single();
 
 		if (quotationError || !quotation) {
-			console.error("[Visita→Cotización] Error creando cotización:", quotationError);
-			return { quotationId: null, error: quotationError?.message || "Error desconocido" };
+			console.error(
+				"[Visita→Cotización] Error creando cotización:",
+				quotationError,
+			);
+			return {
+				quotationId: null,
+				error: quotationError?.message || "Error desconocido",
+			};
 		}
 
 		// Insertar items de la cotización
-		if (autofillResult.items.length > 0) {
-			const itemsWithQuotationId = autofillResult.items.map((item, index) => ({
-				quotation_id: quotation.id,
-				type: item.type || "product",
-				product_name: item.product_name,
-				quantity: item.quantity,
-				unit: item.unit,
-				unit_price: item.unit_price,
-				tax_rate: item.tax_rate,
-				amount: item.amount,
-				sort_order: index,
-			}));
+		if (items.length > 0) {
+			const itemsWithQuotationId = toQuotationItemRows(quotation.id, items);
 
 			const { error: itemsError } = await supabase
 				.from("quotation_items")
 				.insert(itemsWithQuotationId);
 
 			if (itemsError) {
-				console.error("[Visita→Cotización] Error insertando items:", itemsError);
+				console.error(
+					"[Visita→Cotización] Error insertando items:",
+					itemsError,
+				);
 				// No fallar completamente, la cotización ya se creó
 			}
 		}
@@ -85,6 +100,9 @@ export async function createQuotationFromVisita(
 		return { quotationId: quotation.id, error: null };
 	} catch (error) {
 		console.error("[Visita→Cotización] Error inesperado:", error);
-		return { quotationId: null, error: error instanceof Error ? error.message : "Error desconocido" };
+		return {
+			quotationId: null,
+			error: error instanceof Error ? error.message : "Error desconocido",
+		};
 	}
 }

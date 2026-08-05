@@ -6,7 +6,6 @@ import { getCurrentUser, requireRole } from "@/features/auth/session";
 import { getTrabajosForList } from "@/features/trabajos/data";
 import { getWorkerByAuthUserId } from "@/features/workers/data";
 import { hasSupabaseEnv } from "@/lib/env";
-import { trabajoStageLabels } from "@/types/trabajo";
 
 function formatAppointment(dateString: string | null) {
 	if (!dateString) {
@@ -329,7 +328,7 @@ function TrabajoCard({
 					<div className="flex items-start justify-between gap-3">
 						<div className="flex-1">
 							<h3 className="text-lg font-semibold text-gray-900">
-								{trabajo.client_name ?? trabajo.intake_name}
+								{trabajo.intake_name}
 							</h3>
 							{appointmentLabel && (
 								<div className="mt-1 flex items-center gap-1.5 text-sm text-gray-600">

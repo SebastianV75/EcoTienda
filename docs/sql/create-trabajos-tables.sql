@@ -72,6 +72,12 @@ for update
 using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
 with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
 
+drop policy if exists "admin can delete trabajos" on public.trabajos;
+create policy "admin can delete trabajos"
+on public.trabajos
+for delete
+using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
 create table if not exists public.trabajo_agenda_stage (
   trabajo_id uuid primary key references public.trabajos (id) on delete cascade,
   appointment_at timestamptz not null,
@@ -131,6 +137,12 @@ on public.trabajo_agenda_stage
 for update
 using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
 with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+
+drop policy if exists "admin can delete trabajo agenda stage" on public.trabajo_agenda_stage;
+create policy "admin can delete trabajo agenda stage"
+on public.trabajo_agenda_stage
+for delete
+using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
 create table if not exists public.trabajo_media_assets (
   id uuid primary key default gen_random_uuid(),
@@ -193,6 +205,12 @@ on public.trabajo_media_assets
 for update
 using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
 with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+
+drop policy if exists "admin can delete trabajo media assets" on public.trabajo_media_assets;
+create policy "admin can delete trabajo media assets"
+on public.trabajo_media_assets
+for delete
+using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
 create table if not exists public.trabajo_visita_stage (
   trabajo_id uuid primary key references public.trabajos (id) on delete cascade,
@@ -257,6 +275,12 @@ for update
 using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
 with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
 
+drop policy if exists "admin can delete trabajo visita stage" on public.trabajo_visita_stage;
+create policy "admin can delete trabajo visita stage"
+on public.trabajo_visita_stage
+for delete
+using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
 create table if not exists public.trabajo_quotation_stage (
   trabajo_id uuid primary key references public.trabajos (id) on delete cascade,
   scope_summary text not null,
@@ -311,6 +335,12 @@ for update
 using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
 with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
 
+drop policy if exists "admin can delete trabajo quotation stage" on public.trabajo_quotation_stage;
+create policy "admin can delete trabajo quotation stage"
+on public.trabajo_quotation_stage
+for delete
+using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
 create table if not exists public.trabajo_sale_stage (
   trabajo_id uuid primary key references public.trabajos (id) on delete cascade,
   quotation_trabajo_id uuid not null references public.trabajo_quotation_stage (trabajo_id) on delete restrict,
@@ -361,6 +391,12 @@ on public.trabajo_sale_stage
 for update
 using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
 with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+
+drop policy if exists "admin can delete trabajo sale stage" on public.trabajo_sale_stage;
+create policy "admin can delete trabajo sale stage"
+on public.trabajo_sale_stage
+for delete
+using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
 create table if not exists public.trabajo_document_overrides (
   id uuid primary key default gen_random_uuid(),
@@ -416,3 +452,9 @@ on public.trabajo_document_overrides
 for update
 using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
 with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+
+drop policy if exists "admin can delete trabajo document overrides" on public.trabajo_document_overrides;
+create policy "admin can delete trabajo document overrides"
+on public.trabajo_document_overrides
+for delete
+using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');

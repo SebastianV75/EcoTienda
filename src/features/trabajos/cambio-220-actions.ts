@@ -7,6 +7,8 @@ import { requireRole } from "@/features/auth/session";
 import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
+import { getVisitSaveRedirectPath } from "./visit-save-redirect";
+import { existingAttributes, existingText, getExistingVisita } from "./visita-action-helpers";
 
 export type Cambio220ActionState = {
 	error: string | null;
@@ -22,9 +24,9 @@ export async function saveCambio220Action(
 	_prevState: Cambio220ActionState,
 	formData: FormData,
 ): Promise<Cambio220ActionState> {
-	if (hasSupabaseEnv()) {
-		await requireRole(["admin", "technician"]);
-	}
+	const user = hasSupabaseEnv()
+		? await requireRole(["admin", "technician"])
+		: null;
 
 	const trabajoId = getString(formData, "trabajo_id");
 	const contactName = getString(formData, "contact_name");
@@ -37,17 +39,18 @@ export async function saveCambio220Action(
 	}
 
 	const supabase = await createSupabaseServerClient();
+	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
-	const electricalAttributes: Record<string, string> = {};
+	const electricalAttributes: Record<string, string> = existingAttributes(existingVisita, "electrical_attributes");
 	if (meterPhoto) electricalAttributes.meter_photo = meterPhoto;
 	if (terminalPhoto) electricalAttributes.terminal_photo = terminalPhoto;
 
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: new Date().toISOString(),
-		contact_name: contactName,
+		execution_date: existingText(existingVisita, "execution_date", new Date().toISOString()),
+		contact_name: existingText(existingVisita, "contact_name", contactName),
 		contact_phone: "",
-		confirmed_address: address,
+		confirmed_address: existingText(existingVisita, "confirmed_address", address),
 		interest_package: "Cambio a 220",
 		quotation_type: "Cambio a 220",
 		house_attributes: {},
@@ -63,7 +66,10 @@ export async function saveCambio220Action(
 		.upsert(payload, { onConflict: "trabajo_id" });
 
 	if (visitaError) {
-		return { error: "No se pudo guardar la visita de cambio a 220.", success: null };
+		return {
+			error: "No se pudo guardar la visita de cambio a 220.",
+			success: null,
+		};
 	}
 
 	const { error: trabajoError } = await supabase
@@ -82,22 +88,26 @@ export async function saveCambio220Action(
 	}
 
 	// Crear automáticamente la cotización vinculada al trabajo
-	const { quotationId, error: quotationError } = await createQuotationFromVisita(supabase, {
-		trabajo_id: trabajoId,
-		contact_name: contactName,
-		contact_phone: "",
-		confirmed_address: address,
-		interest_package: "Cambio a 220",
-		quotation_type: "Cambio a 220",
-		notes: "",
-		house_attributes: {},
-		electrical_attributes: electricalAttributes,
-		roof_attributes: {},
-		minisplit_attributes: {},
-	});
+	const { quotationId, error: quotationError } =
+		await createQuotationFromVisita(supabase, {
+			trabajo_id: trabajoId,
+			contact_name: existingText(existingVisita, "contact_name", contactName),
+			contact_phone: "",
+			confirmed_address: existingText(existingVisita, "confirmed_address", address),
+			interest_package: "Cambio a 220",
+			quotation_type: "Cambio a 220",
+			notes: "",
+			house_attributes: {},
+			electrical_attributes: electricalAttributes,
+			roof_attributes: {},
+			minisplit_attributes: {},
+		});
 
 	if (quotationError) {
-		console.error("[Cambio 220] Error creando cotización automática:", quotationError);
+		console.error(
+			"[Cambio 220] Error creando cotización automática:",
+			quotationError,
+		);
 	}
 
 	revalidatePath("/admin/visits");
@@ -106,10 +116,20 @@ export async function saveCambio220Action(
 	revalidatePath(`/agenda/${trabajoId}`);
 	revalidatePath("/admin/quotations");
 
-	// Redirigir a la cotización creada
-	if (quotationId) {
-		redirect(`/admin/quotations/${quotationId}/edit`);
+	if (user) {
+		redirect(
+			getVisitSaveRedirectPath({
+				role: user.role,
+				trabajoId,
+				quotationId,
+			}),
+		);
 	}
 
-	return { error: null, success: "Visita de cambio a 220 guardada correctamente. Cotización creada automáticamente.", quotationId };
+	return {
+		error: null,
+		success:
+			"Visita de cambio a 220 guardada correctamente. Cotización creada automáticamente.",
+		quotationId,
+	};
 }

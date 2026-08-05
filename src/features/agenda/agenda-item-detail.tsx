@@ -95,13 +95,13 @@ export function AgendaItemDetail({ item, role }: AgendaItemDetailProps) {
 							<div>
 								<dt className="text-sm font-medium text-[var(--brand-deep)]">Contacto</dt>
 								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
-									{item.contact_name?.trim() || item.client?.full_name || "Sin contacto"}
+									{item.contact_name?.trim() || "Sin contacto"}
 								</dd>
 							</div>
 							<div>
 								<dt className="text-sm font-medium text-[var(--brand-deep)]">Teléfono</dt>
 								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
-									{item.contact_phone?.trim() || item.client?.phone || "Sin teléfono"}
+									{item.contact_phone?.trim() || "Sin teléfono"}
 								</dd>
 							</div>
 							<div>
@@ -130,7 +130,7 @@ export function AgendaItemDetail({ item, role }: AgendaItemDetailProps) {
 							<div>
 								<dt className="font-medium text-[var(--brand-deep)]">Cliente vinculado</dt>
 								<dd className="mt-1 leading-6">
-									{item.client ? item.client.full_name : "Sin cliente asociado"}
+									{"Sin cliente asociado"}
 								</dd>
 							</div>
 							{item.address_text ? (
@@ -146,18 +146,6 @@ export function AgendaItemDetail({ item, role }: AgendaItemDetailProps) {
 										{item.latitude}, {item.longitude}
 									</dd>
 								</div>
-							) : null}
-							{item.client ? (
-								<>
-									<div>
-									<dt className="font-medium text-[var(--brand-deep)]">Teléfono</dt>
-									<dd className="mt-1">{item.client.phone}</dd>
-								</div>
-								<div>
-									<dt className="font-medium text-[var(--brand-deep)]">RPU</dt>
-									<dd className="mt-1">{item.client.rpu}</dd>
-								</div>
-								</>
 							) : null}
 							<div>
 								<dt className="font-medium text-[var(--brand-deep)]">Trabajo</dt>

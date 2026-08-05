@@ -1,6 +1,4 @@
-import type {
-	Trabajo,
-} from "@/types/trabajo";
+import type { Trabajo } from "@/types/trabajo";
 
 import type { TrabajoDocumentSource } from "./data";
 
@@ -46,11 +44,33 @@ export type TrabajoDocumentDefaults = {
 };
 
 function pickText(...values: Array<string | null | undefined>): string {
-	return values.find((value) => typeof value === "string" && value.trim().length > 0)?.trim() ?? "";
+	return (
+		values
+			.find((value) => typeof value === "string" && value.trim().length > 0)
+			?.trim() ?? ""
+	);
 }
 
-function pickNumber(...values: Array<number | null | undefined>): number | null {
-	return values.find((value) => typeof value === "number" && Number.isFinite(value)) ?? null;
+function pickAddressText(...values: Array<string | null | undefined>): string {
+	return (
+		values
+			.map((value) => (typeof value === "string" ? value.trim() : ""))
+			.find(
+				(value) =>
+					value.length > 0 &&
+					!/^[+-]?\d+(?:\.\d+)?\s*,\s*[+-]?\d+(?:\.\d+)?$/.test(value),
+			) ?? ""
+	);
+}
+
+function pickNumber(
+	...values: Array<number | null | undefined>
+): number | null {
+	return (
+		values.find(
+			(value) => typeof value === "number" && Number.isFinite(value),
+		) ?? null
+	);
 }
 
 function getAgendaDefaults(
@@ -61,7 +81,9 @@ function getAgendaDefaults(
 		work_type: trabajo.agenda?.work_type ?? "",
 		assignee_worker_id: trabajo.agenda?.assignee_worker_id ?? "",
 		assignee_name:
-			trabajo.agenda?.assignee_worker?.full_name ?? trabajo.agenda?.assignee_name ?? "",
+			trabajo.agenda?.assignee_worker?.full_name ??
+			trabajo.agenda?.assignee_name ??
+			"",
 		note: trabajo.agenda?.note ?? "",
 	};
 }
@@ -73,13 +95,13 @@ function getVisitaDefaults(
 		execution_date: trabajo.visita?.execution_date ?? "",
 		contact_name:
 			trabajo.visita?.contact_name ??
-			pickText(trabajo.agenda?.contact_name, trabajo.client?.full_name, trabajo.intake_name),
+			pickText(trabajo.agenda?.contact_name, trabajo.intake_name),
 		contact_phone:
 			trabajo.visita?.contact_phone ??
-			pickText(trabajo.agenda?.contact_phone, trabajo.client?.phone, trabajo.intake_phone),
+			pickText(trabajo.agenda?.contact_phone, trabajo.intake_phone),
 		confirmed_address:
 			trabajo.visita?.confirmed_address ??
-			pickText(trabajo.agenda?.address_text, trabajo.client?.address, trabajo.intake_address_text),
+			pickText(trabajo.agenda?.address_text, trabajo.intake_address_text),
 		interest_package: trabajo.visita?.interest_package ?? "",
 		quotation_type: trabajo.visita?.quotation_type ?? "",
 		notes: trabajo.visita?.notes ?? "",
@@ -94,13 +116,18 @@ function getQuotationDefaults(
 		amount: pickNumber(trabajo.cotizacion?.amount),
 		terms_and_conditions: trabajo.cotizacion?.terms_and_conditions ?? "",
 		outcome: trabajo.cotizacion?.outcome ?? "",
-		quotation_type: trabajo.cotizacion?.quotation_type ?? trabajo.visita?.quotation_type ?? "",
+		quotation_type:
+			trabajo.cotizacion?.quotation_type ??
+			trabajo.visita?.quotation_type ??
+			"",
 		rfc: trabajo.cotizacion?.rfc ?? "",
 		rpu: trabajo.cotizacion?.rpu ?? "",
 	};
 }
 
-function getSaleDefaults(trabajo: TrabajoDocumentSource): TrabajoDocumentDefaults["sale"] {
+function getSaleDefaults(
+	trabajo: TrabajoDocumentSource,
+): TrabajoDocumentDefaults["sale"] {
 	return {
 		confirmed_on: trabajo.venta?.confirmed_on ?? "",
 		agreed_amount: pickNumber(trabajo.venta?.agreed_amount),
@@ -116,25 +143,22 @@ export function composeTrabajoDocumentDefaults(
 		current_stage: trabajo.current_stage,
 		status: trabajo.status,
 		client_name: pickText(
-			trabajo.intake_name,
-			trabajo.client?.full_name,
-			trabajo.agenda?.contact_name,
 			trabajo.visita?.contact_name,
+			trabajo.agenda?.contact_name,
+			trabajo.intake_name,
 		),
 		client_phone: pickText(
-			trabajo.intake_phone,
-			trabajo.client?.phone,
-			trabajo.agenda?.contact_phone,
 			trabajo.visita?.contact_phone,
+			trabajo.agenda?.contact_phone,
+			trabajo.intake_phone,
 		),
-		address_text: pickText(
-			trabajo.intake_address_text,
-			trabajo.client?.address,
-			trabajo.agenda?.address_text,
+		address_text: pickAddressText(
 			trabajo.visita?.confirmed_address,
+			trabajo.agenda?.address_text,
+			trabajo.intake_address_text,
 		),
-		latitude: trabajo.intake_latitude ?? trabajo.client?.latitude ?? null,
-		longitude: trabajo.intake_longitude ?? trabajo.client?.longitude ?? null,
+		latitude: pickNumber(trabajo.agenda?.latitude, trabajo.intake_latitude),
+		longitude: pickNumber(trabajo.agenda?.longitude, trabajo.intake_longitude),
 		agenda: getAgendaDefaults(trabajo),
 		visita: getVisitaDefaults(trabajo),
 		quotation: getQuotationDefaults(trabajo),

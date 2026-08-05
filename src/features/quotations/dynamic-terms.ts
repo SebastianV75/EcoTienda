@@ -28,7 +28,9 @@ export function generateDynamicTerms(visita: VisitaData): string {
 	// Información del proyecto
 	sections.push("1. INFORMACIÓN DEL PROYECTO");
 	sections.push(`   Cliente: ${visita.contact_name || "No especificado"}`);
-	sections.push(`   Ubicación: ${visita.confirmed_address || "No especificada"}`);
+	sections.push(
+		`   Ubicación: ${visita.confirmed_address || "No especificada"}`,
+	);
 	sections.push(`   Tipo de servicio: ${visita.interest_package}`);
 	sections.push("");
 
@@ -56,7 +58,9 @@ export function generateDynamicTerms(visita: VisitaData): string {
 	// Vigencia
 	sections.push("");
 	sections.push("VIGENCIA:");
-	sections.push("Esta cotización tiene una vigencia de 15 días a partir de su emisión.");
+	sections.push(
+		"Esta cotización tiene una vigencia de 15 días a partir de su emisión.",
+	);
 	sections.push("Los precios pueden variar después de este período.");
 
 	return sections.join("\n");
@@ -129,7 +133,6 @@ function getGeneralTerms(): string[] {
 		"3. CONDICIONES GENERALES",
 		"   - Forma de pago: 50% anticipo, 50% contra entrega",
 		"   - Método de pago: transferencia, efectivo o tarjeta",
-		"   - Los precios incluyen IVA",
 		"   - Los precios pueden cambiar sin previo aviso después de la vigencia",
 		"   - El cliente debe proporcionar acceso al lugar de instalación",
 		"   - El cliente debe proporcionar punto de agua y luz para la instalación",
@@ -142,7 +145,10 @@ function getGeneralTerms(): string[] {
 /**
  * Genera un resumen ejecutivo para la cotización
  */
-export function generateExecutiveSummary(visita: VisitaData, totalAmount: number): string {
+export function generateExecutiveSummary(
+	visita: VisitaData,
+	totalAmount: number,
+): string {
 	const pkg = visita.interest_package;
 	const clientName = visita.contact_name || "Cliente";
 

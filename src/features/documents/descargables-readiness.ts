@@ -1,4 +1,4 @@
-import type { DocumentTemplateSlug } from "./client-preview-selector";
+import type { DocumentTemplateSlug } from "./trabajo-preview-selector";
 import {
 	buildTrabajoPreviewSubject,
 	type DocumentPreviewSubject,
@@ -52,32 +52,71 @@ function hasValidCoordinates(subject: DocumentPreviewSubject): boolean {
 
 const documentRequirements = {
 	"carta-poder": [
-		{ label: "nombre del titular", test: (subject) => hasReadableValue(subject.full_name) },
-		{ label: "domicilio", test: (subject) => hasReadableValue(subject.address) },
-		{ label: "colonia", test: (subject) => hasReadableValue(subject.neighborhood) },
+		{
+			label: "nombre del titular",
+			test: (subject) => hasReadableValue(subject.full_name),
+		},
+		{
+			label: "domicilio",
+			test: (subject) => hasReadableValue(subject.address),
+		},
+		{
+			label: "colonia",
+			test: (subject) => hasReadableValue(subject.neighborhood),
+		},
 		{ label: "RPU", test: (subject) => hasReadableValue(subject.rpu) },
 		{ label: "RFC", test: (subject) => hasReadableValue(subject.rfc) },
 	],
 	"ubicacion-cliente": [
-		{ label: "nombre del titular", test: (subject) => hasReadableValue(subject.full_name) },
+		{
+			label: "nombre del titular",
+			test: (subject) => hasReadableValue(subject.full_name),
+		},
 		{ label: "teléfono", test: (subject) => hasReadableValue(subject.phone) },
-		{ label: "domicilio", test: (subject) => hasReadableValue(subject.address) },
-		{ label: "colonia", test: (subject) => hasReadableValue(subject.neighborhood) },
+		{
+			label: "domicilio",
+			test: (subject) => hasReadableValue(subject.address),
+		},
+		{
+			label: "colonia",
+			test: (subject) => hasReadableValue(subject.neighborhood),
+		},
 		{ label: "RPU", test: (subject) => hasReadableValue(subject.rpu) },
 		{ label: "RFC", test: (subject) => hasReadableValue(subject.rfc) },
 		{ label: "coordenadas", test: (subject) => hasValidCoordinates(subject) },
 	],
 	"diagrama-unifilar": [
-		{ label: "nombre del titular", test: (subject) => hasReadableValue(subject.full_name) },
+		{
+			label: "nombre del titular",
+			test: (subject) => hasReadableValue(subject.full_name),
+		},
 		{ label: "teléfono", test: (subject) => hasReadableValue(subject.phone) },
-		{ label: "domicilio", test: (subject) => hasReadableValue(subject.address) },
-		{ label: "colonia", test: (subject) => hasReadableValue(subject.neighborhood) },
+		{
+			label: "domicilio",
+			test: (subject) => hasReadableValue(subject.address),
+		},
+		{
+			label: "colonia",
+			test: (subject) => hasReadableValue(subject.neighborhood),
+		},
 		{ label: "RPU", test: (subject) => hasReadableValue(subject.rpu) },
 		{ label: "RFC", test: (subject) => hasReadableValue(subject.rfc) },
-		{ label: "cantidad de paneles", test: (subject) => hasReadableValue(subject.panel_count) },
-		{ label: "potencia de paneles", test: (subject) => hasReadableValue(subject.panel_power) },
-		{ label: "inversor", test: (subject) => hasReadableValue(subject.inverter) },
-		{ label: "capacidad instalada", test: (subject) => hasReadableValue(subject.installed_capacity) },
+		{
+			label: "cantidad de paneles",
+			test: (subject) => hasReadableValue(subject.panel_count),
+		},
+		{
+			label: "potencia de paneles",
+			test: (subject) => hasReadableValue(subject.panel_power),
+		},
+		{
+			label: "inversor",
+			test: (subject) => hasReadableValue(subject.inverter),
+		},
+		{
+			label: "capacidad instalada",
+			test: (subject) => hasReadableValue(subject.installed_capacity),
+		},
 		{
 			label: "generación media mensual estimada",
 			test: (subject) => hasReadableValue(subject.estimated_monthly_generation),
@@ -85,8 +124,17 @@ const documentRequirements = {
 	],
 } satisfies Record<DocumentTemplateSlug, readonly Requirement[]>;
 
-function getReadiness(subject: DocumentPreviewSubject, requirements: readonly Requirement[]): DocumentReadiness {
-	const missing = requirements.filter(({ test }) => !test(subject)).map(({ label }) => label);
+function getReadiness(
+	subject: DocumentPreviewSubject,
+	requirements: readonly Requirement[],
+): DocumentReadiness {
+	const missing: string[] = [];
+
+	for (const requirement of requirements) {
+		if (!requirement.test(subject)) {
+			missing.push(requirement.label);
+		}
+	}
 
 	return {
 		ready: missing.length === 0,

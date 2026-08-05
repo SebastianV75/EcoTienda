@@ -3,26 +3,33 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
 import {
-	ClientPreviewSelector,
+	TrabajoPreviewSelector,
 	type DocumentTemplateSlug,
-} from "@/features/documents/client-preview-selector";
+} from "@/features/documents/trabajo-preview-selector";
 import { getTrabajosForDocumentSelection } from "@/features/trabajos/data";
 
-const templates: Array<{ slug: DocumentTemplateSlug; title: string; description: string }> = [
+const templates: Array<{
+	slug: DocumentTemplateSlug;
+	title: string;
+	description: string;
+}> = [
 	{
 		slug: "carta-poder",
 		title: "Carta poder",
-		description: "Autollenado con el trabajo más reciente y sus datos ya capturados.",
+		description:
+			"Autollenado con el trabajo más reciente y sus datos ya capturados.",
 	},
 	{
 		slug: "ubicacion-cliente",
 		title: "Ubicación del cliente",
-		description: "Vista previa con datos del trabajo y mapa centrado en su ubicación.",
+		description:
+			"Vista previa con datos del trabajo y mapa centrado en su ubicación.",
 	},
 	{
 		slug: "diagrama-unifilar",
 		title: "Diagrama unifilar",
-		description: "Panel de datos que acompaña al trabajo para exportaciones técnicas.",
+		description:
+			"Panel de datos que acompaña al trabajo para exportaciones técnicas.",
 	},
 ];
 
@@ -51,7 +58,8 @@ export default async function DocumentWorkSelectionPage({
 	const user = await requireRole(["admin"]);
 	const params = searchParams ? await searchParams : undefined;
 	const template = params?.template;
-	const templateLabel = templates.find((item) => item.slug === template)?.title ?? template;
+	const templateLabel =
+		templates.find((item) => item.slug === template)?.title ?? template;
 
 	if (!template) {
 		return (
@@ -64,7 +72,8 @@ export default async function DocumentWorkSelectionPage({
 				<div className="space-y-4">
 					<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
 						<p className="text-sm leading-7 text-[var(--muted)]">
-							Selecciona primero la plantilla que quieres prellenar con datos del trabajo.
+							Selecciona primero la plantilla que quieres prellenar con datos
+							del trabajo.
 						</p>
 					</section>
 
@@ -123,20 +132,19 @@ export default async function DocumentWorkSelectionPage({
 				</div>
 
 				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
-					<ClientPreviewSelector
+					<TrabajoPreviewSelector
 						items={trabajos.map((trabajo) => ({
 							id: trabajo.id,
-							label: trabajo.client_name ?? trabajo.intake_name,
+							label: trabajo.intake_name,
 							supportingText: [
 								formatStageLabel(trabajo.current_stage),
-								trabajo.intake_phone || trabajo.client_phone || null,
+								trabajo.intake_phone,
 								trabajo.intake_address_text,
 							]
 								.filter((part): part is string => Boolean(part && part.trim()))
 								.join(" · "),
 						}))}
 						template={template}
-						mode="trabajo"
 					/>
 				</section>
 			</div>

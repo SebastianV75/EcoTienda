@@ -2,18 +2,15 @@ import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
-import { getClients } from "@/features/clients/data";
-import { ClientPreviewSelector } from "@/features/documents/client-preview-selector";
 
 export default async function DiagramaUnifilarTemplatePage() {
 	const user = await requireRole(["admin"]);
-	const clients = await getClients();
 
 	return (
 		<AppShell
 			role="admin"
 			title="Diagrama unifilar"
-			description="Selecciona un cliente para revisar el panel de datos que acompañará al diagrama unifilar."
+			description="Elige un trabajo para revisar el panel de datos que acompaña al diagrama unifilar."
 			email={user.email}
 		>
 			<div className="space-y-4">
@@ -27,14 +24,16 @@ export default async function DiagramaUnifilarTemplatePage() {
 				</div>
 
 				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
-					<ClientPreviewSelector
-						items={clients.map((client) => ({
-							id: client.id,
-							label: client.full_name,
-							supportingText: client.rpu,
-						}))}
-						template="diagrama-unifilar"
-					/>
+					<p className="text-sm leading-7 text-[var(--muted)]">
+						El diagrama se alimenta del trabajo y sus etapas, no de la ficha del
+						cliente.
+					</p>
+					<Link
+						href="/admin/documents/trabajos?template=diagrama-unifilar"
+						className="mt-5 inline-flex rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)]"
+					>
+						Elegir trabajo
+					</Link>
 				</section>
 			</div>
 		</AppShell>

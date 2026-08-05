@@ -9,9 +9,9 @@ export default async function VisitaMinisplitPage({
 	params: Promise<{ trabajoId: string }>;
 }) {
 	const { trabajoId } = await params;
-	const { user, work, shellRole, hubHref } = await loadAuthorizedVisitWork(
-		trabajoId,
-	);
+	const { user, work, shellRole, hubHref } =
+		await loadAuthorizedVisitWork(trabajoId);
+	const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? null;
 
 	return (
 		<AppShell
@@ -42,7 +42,10 @@ export default async function VisitaMinisplitPage({
 				</section>
 
 				<section className="rounded-[24px] border border-[var(--border-soft)] bg-white p-5 shadow-sm sm:p-6">
-					<VisitaMinisplitForm trabajoId={trabajoId} />
+					<VisitaMinisplitForm
+						trabajoId={trabajoId}
+						googleMapsApiKey={googleMapsApiKey}
+					/>
 				</section>
 			</div>
 		</AppShell>

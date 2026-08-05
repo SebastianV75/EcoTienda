@@ -3,7 +3,6 @@ import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
 	AgendaItem,
-	AgendaItemClientSummary,
 	AgendaItemType,
 } from "@/types/agenda";
 import type { WorkerSummary } from "@/types/worker";
@@ -19,14 +18,12 @@ type AgendaItemRow = {
 	tipo: AgendaItem["tipo"];
 	estado: AgendaItem["estado"];
 	descripcion: string | null;
-	client_id: string | null;
 	visit_id: string | null;
 	assignee_worker_id: string | null;
 	assignee_name: string | null;
 	assignee_worker: AgendaWorkerSummaryRow;
 	created_at: string;
 	updated_at: string;
-	client: AgendaItemClientSummary | AgendaItemClientSummary[] | null;
 };
 
 type WorkflowAgendaItemRow = {
@@ -46,11 +43,9 @@ type WorkflowAgendaItemRow = {
 	address_text: string;
 	latitude: number | null;
 	longitude: number | null;
-	client_id: string | null;
 	completed_at: string | null;
 	created_at: string;
 	updated_at: string;
-	client: AgendaItemClientSummary | AgendaItemClientSummary[] | null;
 };
 
 const agendaSelect = `
@@ -60,7 +55,6 @@ const agendaSelect = `
 	tipo,
 	estado,
 	descripcion,
-	client_id,
 	visit_id,
 	assignee_worker_id,
 	assignee_name,
@@ -71,13 +65,7 @@ const agendaSelect = `
 		active
 	),
 	created_at,
-	updated_at,
-	client:clients (
-		id,
-		full_name,
-		phone,
-		rpu
-	)
+	updated_at
 `;
 
 const workflowAgendaSelect = `
@@ -101,31 +89,10 @@ const workflowAgendaSelect = `
 	address_text,
 	latitude,
 	longitude,
-	client_id,
 	completed_at,
 	created_at,
-	updated_at,
-	client:clients (
-		id,
-		full_name,
-		phone,
-		rpu
-	)
+	updated_at
 `;
-
-function normalizeClient(
-	client: AgendaItemRow["client"],
-): AgendaItemClientSummary | null {
-	if (!client) {
-		return null;
-	}
-
-	if (Array.isArray(client)) {
-		return client[0] ?? null;
-	}
-
-	return client;
-}
 
 function normalizeWorker(
 	worker: AgendaWorkerSummaryRow,
@@ -146,7 +113,6 @@ function normalizeAgendaItem(row: AgendaItemRow): AgendaItem {
 		tipo: row.tipo,
 		estado: row.estado,
 		descripcion: row.descripcion,
-		client_id: row.client_id,
 		visit_id: row.visit_id,
 		trabajo_id: null,
 		work_type: null,
@@ -164,7 +130,6 @@ function normalizeAgendaItem(row: AgendaItemRow): AgendaItem {
 		longitude: null,
 		created_at: row.created_at,
 		updated_at: row.updated_at,
-		client: normalizeClient(row.client),
 	};
 }
 
@@ -177,7 +142,6 @@ function normalizeWorkflowAgendaItem(row: WorkflowAgendaItemRow): AgendaItem {
 		tipo: "visita_tecnica",
 		estado: row.completed_at ? "en_proceso" : "pendiente",
 		descripcion: row.note || null,
-		client_id: row.client_id,
 		visit_id: row.completed_at ? row.trabajo_id : null,
 		trabajo_id: row.trabajo_id,
 		work_type: row.work_type,
@@ -195,7 +159,6 @@ function normalizeWorkflowAgendaItem(row: WorkflowAgendaItemRow): AgendaItem {
 		longitude: row.longitude,
 		created_at: row.created_at,
 		updated_at: row.updated_at,
-		client: normalizeClient(row.client),
 	};
 }
 

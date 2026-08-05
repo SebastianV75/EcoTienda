@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { workerRoleLabels, type WorkerRecord } from "@/types/worker";
 
 type WorkerCardProps = {
@@ -8,7 +10,7 @@ type WorkerCardProps = {
 
 export function WorkerCard({ worker }: WorkerCardProps) {
 	return (
-		<article className="rounded-[26px] border border-[var(--border-soft)] bg-white p-5 shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(13,79,46,0.09)]">
+		<Card className="p-5">
 			<div className="flex flex-wrap items-start justify-between gap-3">
 				<div className="min-w-0">
 					<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
@@ -20,14 +22,16 @@ export function WorkerCard({ worker }: WorkerCardProps) {
 				</div>
 
 				<div className="flex flex-wrap gap-2">
-					<span className="rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-3 py-1 text-xs font-medium text-[var(--brand-deep)]">
-						{workerRoleLabels[worker.role]}
-					</span>
-					<span
-						className={`rounded-full px-3 py-1 text-xs font-medium ${worker.active ? "border border-emerald-200 bg-emerald-50 text-emerald-800" : "border border-slate-200 bg-slate-50 text-slate-700"}`}
+					<Badge>{workerRoleLabels[worker.role]}</Badge>
+					<Badge
+						className={
+							worker.active
+								? "border-emerald-200 bg-emerald-50 text-emerald-800"
+								: "border-slate-200 bg-slate-50 text-slate-700"
+						}
 					>
 						{worker.active ? "Activo" : "Inactivo"}
-					</span>
+					</Badge>
 				</div>
 			</div>
 
@@ -37,7 +41,9 @@ export function WorkerCard({ worker }: WorkerCardProps) {
 					<dd>{worker.phone ?? "Sin teléfono"}</dd>
 				</div>
 				<div>
-					<dt className="font-medium text-[var(--brand-deep)]">Vínculo de auth</dt>
+					<dt className="font-medium text-[var(--brand-deep)]">
+						Vínculo de auth
+					</dt>
 					<dd className="break-all font-mono text-xs text-[var(--muted)]">
 						{worker.auth_user_id ?? "Sin vínculo"}
 					</dd>
@@ -52,6 +58,6 @@ export function WorkerCard({ worker }: WorkerCardProps) {
 					Editar
 				</Link>
 			</div>
-		</article>
+		</Card>
 	);
 }

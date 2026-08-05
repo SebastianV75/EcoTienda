@@ -6,30 +6,78 @@ type GoogleMapsPickerProps = {
 	name: string;
 	defaultValue?: string;
 	label?: string;
+	googleMapsApiKey?: string | null;
+};
+
+type GoogleLatLng = {
+	lat: () => number;
+	lng: () => number;
+};
+
+type GoogleMapClickEvent = {
+	latLng: GoogleLatLng;
+};
+
+type GoogleMapInstance = {
+	panTo: (position: GoogleLatLng) => void;
+	addListener: (
+		eventName: string,
+		handler: (event: GoogleMapClickEvent) => void,
+	) => { remove: () => void };
+};
+
+type GoogleMarkerInstance = {
+	getPosition: () => GoogleLatLng | null;
+	setPosition: (position: GoogleLatLng) => void;
+	addListener: (
+		eventName: string,
+		handler: () => void,
+	) => { remove: () => void };
+};
+
+type GoogleAutocompleteInstance = {
+	getPlace: () => { geometry?: { location?: GoogleLatLng } };
+	addListener: (
+		eventName: string,
+		handler: () => void,
+	) => { remove: () => void };
 };
 
 declare global {
 	interface Window {
 		google?: {
 			maps: {
-				Map: new (element: HTMLElement, options?: any) => any;
-				LatLng: new (lat: number, lng: number) => any;
-				Marker: new (options?: any) => any;
+				Map: new (
+					element: HTMLElement,
+					options?: Record<string, unknown>,
+				) => GoogleMapInstance;
+				LatLng: new (lat: number, lng: number) => GoogleLatLng;
+				Marker: new (options?: Record<string, unknown>) => GoogleMarkerInstance;
 				Animation: { DROP: number; BOUNCE: number };
 				marker?: {
-					AdvancedMarkerElement: new (options?: any) => any;
-					PinElement: new (options?: any) => any;
+					AdvancedMarkerElement: new (
+						options?: Record<string, unknown>,
+					) => unknown;
+					PinElement: new (options?: Record<string, unknown>) => unknown;
 				};
 				places?: {
-					Autocomplete: new (input: HTMLInputElement, options?: any) => any;
+					Autocomplete: new (
+						input: HTMLInputElement,
+						options?: Record<string, unknown>,
+					) => GoogleAutocompleteInstance;
 				};
 				event?: {
-					addListener: (instance: any, eventName: string, handler: Function) => any;
-					removeListener: (listener: any) => void;
+					addListener: (
+						instance: unknown,
+						eventName: string,
+						handler: (...args: never[]) => void,
+					) => unknown;
+					removeListener: (listener: unknown) => void;
 				};
 			};
 		};
 		initGoogleMaps?: () => void;
+		googleMapsLoaderPromise?: Promise<void>;
 	}
 }
 
@@ -37,16 +85,92 @@ export function GoogleMapsPicker({
 	name,
 	defaultValue = "",
 	label = "📍 Seleccionar ubicación en el mapa",
+	googleMapsApiKey = null,
 }: GoogleMapsPickerProps) {
 	const [coordinates, setCoordinates] = useState(defaultValue);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [mapLoaded, setMapLoaded] = useState(false);
 	const mapRef = useRef<HTMLDivElement>(null);
-	const markerRef = useRef<any>(null);
-	const mapInstanceRef = useRef<any>(null);
+	const markerRef = useRef<GoogleMarkerInstance | null>(null);
+	const mapInstanceRef = useRef<GoogleMapInstance | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const scriptLoadedRef = useRef(false);
+
+	const getCurrentPosition = useCallback((): Promise<GeolocationPosition> => {
+		return new Promise((resolve, reject) => {
+			if (!navigator.geolocation) {
+				reject(new Error("Geolocalización no soportada"));
+				return;
+			}
+
+			navigator.geolocation.getCurrentPosition(resolve, reject, {
+				enableHighAccuracy: true,
+				timeout: 5000,
+				maximumAge: 0,
+			});
+		});
+	}, []);
+
+	function loadGoogleMapsScript(apiKey: string) {
+		if (window.google?.maps) {
+			return Promise.resolve();
+		}
+
+		if (window.googleMapsLoaderPromise) {
+			return window.googleMapsLoaderPromise;
+		}
+
+		window.googleMapsLoaderPromise = new Promise<void>((resolve, reject) => {
+			const scriptId = "google-maps-js";
+			const existingScript = document.getElementById(
+				scriptId,
+			) as HTMLScriptElement | null;
+			let settled = false;
+			const timeoutId = window.setTimeout(() => {
+				if (!settled) {
+					settled = true;
+					reject(new Error("Timeout al cargar Google Maps."));
+				}
+			}, 12000);
+
+			const finish = () => {
+				if (settled) return;
+				if (window.google?.maps) {
+					settled = true;
+					window.clearTimeout(timeoutId);
+					resolve();
+				}
+			};
+
+			const fail = () => {
+				if (settled) return;
+				settled = true;
+				window.clearTimeout(timeoutId);
+				reject(new Error("Error al cargar Google Maps."));
+			};
+
+			if (existingScript) {
+				existingScript.addEventListener("load", finish, { once: true });
+				existingScript.addEventListener("error", fail, { once: true });
+				window.setTimeout(finish, 100);
+				return;
+			}
+
+			const script = document.createElement("script");
+			script.id = scriptId;
+			script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker,places`;
+			script.async = true;
+			script.defer = true;
+			script.onload = finish;
+			script.onerror = fail;
+			document.head.appendChild(script);
+		}).finally(() => {
+			window.googleMapsLoaderPromise = undefined;
+		});
+
+		return window.googleMapsLoaderPromise ?? Promise.resolve();
+	}
 
 	const initializeMap = useCallback(async () => {
 		if (!mapRef.current || !window.google?.maps) return;
@@ -69,7 +193,7 @@ export function GoogleMapsPicker({
 					const position = await getCurrentPosition();
 					defaultLat = position.coords.latitude;
 					defaultLng = position.coords.longitude;
-				} catch (err) {
+				} catch {
 					console.log("No se pudo obtener ubicación actual, usando CDMX");
 				}
 			}
@@ -110,7 +234,7 @@ export function GoogleMapsPicker({
 			});
 
 			// Actualizar coordenadas cuando se hace click en el mapa
-			map.addListener("click", (event: any) => {
+			map.addListener("click", (event: GoogleMapClickEvent) => {
 				const lat = event.latLng.lat();
 				const lng = event.latLng.lng();
 				marker.setPosition(event.latLng);
@@ -121,7 +245,7 @@ export function GoogleMapsPicker({
 			if (inputRef.current && window.google.maps.places) {
 				const autocomplete = new window.google.maps.places.Autocomplete(
 					inputRef.current,
-					{ types: ["geocode"] }
+					{ types: ["geocode"] },
 				);
 
 				autocomplete.addListener("place_changed", () => {
@@ -139,95 +263,60 @@ export function GoogleMapsPicker({
 			setError(null);
 		} catch (err) {
 			console.error("Error inicializando mapa:", err);
-			setError("Error al inicializar el mapa. Verifica la consola para más detalles.");
+			setError(
+				"Error al inicializar el mapa. Verifica la consola para más detalles.",
+			);
 		}
-	}, [defaultValue]);
+	}, [defaultValue, getCurrentPosition]);
 
 	useEffect(() => {
-		const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-		
+		let cancelled = false;
+		const apiKey =
+			googleMapsApiKey?.trim() ||
+			process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim() ||
+			null;
+
 		if (!apiKey) {
-			setError("Google Maps API key no configurada en .env.local");
+			window.setTimeout(() => {
+				setError("Google Maps API key no configurada en .env.local");
+			}, 0);
 			return;
 		}
 
-		// Si Google Maps ya está cargado
-		if (window.google?.maps) {
-			setMapLoaded(true);
-			return;
-		}
-
-		// Si el script ya existe pero no está cargado
-		const existingScript = document.querySelector(
-			`script[src*="maps.googleapis.com"]`
-		);
-		
-		if (existingScript && !scriptLoadedRef.current) {
-			// El script existe, esperar a que cargue
+		const timeoutId = window.setTimeout(() => {
 			setIsLoading(true);
-			const checkInterval = setInterval(() => {
-				if (window.google?.maps) {
-					clearInterval(checkInterval);
+			setError(null);
+
+			loadGoogleMapsScript(apiKey)
+				.then(() => {
+					if (cancelled) return;
 					scriptLoadedRef.current = true;
 					setMapLoaded(true);
-					setIsLoading(false);
-				}
-			}, 100);
-			
-			// Timeout después de 10 segundos
-			setTimeout(() => {
-				clearInterval(checkInterval);
-				if (!window.google?.maps) {
-					setError("Timeout al cargar Google Maps. Recarga la página.");
-					setIsLoading(false);
-				}
-			}, 10000);
-			
-			return () => clearInterval(checkInterval);
-		}
+					setError(null);
+				})
+				.catch((error) => {
+					if (cancelled) return;
+					console.error("Error cargando Google Maps:", error);
+					setError(
+						"No se pudo cargar Google Maps. Verifica tu API key o recarga la página.",
+					);
+				})
+				.finally(() => {
+					if (!cancelled) setIsLoading(false);
+				});
+		}, 0);
 
-		// Cargar el script
-		setIsLoading(true);
-
-		const script = document.createElement("script");
-		script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker,places&callback=initGoogleMaps`;
-		script.async = true;
-		script.defer = true;
-
-		window.initGoogleMaps = () => {
-			scriptLoadedRef.current = true;
-			setMapLoaded(true);
-			setIsLoading(false);
+		return () => {
+			cancelled = true;
+			window.clearTimeout(timeoutId);
 		};
-
-		script.onerror = () => {
-			setError("Error al cargar Google Maps. Verifica tu API key.");
-			setIsLoading(false);
-		};
-
-		document.head.appendChild(script);
-	}, []);
+	}, [googleMapsApiKey]);
 
 	useEffect(() => {
 		if (mapLoaded && mapRef.current && !mapInstanceRef.current) {
 			initializeMap();
 		}
 	}, [mapLoaded, initializeMap]);
-
-	function getCurrentPosition(): Promise<GeolocationPosition> {
-		return new Promise((resolve, reject) => {
-			if (!navigator.geolocation) {
-				reject(new Error("Geolocalización no soportada"));
-				return;
-			}
-
-			navigator.geolocation.getCurrentPosition(resolve, reject, {
-				enableHighAccuracy: true,
-				timeout: 5000,
-				maximumAge: 0,
-			});
-		});
-	}
 
 	async function handleUseCurrentLocation() {
 		try {
@@ -244,12 +333,12 @@ export function GoogleMapsPicker({
 			if (mapInstanceRef.current && window.google?.maps) {
 				const newCenter = new window.google.maps.LatLng(lat, lng);
 				mapInstanceRef.current.panTo(newCenter);
-				
+
 				if (markerRef.current) {
 					markerRef.current.setPosition(newCenter);
 				}
 			}
-		} catch (err) {
+		} catch {
 			setError("No se pudo obtener tu ubicación actual");
 		} finally {
 			setIsLoading(false);
@@ -269,6 +358,12 @@ export function GoogleMapsPicker({
 						ref={inputRef}
 						type="text"
 						placeholder="Buscar dirección..."
+						onKeyDown={(event) => {
+							if (event.key === "Enter") {
+								event.preventDefault();
+								event.stopPropagation();
+							}
+						}}
 						className="flex-1 rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 					/>
 					<button

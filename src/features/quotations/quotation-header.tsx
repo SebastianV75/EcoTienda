@@ -23,7 +23,10 @@ export function QuotationHeader({
 		<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
 			<div className="space-y-5">
 				<div className="space-y-2.5">
-					<label htmlFor="project" className="text-sm font-medium text-[var(--brand-deep)]">
+					<label
+						htmlFor="project"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
 						Cliente
 					</label>
 					{project ? (
@@ -76,7 +79,7 @@ export function QuotationHeader({
 							htmlFor="order_deadline_display"
 							className="text-sm font-medium text-[var(--brand-deep)]"
 						>
-							Cotización válida hasta
+							Vigencia de la cotización
 						</label>
 						<DatePicker
 							id="order_deadline_display"
@@ -104,7 +107,8 @@ export function QuotationHeader({
 								className="w-full rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface-strong)] px-4 py-3 text-[var(--foreground)] outline-none"
 							/>
 							<p className="text-xs text-[var(--muted)]">
-								Al guardar se agregar&aacute; &ldquo;(editado)&rdquo; si no lo tiene.
+								Al guardar se agregar&aacute; &ldquo;(editado)&rdquo; si no lo
+								tiene.
 							</p>
 						</div>
 					)}
