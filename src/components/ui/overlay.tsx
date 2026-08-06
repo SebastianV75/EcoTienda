@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import {
+	useEffect,
+	useRef,
+	useState,
+	type PointerEvent,
+	type ReactNode,
+} from "react";
 import { cn } from "@/lib/utils";
 
 let scrollLockCount = 0;
@@ -124,6 +130,84 @@ export function Drawer({
 	titleId,
 	children,
 }: DialogProps) {
+	const [dragOffset, setDragOffset] = useState(0);
+	const [isDragging, setIsDragging] = useState(false);
+	const closeTimerRef = useRef<number | null>(null);
+	const dragRef = useRef({
+		active: false,
+		pointerId: -1,
+		startY: 0,
+		lastY: 0,
+		lastTime: 0,
+		velocity: 0,
+	});
+
+	useEffect(
+		() => () => {
+			if (closeTimerRef.current !== null) {
+				window.clearTimeout(closeTimerRef.current);
+			}
+		},
+		[],
+	);
+
+	function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+		if (event.pointerType === "mouse" && event.button !== 0) return;
+		if (closeTimerRef.current !== null) {
+			window.clearTimeout(closeTimerRef.current);
+			closeTimerRef.current = null;
+		}
+		event.currentTarget.setPointerCapture(event.pointerId);
+		const now = performance.now();
+		dragRef.current = {
+			active: true,
+			pointerId: event.pointerId,
+			startY: event.clientY,
+			lastY: event.clientY,
+			lastTime: now,
+			velocity: 0,
+		};
+		setDragOffset(0);
+		setIsDragging(true);
+	}
+
+	function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+		const drag = dragRef.current;
+		if (!drag.active || drag.pointerId !== event.pointerId) return;
+
+		event.preventDefault();
+		const now = performance.now();
+		const delta = event.clientY - drag.startY;
+		const elapsed = Math.max(now - drag.lastTime, 1);
+		drag.velocity = ((event.clientY - drag.lastY) / elapsed) * 1000;
+		drag.lastY = event.clientY;
+		drag.lastTime = now;
+		setDragOffset(delta >= 0 ? delta : delta * 0.18);
+	}
+
+	function finishDrag(event: PointerEvent<HTMLDivElement>) {
+		const drag = dragRef.current;
+		if (!drag.active || drag.pointerId !== event.pointerId) return;
+		drag.active = false;
+		if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+			event.currentTarget.releasePointerCapture(event.pointerId);
+		}
+
+		const shouldClose = drag.lastY - drag.startY > 96 || drag.velocity > 720;
+		setIsDragging(false);
+		if (!shouldClose) {
+			setDragOffset(0);
+			return;
+		}
+
+		setDragOffset(window.innerHeight);
+		closeTimerRef.current = window.setTimeout(() => {
+			closeTimerRef.current = null;
+			setDragOffset(0);
+			onCloseAction();
+		}, 180);
+	}
+
 	return (
 		<Dialog
 			open={open}
@@ -131,8 +215,20 @@ export function Drawer({
 			title={title}
 			titleId={titleId}
 		>
-			<div className="absolute inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-[28px] bg-white shadow-[0_-24px_60px_rgba(10,44,21,0.22)] motion-safe:animate-[slide-up_200ms_ease-out] motion-reduce:animate-none">
-				<div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-[var(--border-soft)]" />
+			<div
+				className={`absolute inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-[28px] bg-white shadow-[0_-24px_60px_rgba(10,44,21,0.22)] motion-safe:animate-[slide-up_200ms_ease-out] motion-reduce:animate-none ${isDragging ? "transition-none" : "transition-transform duration-200 ease-out motion-reduce:transition-none"}`}
+				style={{ transform: `translateY(${dragOffset}px)` }}
+			>
+				<div
+					aria-label="Desliza hacia abajo para cerrar"
+					className="flex h-10 touch-none select-none items-center justify-center"
+					onPointerDown={handlePointerDown}
+					onPointerMove={handlePointerMove}
+					onPointerUp={finishDrag}
+					onPointerCancel={finishDrag}
+				>
+					<div className="h-1.5 w-12 rounded-full bg-[var(--border-soft)]" />
+				</div>
 				{children}
 			</div>
 		</Dialog>

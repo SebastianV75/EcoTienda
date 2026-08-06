@@ -70,6 +70,12 @@ const supportNavigation: NavigationItem[] = [
 		icon: DocumentText,
 	},
 	{
+		href: "/technician/materiales-cliente",
+		label: "Info para cliente",
+		roles: ["admin", "technician"],
+		icon: DocumentText,
+	},
+	{
 		href: "/admin/workers",
 		label: "Trabajadores",
 		roles: ["admin"],
@@ -233,7 +239,7 @@ export function AppShell({
 								<p
 									className={`px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] transition-[opacity,max-height] duration-200 ease-out ${isSidebarCollapsed ? "max-h-0 overflow-hidden pb-0 opacity-0" : "max-h-8 opacity-100"}`}
 								>
-									Administración
+									{role === "technician" ? "Recursos" : "Administración"}
 								</p>
 								<nav className="flex flex-col gap-1">
 									{visibleSupportNavigation.map((item) => {
