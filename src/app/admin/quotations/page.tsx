@@ -95,6 +95,7 @@ export default async function QuotationsPage({
 								<input
 									name="q"
 									defaultValue={query}
+									aria-label="Buscar cotizaciones"
 									placeholder="Buscar por número, proveedor o cliente..."
 									className="w-full rounded-full border border-[var(--border-soft)] bg-white py-2.5 pl-11 pr-4 text-sm text-[var(--foreground)] outline-none transition duration-200 ease-out placeholder:text-[var(--muted)]/70 focus:border-emerald-300 focus:shadow-sm"
 								/>

@@ -2,23 +2,17 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, startTransition } from "react";
 import { Card } from "@/components/ui/card";
 import { deleteQuotationAction, confirmQuotationAction } from "./actions";
 import type { QuotationListItem } from "./data";
 import { QuotationStatusBadge } from "./quotation-status";
+import { formatDisplayDate } from "@/lib/date-utils";
 
 type QuotationCardProps = {
 	quotation: QuotationListItem;
 };
-
-function formatDate(dateString: string): string {
-	const date = new Date(dateString);
-	const day = String(date.getDate()).padStart(2, "0");
-	const month = String(date.getMonth() + 1).padStart(2, "0");
-	const year = date.getFullYear();
-	return `${day}/${month}/${year}`;
-}
 
 function formatCurrency(amount: number): string {
 	return new Intl.NumberFormat("es-MX", {
@@ -35,19 +29,40 @@ const DotsIcon = () => (
 );
 
 const EditIcon = () => (
-	<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5l3.5 3.5m-2-5a2.5 2.5 0 113.5 3.5L6.5 21H3v-3.5L16 3.7z" />
+	<svg
+		className="h-4 w-4"
+		fill="none"
+		stroke="currentColor"
+		viewBox="0 0 24 24"
+	>
+		<path
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			strokeWidth={2}
+			d="M15 5l3.5 3.5m-2-5a2.5 2.5 0 113.5 3.5L6.5 21H3v-3.5L16 3.7z"
+		/>
 	</svg>
 );
 
 const DeleteIcon = () => (
-	<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.9 12A2 2 0 0116 21H8a2 2 0 01-2-2L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+	<svg
+		className="h-4 w-4"
+		fill="none"
+		stroke="currentColor"
+		viewBox="0 0 24 24"
+	>
+		<path
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			strokeWidth={2}
+			d="M19 7l-.9 12A2 2 0 0116 21H8a2 2 0 01-2-2L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+		/>
 	</svg>
 );
 
 export function QuotationCard({ quotation }: QuotationCardProps) {
-	const createdDate = formatDate(quotation.created_at);
+	const router = useRouter();
+	const createdDate = formatDisplayDate(quotation.created_at);
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
 	const dropdownRef = useRef<HTMLDivElement>(null);
@@ -64,6 +79,12 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 
 	const isDeleted = deleteState.success;
 	const isConfirmed = confirmState.success;
+
+	useEffect(() => {
+		if (confirmState.success) {
+			router.refresh();
+		}
+	}, [confirmState.success, router]);
 
 	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
@@ -92,27 +113,34 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 		};
 	}, [isDropdownOpen]);
 
-	async function handleDelete() {
+	function handleDelete() {
+		if (
+			!window.confirm(
+				"¿Eliminar esta cotización? Esta acción también elimina sus productos y no se puede deshacer.",
+			)
+		) {
+			return;
+		}
+
 		setIsDropdownOpen(false);
 		startTransition(() => {
 			deleteAction(quotation.id);
 		});
 	}
 
-	async function handleConfirmQuotation() {
+	function handleConfirmQuotation() {
 		const formData = new FormData();
 		formData.append("quotation_id", quotation.id);
 		formData.append("trabajo_id", quotation.trabajo_id || "");
-		
-		await confirmAction(formData);
-		
-		// Forzar recarga de la página para actualizar la lista
-		window.location.reload();
+
+		startTransition(() => {
+			confirmAction(formData);
+		});
 	}
 
 	return (
 		<>
-		{!isDeleted && !isConfirmed && (
+			{!isDeleted && !isConfirmed && (
 				<div className="relative motion-safe:transition-opacity motion-reduce:transition-none">
 					<Card className="group relative p-5">
 						<div className="flex items-start justify-between gap-3">
@@ -129,7 +157,10 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 								</p>
 							</div>
 							<div className="flex items-start gap-2">
-								<QuotationStatusBadge status={quotation.status} className="mt-1" />
+								<QuotationStatusBadge
+									status={quotation.status}
+									className="mt-1"
+								/>
 								<div className="relative" ref={dropdownRef}>
 									<button
 										type="button"
@@ -141,9 +172,13 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 										<DotsIcon />
 									</button>
 									{isDropdownOpen && (
-										<div className="absolute right-0 z-50 mt-2 w-40 rounded-[14px] border border-[var(--border-soft)] bg-white py-1 shadow-lg">
+										<div
+											role="menu"
+											className="absolute right-0 z-50 mt-2 w-44 rounded-[14px] border border-[var(--border-soft)] bg-white py-1 shadow-lg"
+										>
 											<Link
 												href={`/admin/quotations/${quotation.id}/edit`}
+												role="menuitem"
 												className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--brand-deep)] hover:bg-emerald-50"
 												onClick={() => setIsDropdownOpen(false)}
 											>
@@ -155,6 +190,7 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 												type="button"
 												onClick={handleDelete}
 												disabled={isDeletingAction}
+												role="menuitem"
 												className="flex w-full items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
 											>
 												<DeleteIcon />
@@ -179,7 +215,9 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 								<dt className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
 									Fecha
 								</dt>
-								<dd className="mt-1 text-sm text-[var(--foreground)]">{createdDate}</dd>
+								<dd className="mt-1 text-sm text-[var(--foreground)]">
+									{createdDate}
+								</dd>
 							</div>
 							{quotation.trabajo_id ? (
 								<div className="sm:col-span-2">
@@ -222,16 +260,41 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 								>
 									{isConfirmingAction ? (
 										<>
-											<svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+											<svg
+												className="h-4 w-4 animate-spin"
+												fill="none"
+												viewBox="0 0 24 24"
+											>
+												<circle
+													className="opacity-25"
+													cx="12"
+													cy="12"
+													r="10"
+													stroke="currentColor"
+													strokeWidth="4"
+												/>
+												<path
+													className="opacity-75"
+													fill="currentColor"
+													d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+												/>
 											</svg>
 											Confirmando...
 										</>
 									) : (
 										<>
-											<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+											<svg
+												className="h-4 w-4"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M5 13l4 4L19 7"
+												/>
 											</svg>
 											Confirmar cotización
 										</>
@@ -241,7 +304,20 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 						</div>
 
 						{confirmState.error && (
-							<p className="mt-3 text-sm text-red-600">{confirmState.error}</p>
+							<p
+								role="alert"
+								className="mt-3 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+							>
+								{confirmState.error}
+							</p>
+						)}
+						{deleteState.error && (
+							<p
+								role="alert"
+								className="mt-3 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+							>
+								{deleteState.error}
+							</p>
 						)}
 					</Card>
 				</div>

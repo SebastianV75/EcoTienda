@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
 	useState,
 	type ComponentType,
@@ -63,9 +64,15 @@ const workflowNavigation: NavigationItem[] = [
 
 const supportNavigation: NavigationItem[] = [
 	{
-		href: "/admin/documents",
-		label: "Documentos",
+		href: "/admin/descargables",
+		label: "Descargables",
 		roles: ["admin"],
+		icon: DocumentText,
+	},
+	{
+		href: "/technician/materiales-cliente",
+		label: "Info para cliente",
+		roles: ["admin", "technician"],
 		icon: DocumentText,
 	},
 	{
@@ -108,6 +115,12 @@ type AppShellProps = {
 	email?: string | null;
 };
 
+function isNavigationActive(pathname: string, href: string) {
+	return href === "/admin"
+		? pathname === href
+		: pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function AppShell({
 	children,
 	role,
@@ -116,6 +129,7 @@ export function AppShell({
 	email,
 }: AppShellProps) {
 	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+	const pathname = usePathname() ?? "";
 	const visibleWorkflowNavigation = workflowNavigation.filter((item) =>
 		item.roles.includes(role),
 	);
@@ -195,12 +209,14 @@ export function AppShell({
 								<nav className="flex flex-col gap-1.5">
 									{visibleWorkflowNavigation.map((item) => {
 										const Icon = item.icon;
+										const active = isNavigationActive(pathname, item.href);
 
 										return (
 											<Link
 												key={item.href}
 												href={item.href}
-												className={`grid min-h-[44px] items-center rounded-[14px] px-3 py-2.5 text-sm font-medium text-[var(--brand-deep)] shadow-[inset_0_0_0_1px_rgba(13,79,46,0)] transition-[transform,background-color,box-shadow,color,grid-template-columns,padding,column-gap] duration-300 ease-out ${isSidebarCollapsed ? "grid-cols-[18px] justify-center gap-x-0" : "grid-cols-[18px_minmax(0,1fr)] gap-x-4"} hover:-translate-y-0.5 hover:bg-[rgba(13,79,46,0.06)] hover:shadow-[inset_0_0_0_1px_rgba(13,79,46,0.08),0_10px_20px_rgba(10,44,21,0.05)] active:translate-y-0 active:scale-[0.98]`}
+												aria-current={active ? "page" : undefined}
+												className={`grid min-h-[44px] items-center rounded-[14px] px-3 py-2.5 text-sm font-medium text-[var(--brand-deep)] shadow-[inset_0_0_0_1px_rgba(13,79,46,0)] transition-[transform,background-color,box-shadow,color,grid-template-columns,padding,column-gap] duration-200 ease-out ${isSidebarCollapsed ? "grid-cols-[18px] justify-center gap-x-0" : "grid-cols-[18px_minmax(0,1fr)] gap-x-4"} ${active ? "bg-[rgba(13,79,46,0.09)] shadow-[inset_0_0_0_1px_rgba(13,79,46,0.10)]" : "hover:-translate-y-0.5 hover:bg-[rgba(13,79,46,0.06)] hover:shadow-[inset_0_0_0_1px_rgba(13,79,46,0.08),0_10px_20px_rgba(10,44,21,0.05)]"} active:translate-y-0 active:scale-[0.98]`}
 												title={isSidebarCollapsed ? item.label : undefined}
 											>
 												<Icon
@@ -223,17 +239,19 @@ export function AppShell({
 								<p
 									className={`px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] transition-[opacity,max-height] duration-200 ease-out ${isSidebarCollapsed ? "max-h-0 overflow-hidden pb-0 opacity-0" : "max-h-8 opacity-100"}`}
 								>
-									Administración
+									{role === "technician" ? "Recursos" : "Administración"}
 								</p>
 								<nav className="flex flex-col gap-1">
 									{visibleSupportNavigation.map((item) => {
 										const Icon = item.icon;
+										const active = isNavigationActive(pathname, item.href);
 
 										return (
 											<Link
 												key={item.href}
 												href={item.href}
-												className={`grid min-h-[44px] items-center rounded-[14px] px-3 py-2.5 text-sm font-medium text-[var(--muted)] transition-[transform,background-color,color,grid-template-columns,padding,column-gap,box-shadow] duration-300 ease-out ${isSidebarCollapsed ? "grid-cols-[18px] justify-center gap-x-0" : "grid-cols-[18px_minmax(0,1fr)] gap-x-4"} hover:-translate-y-0.5 hover:bg-[rgba(13,79,46,0.05)] hover:text-[var(--brand-deep)] hover:shadow-[0_10px_20px_rgba(10,44,21,0.04)] active:translate-y-0 active:scale-[0.98]`}
+												aria-current={active ? "page" : undefined}
+												className={`grid min-h-[44px] items-center rounded-[14px] px-3 py-2.5 text-sm font-medium transition-[transform,background-color,color,grid-template-columns,padding,column-gap,box-shadow] duration-200 ease-out ${isSidebarCollapsed ? "grid-cols-[18px] justify-center gap-x-0" : "grid-cols-[18px_minmax(0,1fr)] gap-x-4"} ${active ? "bg-[rgba(13,79,46,0.09)] text-[var(--brand-deep)] shadow-[inset_0_0_0_1px_rgba(13,79,46,0.10)]" : "text-[var(--muted)] hover:-translate-y-0.5 hover:bg-[rgba(13,79,46,0.05)] hover:text-[var(--brand-deep)] hover:shadow-[0_10px_20px_rgba(10,44,21,0.04)]"} active:translate-y-0 active:scale-[0.98]`}
 												title={isSidebarCollapsed ? item.label : undefined}
 											>
 												<Icon

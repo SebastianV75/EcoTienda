@@ -8,7 +8,13 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
 import { getVisitSaveRedirectPath } from "./visit-save-redirect";
-import { existingAttributes, existingText, getExistingVisita } from "./visita-action-helpers";
+import {
+	completeVisitWorkflow,
+	existingAttributes,
+	existingText,
+	getExistingVisita,
+	normalizeExecutionDate,
+} from "./visita-action-helpers";
 
 export type VisitaAmpliarActionState = {
 	error: string | null;
@@ -30,7 +36,6 @@ export async function saveVisitaAmpliarAction(
 
 	const trabajoId = getString(formData, "trabajo_id");
 	const executionDate = getString(formData, "execution_date_date");
-	const executionTime = getString(formData, "execution_date_time");
 	const contactName = getString(formData, "contact_name");
 	const contactPhone = getString(formData, "contact_phone");
 	const email = getString(formData, "email");
@@ -61,14 +66,13 @@ export async function saveVisitaAmpliarAction(
 		return { error: "La fecha es obligatoria.", success: null };
 	}
 
-	const executionDateIso = executionTime
-		? `${executionDate}T${executionTime}:00`
-		: executionDate;
-
 	const supabase = await createSupabaseServerClient();
 	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
-	const houseAttributes: Record<string, string> = existingAttributes(existingVisita, "house_attributes");
+	const houseAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"house_attributes",
+	);
 	if (housePhoto) houseAttributes.house_photo = housePhoto;
 	if (email) houseAttributes.email = email;
 	if (location) houseAttributes.location = location;
@@ -81,11 +85,17 @@ export async function saveVisitaAmpliarAction(
 	if (panelsCondition) houseAttributes.panels_condition = panelsCondition;
 	if (panelsToInstall) houseAttributes.panels_to_install = panelsToInstall;
 
-	const electricalAttributes: Record<string, string> = existingAttributes(existingVisita, "electrical_attributes");
+	const electricalAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"electrical_attributes",
+	);
 	if (meterPhoto) electricalAttributes.meter_photo = meterPhoto;
 	if (meterVideo) electricalAttributes.meter_video = meterVideo;
 
-	const roofAttributes: Record<string, string> = existingAttributes(existingVisita, "roof_attributes");
+	const roofAttributes: Record<string, string> = existingAttributes(
+		existingVisita,
+		"roof_attributes",
+	);
 	if (areaPhotos) roofAttributes.area_photos = areaPhotos;
 	if (areaVideo) roofAttributes.area_video = areaVideo;
 	if (measurements) roofAttributes.measurements = measurements;
@@ -93,10 +103,17 @@ export async function saveVisitaAmpliarAction(
 
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: existingText(existingVisita, "execution_date", executionDateIso),
+		execution_date: normalizeExecutionDate(
+			existingText(existingVisita, "execution_date", executionDate),
+			executionDate,
+		),
 		contact_name: existingText(existingVisita, "contact_name", contactName),
 		contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
-		confirmed_address: existingText(existingVisita, "confirmed_address", location),
+		confirmed_address: existingText(
+			existingVisita,
+			"confirmed_address",
+			location,
+		),
 		interest_package: "Ampliar Sistema",
 		quotation_type: "Ampliación",
 		house_attributes: houseAttributes,
@@ -104,7 +121,8 @@ export async function saveVisitaAmpliarAction(
 		minisplit_attributes: {},
 		roof_attributes: roofAttributes,
 		notes: existingText(existingVisita, "notes", notes),
-		utility_bill_asset_id: utilityBill || existingVisita?.utility_bill_asset_id || null,
+		utility_bill_asset_id:
+			utilityBill || existingVisita?.utility_bill_asset_id || null,
 		completed_at: new Date().toISOString(),
 	};
 
@@ -119,19 +137,14 @@ export async function saveVisitaAmpliarAction(
 		};
 	}
 
-	const { error: trabajoError } = await supabase
-		.from("trabajos")
-		.update({
-			current_stage: "cotizacion",
-			visita_completed_at: payload.completed_at,
-		})
-		.eq("id", trabajoId);
+	const workflowError = await completeVisitWorkflow(
+		supabase,
+		trabajoId,
+		payload.completed_at,
+	);
 
-	if (trabajoError) {
-		return {
-			error: "Se guardó la visita, pero no se pudo actualizar el trabajo.",
-			success: null,
-		};
+	if (workflowError) {
+		return { error: workflowError, success: null };
 	}
 
 	// Crear automáticamente la cotización vinculada al trabajo
@@ -139,8 +152,16 @@ export async function saveVisitaAmpliarAction(
 		await createQuotationFromVisita(supabase, {
 			trabajo_id: trabajoId,
 			contact_name: existingText(existingVisita, "contact_name", contactName),
-			contact_phone: existingText(existingVisita, "contact_phone", contactPhone),
-			confirmed_address: existingText(existingVisita, "confirmed_address", location),
+			contact_phone: existingText(
+				existingVisita,
+				"contact_phone",
+				contactPhone,
+			),
+			confirmed_address: existingText(
+				existingVisita,
+				"confirmed_address",
+				location,
+			),
 			interest_package: "Ampliar Sistema",
 			quotation_type: "Ampliación",
 			notes: existingText(existingVisita, "notes", notes),

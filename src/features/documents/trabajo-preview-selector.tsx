@@ -6,7 +6,8 @@ import { useTransition, type ChangeEvent } from "react";
 export type DocumentTemplateSlug =
 	| "carta-poder"
 	| "ubicacion-cliente"
-	| "diagrama-unifilar";
+	| "diagrama-unifilar"
+	| "cfe";
 
 type DocumentPreviewSelectorItem = {
 	id: string;

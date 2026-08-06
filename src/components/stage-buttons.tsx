@@ -103,23 +103,23 @@ const stageIcons: Record<string, React.ReactNode> = {
 
 export function StageButtons({ stats }: StageButtonsProps) {
 	return (
-		<MotionSafe className="flex gap-1.5">
+		<MotionSafe className="grid grid-cols-2 gap-2 sm:grid-cols-5">
 			{trabajoStages.map((stage) => (
 				<Button
 					key={stage}
 					asChild
 					variant="secondary"
 					size="sm"
-					className="group flex h-auto flex-1 flex-col rounded-lg px-1 py-2"
+					className="group flex min-h-[76px] h-auto flex-col rounded-[14px] px-2 py-2.5 transition-[transform,background-color,border-color,box-shadow] duration-200 ease-out active:scale-[0.97] last:col-span-2 sm:last:col-span-1"
 				>
 					<Link href={stageRoutes[stage]}>
-						<div className="mb-1 text-gray-400 transition-colors duration-200 group-hover:text-emerald-600">
+						<div className="mb-1 text-[var(--muted)] transition-colors duration-200 group-hover:text-[var(--brand-strong)]">
 							{stageIcons[stage]}
 						</div>
-						<div className="text-base font-bold text-gray-900">
+						<div className="text-base font-bold text-[var(--brand-deep)]">
 							{stats[stage]}
 						</div>
-						<div className="mt-0.5 text-[9px] font-medium leading-tight text-gray-500 group-hover:text-gray-700">
+						<div className="mt-0.5 text-[11px] font-medium leading-tight text-[var(--muted)] group-hover:text-[var(--brand-deep)]">
 							{trabajoStageLabels[stage]}
 						</div>
 					</Link>

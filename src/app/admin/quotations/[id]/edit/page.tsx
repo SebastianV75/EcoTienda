@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { AppShell } from "@/components/app-shell";
 import { EditQuotationForm } from "@/features/quotations/quotation-form";
 import { requireRole } from "@/features/auth/session";
@@ -33,9 +35,12 @@ export default async function EditQuotationPage({
 			description="Modifica los datos de la cotización, productos y términos."
 			email={user.email}
 		>
-			<EditQuotationForm
-				initialData={initialData}
-			/>
+			<div className="space-y-4">
+				<Link href="/admin/quotations" className="ui-secondary-action">
+					← Volver a cotizaciones
+				</Link>
+				<EditQuotationForm initialData={initialData} />
+			</div>
 		</AppShell>
 	);
 }

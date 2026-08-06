@@ -7,7 +7,10 @@ const extensionCandidates = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 const stubbedSpecifiers = new Map([
 	["next/link", new URL("./stubs/next-link.mjs", import.meta.url).href],
 	["next/image", new URL("./stubs/next-image.mjs", import.meta.url).href],
-	["next/navigation", new URL("./stubs/next-navigation.mjs", import.meta.url).href],
+	[
+		"next/navigation",
+		new URL("./stubs/next-navigation.mjs", import.meta.url).href,
+	],
 	[
 		"@/components/app-shell",
 		new URL("./stubs/app-shell.mjs", import.meta.url).href,
@@ -60,11 +63,32 @@ export async function resolve(specifier, context, nextResolve) {
 		};
 	}
 
+	if (specifier.startsWith(".") && context.parentURL) {
+		const targetUrl = new URL(specifier, context.parentURL);
+		const targetPath = fileURLToPath(targetUrl);
+
+		if (existsSync(targetPath)) {
+			return { url: targetUrl.href, shortCircuit: true };
+		}
+
+		for (const extension of extensionCandidates) {
+			if (existsSync(`${targetPath}${extension}`)) {
+				return {
+					url: new URL(`${targetUrl.pathname}${extension}`, targetUrl).href,
+					shortCircuit: true,
+				};
+			}
+		}
+	}
+
 	return nextResolve(specifier, context);
 }
 
 export async function load(url, context, nextLoad) {
-	if (url.startsWith("file:") && (url.endsWith(".ts") || url.endsWith(".tsx"))) {
+	if (
+		url.startsWith("file:") &&
+		(url.endsWith(".ts") || url.endsWith(".tsx"))
+	) {
 		const source = await readFile(fileURLToPath(url), "utf8");
 		const transpiled = ts.transpileModule(source, {
 			compilerOptions: {

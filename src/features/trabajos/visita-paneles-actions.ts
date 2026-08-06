@@ -9,9 +9,11 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
 import { getVisitSaveRedirectPath } from "./visit-save-redirect";
 import {
+	completeVisitWorkflow,
 	existingAttributes,
 	existingText,
 	getExistingVisita,
+	normalizeExecutionDate,
 } from "./visita-action-helpers";
 
 export type VisitaPanelesActionState = {
@@ -160,9 +162,8 @@ export async function saveVisitaPanelesAction(
 
 	const payload = {
 		trabajo_id: trabajoId,
-		execution_date: existingText(
-			existingVisita,
-			"execution_date",
+		execution_date: normalizeExecutionDate(
+			existingText(existingVisita, "execution_date", executionDate),
 			executionDate,
 		),
 		contact_name: existingText(existingVisita, "contact_name", contactName),
@@ -202,19 +203,14 @@ export async function saveVisitaPanelesAction(
 		return { error: "No se pudo guardar la visita de paneles.", success: null };
 	}
 
-	const { error: trabajoError } = await supabase
-		.from("trabajos")
-		.update({
-			current_stage: "cotizacion",
-			visita_completed_at: payload.completed_at,
-		})
-		.eq("id", trabajoId);
+	const workflowError = await completeVisitWorkflow(
+		supabase,
+		trabajoId,
+		payload.completed_at,
+	);
 
-	if (trabajoError) {
-		return {
-			error: "Se guardó la visita, pero no se pudo actualizar el trabajo.",
-			success: null,
-		};
+	if (workflowError) {
+		return { error: workflowError, success: null };
 	}
 
 	// Crear automáticamente la cotización vinculada al trabajo

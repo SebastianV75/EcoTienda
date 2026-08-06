@@ -104,6 +104,10 @@ export default async function TrabajoDetailPage({
 		trabajo,
 		"diagrama-unifilar",
 	);
+	const cfePreviewSubject = buildTrabajoPreviewSubject(trabajo, "cfe");
+	const cfeReadiness = trabajo.venta
+		? documentReadiness.cfe
+		: { ready: false, missing: ["venta confirmada"] };
 	const descargablesDocuments = [
 		{
 			key: "carta-poder",
@@ -127,6 +131,14 @@ export default async function TrabajoDetailPage({
 				"Verifica el panel de datos del sistema antes de cerrar la etapa.",
 			href: `/admin/documents/diagrama-unifilar/preview?trabajoId=${trabajo.id}`,
 			readiness: documentReadiness["diagrama-unifilar"],
+		},
+		{
+			key: "cfe",
+			title: "Solicitud CFE",
+			description:
+				"Descarga el formato de solicitud de interconexión con los datos disponibles.",
+			href: `/api/trabajos/${trabajo.id}/cfe`,
+			readiness: cfeReadiness,
 		},
 	] as const;
 
@@ -565,41 +577,51 @@ export default async function TrabajoDetailPage({
 								</div>
 							)
 						) : (
-							<div className="grid gap-4 md:grid-cols-2">
-								<div className="space-y-1.5">
-									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
-										Fecha de confirmación
-									</p>
-									<p className="text-sm font-medium text-[var(--foreground)]">
-										{formatDate(trabajo.venta.confirmed_on)}
-									</p>
+							<div className="space-y-4">
+								<div className="grid gap-4 md:grid-cols-2">
+									<div className="space-y-1.5">
+										<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
+											Fecha de confirmación
+										</p>
+										<p className="text-sm font-medium text-[var(--foreground)]">
+											{formatDate(trabajo.venta.confirmed_on)}
+										</p>
+									</div>
+									<div className="space-y-1.5">
+										<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
+											Monto acordado
+										</p>
+										<p className="text-base font-semibold text-[var(--brand-deep)]">
+											$
+											{Number(trabajo.venta.agreed_amount).toLocaleString(
+												"es-MX",
+												{ minimumFractionDigits: 2 },
+											)}
+										</p>
+									</div>
+									<div className="space-y-1.5 md:col-span-2">
+										<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
+											Notas
+										</p>
+										<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
+											{getDisplayValue(trabajo.venta.notes)}
+										</p>
+									</div>
 								</div>
-								<div className="space-y-1.5">
-									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
-										Monto acordado
-									</p>
-									<p className="text-base font-semibold text-[var(--brand-deep)]">
-										$
-										{Number(trabajo.venta.agreed_amount).toLocaleString(
-											"es-MX",
-											{ minimumFractionDigits: 2 },
-										)}
-									</p>
-								</div>
-								<div className="space-y-1.5 md:col-span-2">
-									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
-										Notas
-									</p>
-									<p className="text-sm font-medium text-[var(--foreground)] whitespace-pre-wrap">
-										{getDisplayValue(trabajo.venta.notes)}
-									</p>
-								</div>
+								<a
+									href={`/api/trabajos/${trabajo.id}/contrato`}
+									className="ui-primary-action w-full justify-center sm:w-auto"
+									download
+								>
+									Descargar contrato
+								</a>
 							</div>
 						)}
 						{currentStage === "venta" ? (
 							<DocumentInfoForm
 								trabajoId={trabajo.id}
 								defaults={documentPreviewSubject}
+								cfeDefaults={cfePreviewSubject}
 								missing={documentMissingFields}
 							/>
 						) : null}
@@ -644,7 +666,9 @@ export default async function TrabajoDetailPage({
 												</p>
 											</div>
 											<span className="mt-4 text-sm font-medium text-[var(--brand)]">
-												Abrir vista previa
+												{document.key === "cfe"
+													? "Descargar PDF"
+													: "Abrir vista previa"}
 											</span>
 										</Link>
 									);

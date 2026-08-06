@@ -66,12 +66,22 @@ const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
 	admin: [
 		{ href: "/admin/sales", label: "Ventas", icon: Clipboard },
 		{ href: "/admin/descargables", label: "Descargables", icon: DocumentText },
-		{ href: "/admin/documents", label: "Documentos", icon: DocumentText },
+		{
+			href: "/technician/materiales-cliente",
+			label: "Info para cliente",
+			icon: DocumentText,
+		},
 		{ href: "/admin/workers", label: "Trabajadores", icon: Profile },
 		{ href: "/admin/visits", label: "Visitas", icon: Location },
 		{ href: "/admin/settings", label: "Configuración", icon: Settings },
 	],
-	technician: [],
+	technician: [
+		{
+			href: "/technician/materiales-cliente",
+			label: "Info para cliente",
+			icon: DocumentText,
+		},
+	],
 };
 
 function isActive(pathname: string, item: PrimaryItem) {
@@ -98,20 +108,6 @@ export function MobileBottomNavigation({
 	const onSecondaryRoute = secondaryMobileNavigation.some(
 		(item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
 	);
-
-	function onSheetPanelPointerDown(event: React.PointerEvent<HTMLDivElement>) {
-		const target = event.currentTarget;
-		target.dataset.pointerStartY = String(event.clientY);
-	}
-
-	function onSheetPanelPointerUp(event: React.PointerEvent<HTMLDivElement>) {
-		const target = event.currentTarget;
-		const startY = Number(target.dataset.pointerStartY);
-		if (Number.isFinite(startY) && event.clientY - startY >= 48) {
-			setIsMoreOpen(false);
-		}
-		target.dataset.pointerStartY = "";
-	}
 
 	return (
 		<>
@@ -185,12 +181,7 @@ export function MobileBottomNavigation({
 				onCloseAction={() => setIsMoreOpen(false)}
 				title="Más opciones"
 			>
-				<div
-					onPointerDown={onSheetPanelPointerDown}
-					onPointerUp={onSheetPanelPointerUp}
-					className="relative w-full bg-[rgba(255,255,255,0.98)] lg:hidden print:hidden"
-				>
-					<div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-[var(--border-soft)]" />
+				<div className="relative w-full bg-[rgba(255,255,255,0.98)] lg:hidden print:hidden">
 					<div className="flex items-center justify-between px-5 pt-4">
 						<h2 className="text-base font-semibold tracking-[-0.02em] text-[var(--brand-deep)]">
 							Más opciones

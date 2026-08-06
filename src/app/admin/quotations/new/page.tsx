@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { AppShell } from "@/components/app-shell";
 import { EditQuotationForm as QuotationForm } from "@/features/quotations/quotation-form";
 import { requireRole } from "@/features/auth/session";
@@ -21,18 +23,25 @@ export default async function NewQuotationPage({
 			description="Crea una nueva solicitud de cotización con datos del proveedor, productos y términos."
 			email={user.email}
 		>
-			<QuotationForm initialData={{
-				quotation_number: null,
-				quotation_id: null,
-				trabajo_id: params?.trabajoId ?? null,
-				supplier_name: "",
-				project: null,
-				status: "draft",
-				terms_and_conditions: null,
-				order_deadline: todayString,
-				expected_delivery: null,
-				items: []
-			}} />
+			<div className="space-y-4">
+				<Link href="/admin/quotations" className="ui-secondary-action">
+					← Volver a cotizaciones
+				</Link>
+				<QuotationForm
+					initialData={{
+						quotation_number: null,
+						quotation_id: null,
+						trabajo_id: params?.trabajoId ?? null,
+						supplier_name: "",
+						project: null,
+						status: "draft",
+						terms_and_conditions: null,
+						order_deadline: todayString,
+						expected_delivery: null,
+						items: [],
+					}}
+				/>
+			</div>
 		</AppShell>
 	);
 }
