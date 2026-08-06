@@ -57,10 +57,17 @@ function formatDate(dateString: string | null | undefined): string {
 function extractClientName(project: string | null | undefined): string {
 	if (!project) return "No especificado";
 	const separatorIndex = project.indexOf(" - ");
-	return separatorIndex > 0 ? project.slice(0, separatorIndex).trim() : project.trim();
+	return separatorIndex > 0
+		? project.slice(0, separatorIndex).trim()
+		: project.trim();
 }
 
-function wrapText(text: string, font: PDFFont, size: number, width: number): string[] {
+function wrapText(
+	text: string,
+	font: PDFFont,
+	size: number,
+	width: number,
+): string[] {
 	return text.split("\n").flatMap((paragraph) => {
 		const words = paragraph.split(/\s+/).filter(Boolean);
 		if (words.length === 0) return [""];
@@ -80,7 +87,11 @@ function wrapText(text: string, font: PDFFont, size: number, width: number): str
 	});
 }
 
-function drawWrappedText(page: PDFPage, text: string, options: TextOptions): number {
+function drawWrappedText(
+	page: PDFPage,
+	text: string,
+	options: TextOptions,
+): number {
 	const lineHeight = options.lineHeight ?? options.size * 1.35;
 	const lines = wrapText(text, options.font, options.size, options.width);
 	lines.forEach((line, index) => {
@@ -168,7 +179,12 @@ function drawHeader(
 	);
 }
 
-function drawFooter(page: PDFPage, font: PDFFont, boldFont: PDFFont, company: CompanySettings) {
+function drawFooter(
+	page: PDFPage,
+	font: PDFFont,
+	boldFont: PDFFont,
+	company: CompanySettings,
+) {
 	const y = 48;
 	drawRule(page, y + 20);
 	drawWrappedText(
@@ -263,7 +279,8 @@ async function getQuotationData(quotationId: string): Promise<{
 		.select("*")
 		.eq("id", quotationId)
 		.single();
-	if (quotationError || !quotation) throw new Error("No se pudo cargar la cotización.");
+	if (quotationError || !quotation)
+		throw new Error("No se pudo cargar la cotización.");
 
 	const { data: items, error: itemsError } = await supabase
 		.from("quotation_items")
@@ -282,7 +299,9 @@ async function getQuotationData(quotationId: string): Promise<{
 	};
 }
 
-export async function generateQuotationPDF(quotationId: string): Promise<Buffer> {
+async function generateQuotationPDF(
+	quotationId: string,
+): Promise<Buffer> {
 	const { quotation, items } = await getQuotationData(quotationId);
 	const company = await getCompanySettings();
 	const pdf = await PDFDocument.create();
@@ -362,12 +381,66 @@ export async function generateQuotationPDF(quotationId: string): Promise<Buffer>
 		}
 
 		if (kind === "section" || kind === "note") {
-			drawTableCell(page, text, MARGIN, y, CONTENT_WIDTH, height, font, 9, kind === "section", "left", boldFont);
+			drawTableCell(
+				page,
+				text,
+				MARGIN,
+				y,
+				CONTENT_WIDTH,
+				height,
+				font,
+				9,
+				kind === "section",
+				"left",
+				boldFont,
+			);
 		} else {
-			drawTableCell(page, `${item.quantity} ${item.unit}`, columns[0], y, columns[1] - columns[0], height, font, 9, false, "center");
-			drawTableCell(page, item.product_name, columns[1], y, columns[2] - columns[1], height, font, 9);
-			drawTableCell(page, `$ ${item.unit_price.toFixed(2)}`, columns[2], y, columns[3] - columns[2], height, font, 9, false, "right");
-			drawTableCell(page, `$ ${item.amount.toFixed(2)}`, columns[3], y, columns[4] - columns[3], height, font, 9, false, "right");
+			drawTableCell(
+				page,
+				`${item.quantity} ${item.unit}`,
+				columns[0],
+				y,
+				columns[1] - columns[0],
+				height,
+				font,
+				9,
+				false,
+				"center",
+			);
+			drawTableCell(
+				page,
+				item.product_name,
+				columns[1],
+				y,
+				columns[2] - columns[1],
+				height,
+				font,
+				9,
+			);
+			drawTableCell(
+				page,
+				`$ ${item.unit_price.toFixed(2)}`,
+				columns[2],
+				y,
+				columns[3] - columns[2],
+				height,
+				font,
+				9,
+				false,
+				"right",
+			);
+			drawTableCell(
+				page,
+				`$ ${item.amount.toFixed(2)}`,
+				columns[3],
+				y,
+				columns[4] - columns[3],
+				height,
+				font,
+				9,
+				false,
+				"right",
+			);
 		}
 		y -= height;
 	}
@@ -379,11 +452,45 @@ export async function generateQuotationPDF(quotationId: string): Promise<Buffer>
 	}
 
 	const totalsX = 350;
-	drawTableCell(page, "TOTAL", totalsX, y, 95, 30, boldFont, 10, true, "left", boldFont);
-	drawTableCell(page, `$ ${quotation.total.toFixed(2)}`, 445, y, 110, 30, boldFont, 10, true, "right", boldFont);
+	drawTableCell(
+		page,
+		"TOTAL",
+		totalsX,
+		y,
+		95,
+		30,
+		boldFont,
+		10,
+		true,
+		"left",
+		boldFont,
+	);
+	drawTableCell(
+		page,
+		`$ ${quotation.total.toFixed(2)}`,
+		445,
+		y,
+		110,
+		30,
+		boldFont,
+		10,
+		true,
+		"right",
+		boldFont,
+	);
 	y -= 48;
 	const notes = quotation.terms_and_conditions?.trim() || "Ninguno";
-	const noteHeight = Math.max(42, wrapText(`Comentarios o instrucciones especiales: ${notes}`, font, 9, CONTENT_WIDTH - 20).length * 13 + 20);
+	const noteHeight = Math.max(
+		42,
+		wrapText(
+			`Comentarios o instrucciones especiales: ${notes}`,
+			font,
+			9,
+			CONTENT_WIDTH - 20,
+		).length *
+			13 +
+			20,
+	);
 	page.drawRectangle({
 		x: MARGIN,
 		y: y - noteHeight,
@@ -405,13 +512,17 @@ export async function generateQuotationPDF(quotationId: string): Promise<Buffer>
 	return Buffer.from(await pdf.save());
 }
 
-export async function uploadPDFToStorage(buffer: Buffer, filename: string): Promise<string> {
+async function uploadPDFToStorage(
+	buffer: Buffer,
+	filename: string,
+): Promise<string> {
 	const supabase = await createSupabaseServerClient();
 	const { data, error } = await supabase.storage
 		.from("quotations")
 		.upload(filename, buffer, { contentType: "application/pdf", upsert: true });
 	if (error) throw new Error(`No se pudo subir el PDF: ${error.message}`);
-	return supabase.storage.from("quotations").getPublicUrl(data.path).data.publicUrl;
+	return supabase.storage.from("quotations").getPublicUrl(data.path).data
+		.publicUrl;
 }
 
 export async function generateAndSavePDF(quotationId: string): Promise<string> {
@@ -421,14 +532,19 @@ export async function generateAndSavePDF(quotationId: string): Promise<string> {
 		.select("quotation_number")
 		.eq("id", quotationId)
 		.single();
-	if (error || !quotation?.quotation_number) throw new Error("quotation_number no encontrado");
+	if (error || !quotation?.quotation_number)
+		throw new Error("quotation_number no encontrado");
 
 	const filename = `${quotation.quotation_number}.pdf`;
-	const pdfUrl = await uploadPDFToStorage(await generateQuotationPDF(quotationId), filename);
+	const pdfUrl = await uploadPDFToStorage(
+		await generateQuotationPDF(quotationId),
+		filename,
+	);
 	const { error: updateError } = await supabase
 		.from("quotations")
 		.update({ pdf_url: pdfUrl })
 		.eq("id", quotationId);
-	if (updateError) throw new Error(`No se pudo actualizar pdf_url: ${updateError.message}`);
+	if (updateError)
+		throw new Error(`No se pudo actualizar pdf_url: ${updateError.message}`);
 	return pdfUrl;
 }
