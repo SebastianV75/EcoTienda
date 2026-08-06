@@ -96,6 +96,7 @@ export default async function EditAgendaItemPage({
 
 	const splitName = splitFullName(item.contact_name ?? item.titulo);
 	const workTypeSelection = inferWorkTypeChoice(item.work_type ?? "");
+	const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? null;
 
 	return (
 		<AppShell
@@ -136,6 +137,7 @@ export default async function EditAgendaItemPage({
 						mode="edit"
 						agendaItemId={item.id}
 						workers={workers}
+						googleMapsApiKey={googleMapsApiKey}
 						defaultValues={{
 							fecha: item.fecha,
 							hora: item.appointment_at

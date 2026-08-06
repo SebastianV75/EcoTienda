@@ -155,7 +155,7 @@ export function UbicacionClientePreview({
 					</div>
 				</div>
 
-				<div className="mt-5 grid gap-4 lg:grid-cols-[0.95fr_1.05fr] print:mt-4 print:grid-cols-[0.9fr_1.1fr] print:gap-4">
+				<div className="mt-5 space-y-4 print:mt-4 print:space-y-3">
 					<SectionCard title="Datos del servicio">
 						<dl className="grid gap-3 sm:grid-cols-2 print:gap-x-4 print:gap-y-3">
 							{identityFields.map((field) => (
@@ -201,12 +201,12 @@ export function UbicacionClientePreview({
 									<img
 										src={staticMapUrl ?? undefined}
 										alt={`Mapa centrado en las coordenadas de ${client.full_name}`}
-										className="block h-auto max-h-[420px] w-full object-cover print:max-h-[300px]"
+										className="block h-[300px] w-full object-cover sm:h-[420px] print:h-[360px]"
 										loading="eager"
 										onError={() => setMapFailed(true)}
 									/>
 								) : (
-									<div className="flex min-h-[220px] w-full flex-col items-center justify-center gap-4 p-6 text-center text-sm leading-6 text-[var(--muted)] print:min-h-[170px] print:gap-2 print:p-4 print:text-black">
+									<div className="flex min-h-[300px] w-full flex-col items-center justify-center gap-4 p-6 text-center text-sm leading-6 text-[var(--muted)] sm:min-h-[420px] print:min-h-[360px] print:gap-2 print:p-4 print:text-black">
 										<p>
 											{coordinatesAvailable
 												? "La vista previa del mapa no está disponible por ahora."

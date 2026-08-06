@@ -16,12 +16,14 @@ import {
 	type AgendaWorkTypeOption,
 } from "@/types/agenda";
 import { workerRoleLabels, type WorkerSummary } from "@/types/worker";
+import { geocodeAddress } from "@/features/trabajos/components/google-maps-picker";
 
 type AgendaItemFormProps = {
 	mode: "create" | "edit";
 	agendaItemId?: string;
 	workers: WorkerSummary[];
 	defaultValues: AgendaItemFormValues;
+	googleMapsApiKey?: string | null;
 };
 
 const initialState: AgendaActionState = {
@@ -66,6 +68,7 @@ export function AgendaItemForm({
 	agendaItemId,
 	workers,
 	defaultValues,
+	googleMapsApiKey = null,
 }: AgendaItemFormProps) {
 	const action =
 		mode === "create" ? createAgendaItemAction : updateAgendaItemAction;
@@ -100,6 +103,7 @@ export function AgendaItemForm({
 	const [longitude, setLongitude] = useState(defaultValues.longitude);
 	const [email, setEmail] = useState(defaultValues.email || "");
 	const [isLocating, setIsLocating] = useState(false);
+	const [isGeocoding, setIsGeocoding] = useState(false);
 	const [locationMessage, setLocationMessage] =
 		useState<LocationMessage | null>(null);
 	const workTypeLabel = useMemo(
@@ -207,6 +211,62 @@ export function AgendaItemForm({
 			paternalLastName,
 			nextLastName,
 		);
+	}
+
+	function handleAddressChange(nextAddress: string) {
+		setAddressText(nextAddress);
+		if (latitude.trim() || longitude.trim()) {
+			setLocationMessage({
+				tone: "info",
+				text: "La dirección cambió. Actualiza las coordenadas desde el domicilio antes de guardar.",
+			});
+		}
+	}
+
+	async function handleGeocodeAddress() {
+		const address = addressText.trim();
+		const apiKey =
+			googleMapsApiKey?.trim() ||
+			process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim() ||
+			null;
+
+		if (!address) {
+			setLocationMessage({
+				tone: "error",
+				text: "Captura primero el domicilio completo para obtener sus coordenadas.",
+			});
+			return;
+		}
+
+		if (!apiKey) {
+			setLocationMessage({
+				tone: "error",
+				text: "No hay una clave de Google Maps configurada para convertir el domicilio en coordenadas.",
+			});
+			return;
+		}
+
+		setIsGeocoding(true);
+		setLocationMessage(null);
+		try {
+			const result = await geocodeAddress(address, apiKey);
+			setLatitude(String(result.latitude));
+			setLongitude(String(result.longitude));
+			setLocationMessage({
+				tone: "success",
+				text: "Coordenadas obtenidas desde el domicilio. Revísalas antes de guardar.",
+			});
+		} catch (error) {
+			setLocationMessage({
+				tone: "error",
+				text:
+					error instanceof Error
+						? error.message
+						: "No se pudo convertir el domicilio en coordenadas.",
+			});
+		} finally {
+			setIsGeocoding(false);
+		}
 	}
 
 	function handleUseMyLocation() {
@@ -509,12 +569,28 @@ export function AgendaItemForm({
 						id="address_text"
 						name="address_text"
 						value={addressText}
-						onChange={(event) => setAddressText(event.target.value)}
+						onChange={(event) => handleAddressChange(event.target.value)}
 						required
 						rows={3}
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						placeholder="Dirección completa"
 					/>
+					<div className="flex flex-wrap items-center gap-2">
+						<button
+							type="button"
+							onClick={handleGeocodeAddress}
+							disabled={isGeocoding || isLocating}
+							className="rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-[var(--brand-deep)] shadow-sm transition duration-200 ease-out hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-70"
+						>
+							{isGeocoding
+								? "Buscando domicilio..."
+								: "Obtener coordenadas desde domicilio"}
+						</button>
+						<p className="text-xs leading-5 text-[var(--muted)]">
+							También puedes usar el botón de ubicación del dispositivo o
+							capturarlas manualmente.
+						</p>
+					</div>
 					{/* Mini mapa de Google Maps */}
 					{(addressText || latitude || longitude) && (
 						<div className="mt-3 rounded-xl overflow-hidden border border-[var(--border-soft)]">
@@ -575,14 +651,14 @@ export function AgendaItemForm({
 					<button
 						type="button"
 						onClick={handleUseMyLocation}
-						disabled={isLocating}
+						disabled={isLocating || isGeocoding}
 						className="w-full rounded-full border border-emerald-200 bg-white px-5 py-3 text-sm font-medium text-[var(--brand-deep)] shadow-sm transition duration-200 ease-out hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
 					>
 						{isLocating ? "Obteniendo ubicación..." : "Usar mi ubicación"}
 					</button>
 					<p className="text-xs leading-5 text-[var(--muted)]">
-						Captura las coordenadas del dispositivo y luego ajusta la dirección
-						si hace falta.
+						La dirección, el dispositivo y la captura manual son opciones
+						independientes.
 					</p>
 				</div>
 
