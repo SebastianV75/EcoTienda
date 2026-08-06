@@ -1,8 +1,13 @@
-import puppeteer from "puppeteer";
-import fs from "fs";
-import path from "path";
+import {
+	PDFDocument,
+	StandardFonts,
+	rgb,
+	type PDFFont,
+	type PDFPage,
+} from "pdf-lib";
 
 import { buildTrabajoPreviewSubject } from "./preview-data";
+import { getCfeTemplateBytes } from "./cfe-template";
 import type { TrabajoDocumentSource } from "@/features/trabajos/data";
 
 export type CfePdfData = {
@@ -39,6 +44,7 @@ export type CfePdfData = {
 	solarTechnology: boolean;
 };
 
+const BLACK = rgb(0, 0, 0);
 const COMPANY_CONTACT = {
 	name: "Ricardo Lopez Beall",
 	position: "Gerente",
@@ -149,89 +155,185 @@ export function buildCfePdfData(trabajo: TrabajoDocumentSource): CfePdfData {
 		monthlyGeneration: client.estimated_monthly_generation ?? "",
 		generationUnits: panelCount,
 		primaryFuel: hasSolarData ? "SOLAR" : "",
+		// Valores de la modalidad solar autorizados por el usuario en la referencia oficial.
 		useLoadCenters: hasSolarData,
 		complianceAccepted: hasSolarData,
 		solarTechnology: hasSolarData,
 	};
 }
 
-function replaceTemplateVariables(
-	html: string,
-	data: CfePdfData,
-): string {
-	let result = html;
+function drawFittedText(
+	page: PDFPage,
+	font: PDFFont,
+	text: string,
+	{
+		x,
+		y,
+		maxWidth,
+		fontSize = 7,
+		align = "center",
+	}: {
+		x: number;
+		y: number;
+		maxWidth: number;
+		fontSize?: number;
+		align?: "left" | "center";
+	},
+) {
+	if (!text) return;
 
-	const replacements: Record<string, string> = {
-		"{{applicationDate}}": formatDate(data.applicationDate),
-		"{{applicantName}}": data.applicantName,
-		"{{applicantStreet}}": data.applicantStreet,
-		"{{applicantExteriorNumber}}": data.applicantExteriorNumber,
-		"{{applicantPostalCode}}": data.applicantPostalCode,
-		"{{applicantNeighborhood}}": data.applicantNeighborhood,
-		"{{applicantMunicipality}}": data.applicantMunicipality,
-		"{{applicantState}}": data.applicantState,
-		"{{applicantPhone}}": data.applicantPhone,
-		"{{applicantEmail}}": data.applicantEmail,
-		"{{contactName}}": data.contactName,
-		"{{contactPosition}}": data.contactPosition,
-		"{{contactStreet}}": data.contactStreet,
-		"{{contactExteriorNumber}}": data.contactExteriorNumber,
-		"{{contactNeighborhood}}": data.contactNeighborhood,
-		"{{contactMunicipality}}": data.contactMunicipality,
-		"{{contactState}}": data.contactState,
-		"{{contactPostalCode}}": data.contactPostalCode,
-		"{{contactPhone}}": data.contactPhone,
-		"{{contactEmail}}": data.contactEmail,
-		"{{voltage}}": data.voltage,
-		"{{rpu}}": data.rpu,
-		"{{operationDate}}": formatDate(data.operationDate),
-		"{{installedCapacity}}": data.installedCapacity,
-		"{{capacityToIncrease}}": data.capacityToIncrease,
-		"{{monthlyGeneration}}": data.monthlyGeneration,
-		"{{generationUnits}}": data.generationUnits,
-		"{{primaryFuel}}": data.primaryFuel,
-	};
-
-	for (const [key, value] of Object.entries(replacements)) {
-		result = result.replace(new RegExp(key, "g"), value);
+	let size = fontSize;
+	while (size > 5 && font.widthOfTextAtSize(text, size) > maxWidth) {
+		size -= 0.25;
 	}
 
-	return result;
+	const textWidth = font.widthOfTextAtSize(text, size);
+	const drawX = align === "center" ? x + (maxWidth - textWidth) / 2 : x;
+	page.drawText(text, { x: drawX, y, size, font, color: BLACK });
+}
+
+function drawValue(
+	page: PDFPage,
+	font: PDFFont,
+	text: string,
+	box: {
+		x: number;
+		y: number;
+		width: number;
+		size?: number;
+		align?: "left" | "center";
+	},
+) {
+	drawFittedText(page, font, text, {
+		x: box.x,
+		y: box.y,
+		maxWidth: box.width,
+		fontSize: box.size,
+		align: box.align,
+	});
+}
+
+function drawMark(page: PDFPage, font: PDFFont, x: number, y: number) {
+	page.drawText("X", { x, y, size: 10, font, color: BLACK });
 }
 
 export async function generateCfePdf(data: CfePdfData): Promise<Uint8Array> {
-	const templatePath = path.join(
-		process.cwd(),
-		"src/features/documents/cfe-template.html",
-	);
-	const htmlTemplate = fs.readFileSync(templatePath, "utf-8");
+	const pdf = await PDFDocument.load(getCfeTemplateBytes());
+	const font = await pdf.embedFont(StandardFonts.Helvetica);
+	const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold);
+	const [page] = pdf.getPages();
 
-	const htmlContent = replaceTemplateVariables(htmlTemplate, data);
+	if (!page || pdf.getPageCount() !== 1) {
+		throw new Error("La plantilla CFE debe tener exactamente una página.");
+	}
 
-	const browser = await puppeteer.launch({
-		headless: true,
-		args: ["--no-sandbox", "--disable-setuid-sandbox"],
+	// I. Datos del solicitante. Cada texto se centra dentro de la celda oficial.
+	drawValue(page, font, formatDate(data.applicationDate), {
+		x: 205,
+		y: 699,
+		width: 65,
+	});
+	drawValue(page, font, data.applicantName, { x: 64, y: 671, width: 464 });
+	drawValue(page, font, data.applicantStreet, { x: 64, y: 655, width: 110 });
+	drawValue(page, font, data.applicantExteriorNumber, {
+		x: 174,
+		y: 655,
+		width: 92,
+	});
+	drawValue(page, font, data.applicantPostalCode, {
+		x: 358,
+		y: 655,
+		width: 170,
+	});
+	drawValue(page, font, data.applicantNeighborhood, {
+		x: 64,
+		y: 640,
+		width: 143,
+	});
+	drawValue(page, font, data.applicantMunicipality, {
+		x: 207,
+		y: 640,
+		width: 154,
+	});
+	drawValue(page, font, data.applicantState, { x: 361, y: 640, width: 167 });
+	drawValue(page, font, data.applicantPhone, { x: 64, y: 625, width: 144 });
+	drawValue(page, font, data.applicantEmail, { x: 208, y: 625, width: 153 });
+
+	// II. Datos de contacto de Ecotienda, centrados por celda.
+	drawValue(page, font, data.contactName, { x: 64, y: 584, width: 206 });
+	drawValue(page, font, data.contactPosition, { x: 270, y: 584, width: 258 });
+	drawValue(page, font, data.contactStreet, { x: 64, y: 569, width: 110 });
+	drawValue(page, font, data.contactExteriorNumber, {
+		x: 174,
+		y: 569,
+		width: 92,
+	});
+	drawValue(page, font, data.contactPostalCode, { x: 358, y: 569, width: 170 });
+	drawValue(page, font, data.contactNeighborhood, {
+		x: 64,
+		y: 554,
+		width: 143,
+	});
+	drawValue(page, font, data.contactMunicipality, {
+		x: 207,
+		y: 554,
+		width: 154,
+	});
+	drawValue(page, font, data.contactState, { x: 361, y: 554, width: 167 });
+	drawValue(page, font, data.contactPhone, { x: 64, y: 529, width: 144 });
+	drawValue(page, font, data.contactEmail, { x: 208, y: 529, width: 153 });
+
+	// III. Modalidad: solo marcar cuando el voltaje registrado permite identificar baja tensión.
+	if (data.voltage === "110" || data.voltage === "220") {
+		drawMark(page, boldFont, 247, 497);
+	}
+
+	// IV. La solicitud CFE solo se habilita para proyectos solares: consumo de centros de carga.
+	if (data.useLoadCenters) {
+		drawMark(page, boldFont, 152, 453);
+	}
+
+	// V. Servicio actual
+	drawValue(page, font, data.rpu, { x: 64, y: 414, width: 236 });
+	drawValue(page, font, data.voltage, { x: 300, y: 414, width: 228 });
+
+	// VI. Central eléctrica
+	drawValue(page, font, formatDate(data.operationDate), {
+		x: 64,
+		y: 365,
+		width: 108,
+	});
+	drawValue(page, font, data.installedCapacity, {
+		x: 172,
+		y: 365,
+		width: 100,
+	});
+	drawValue(page, font, data.capacityToIncrease, {
+		x: 272,
+		y: 365,
+		width: 120,
+	});
+	drawValue(page, font, data.monthlyGeneration, {
+		x: 392,
+		y: 365,
+		width: 136,
 	});
 
-	try {
-		const page = await browser.newPage();
-		await page.setContent(htmlContent, { waitUntil: "load" });
-
-		const pdfBuffer = await page.pdf({
-			format: "letter",
-			printBackground: true,
-			margin: {
-				top: "6mm",
-				right: "10mm",
-				bottom: "6mm",
-				left: "10mm",
-			},
-		});
-
-		return new Uint8Array(pdfBuffer);
-	} finally {
-		await browser.close();
+	// VII. Manifestación, tecnología y combustible.
+	if (data.complianceAccepted) {
+		drawMark(page, boldFont, 497, 328);
 	}
+	if (data.solarTechnology) {
+		drawMark(page, boldFont, 133, 306);
+	}
+	if (data.primaryFuel === "SOLAR") {
+		drawValue(page, boldFont, data.primaryFuel, { x: 208, y: 250, width: 152 });
+	}
+	drawValue(page, font, data.generationUnits, { x: 64, y: 250, width: 144 });
+
+	// El bloque de firma oficial permanece íntegramente en blanco para firma manual.
+
+	return pdf.save();
 }
 
 export function getCfeFilename(clientName: string): string {
