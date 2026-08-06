@@ -43,6 +43,17 @@ type GoogleAutocompleteInstance = {
 	) => { remove: () => void };
 };
 
+type GoogleGeocoderResult = {
+	geometry?: { location?: GoogleLatLng };
+};
+
+type GoogleGeocoderInstance = {
+	geocode: (
+		request: { address: string },
+		callback: (results: GoogleGeocoderResult[] | null, status: string) => void,
+	) => void;
+};
+
 declare global {
 	interface Window {
 		google?: {
@@ -66,6 +77,7 @@ declare global {
 						options?: Record<string, unknown>,
 					) => GoogleAutocompleteInstance;
 				};
+				Geocoder: new () => GoogleGeocoderInstance;
 				event?: {
 					addListener: (
 						instance: unknown,
@@ -79,6 +91,90 @@ declare global {
 		initGoogleMaps?: () => void;
 		googleMapsLoaderPromise?: Promise<void>;
 	}
+}
+
+export function loadGoogleMapsScript(apiKey: string) {
+	if (window.google?.maps) {
+		return Promise.resolve();
+	}
+
+	if (window.googleMapsLoaderPromise) {
+		return window.googleMapsLoaderPromise;
+	}
+
+	window.googleMapsLoaderPromise = new Promise<void>((resolve, reject) => {
+		const scriptId = "google-maps-js";
+		const existingScript = document.getElementById(
+			scriptId,
+		) as HTMLScriptElement | null;
+		let settled = false;
+		const timeoutId = window.setTimeout(() => {
+			if (!settled) {
+				settled = true;
+				reject(new Error("Timeout al cargar Google Maps."));
+			}
+		}, 12000);
+
+		const finish = () => {
+			if (settled) return;
+			if (window.google?.maps) {
+				settled = true;
+				window.clearTimeout(timeoutId);
+				resolve();
+			}
+		};
+
+		const fail = () => {
+			if (settled) return;
+			settled = true;
+			window.clearTimeout(timeoutId);
+			reject(new Error("Error al cargar Google Maps."));
+		};
+
+		if (existingScript) {
+			existingScript.addEventListener("load", finish, { once: true });
+			existingScript.addEventListener("error", fail, { once: true });
+			window.setTimeout(finish, 100);
+			return;
+		}
+
+		const script = document.createElement("script");
+		script.id = scriptId;
+		script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker,places`;
+		script.async = true;
+		script.defer = true;
+		script.onload = finish;
+		script.onerror = fail;
+		document.head.appendChild(script);
+	}).finally(() => {
+		window.googleMapsLoaderPromise = undefined;
+	});
+
+	return window.googleMapsLoaderPromise ?? Promise.resolve();
+}
+
+export async function geocodeAddress(address: string, apiKey: string) {
+	await loadGoogleMapsScript(apiKey);
+
+	const maps = window.google?.maps;
+	if (!maps?.Geocoder) {
+		throw new Error("El geocodificador de Google Maps no está disponible.");
+	}
+
+	return new Promise<{ latitude: number; longitude: number }>(
+		(resolve, reject) => {
+			const geocoder = new maps.Geocoder();
+			geocoder.geocode({ address }, (results, status) => {
+				const location = results?.[0]?.geometry?.location;
+				if (status !== "OK" || !location) {
+					reject(new Error("No se encontró una ubicación para esa dirección."));
+					return;
+				}
+
+				resolve({ latitude: location.lat(), longitude: location.lng() });
+			});
+		},
+	);
 }
 
 export function GoogleMapsPicker({
@@ -111,66 +207,6 @@ export function GoogleMapsPicker({
 			});
 		});
 	}, []);
-
-	function loadGoogleMapsScript(apiKey: string) {
-		if (window.google?.maps) {
-			return Promise.resolve();
-		}
-
-		if (window.googleMapsLoaderPromise) {
-			return window.googleMapsLoaderPromise;
-		}
-
-		window.googleMapsLoaderPromise = new Promise<void>((resolve, reject) => {
-			const scriptId = "google-maps-js";
-			const existingScript = document.getElementById(
-				scriptId,
-			) as HTMLScriptElement | null;
-			let settled = false;
-			const timeoutId = window.setTimeout(() => {
-				if (!settled) {
-					settled = true;
-					reject(new Error("Timeout al cargar Google Maps."));
-				}
-			}, 12000);
-
-			const finish = () => {
-				if (settled) return;
-				if (window.google?.maps) {
-					settled = true;
-					window.clearTimeout(timeoutId);
-					resolve();
-				}
-			};
-
-			const fail = () => {
-				if (settled) return;
-				settled = true;
-				window.clearTimeout(timeoutId);
-				reject(new Error("Error al cargar Google Maps."));
-			};
-
-			if (existingScript) {
-				existingScript.addEventListener("load", finish, { once: true });
-				existingScript.addEventListener("error", fail, { once: true });
-				window.setTimeout(finish, 100);
-				return;
-			}
-
-			const script = document.createElement("script");
-			script.id = scriptId;
-			script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker,places`;
-			script.async = true;
-			script.defer = true;
-			script.onload = finish;
-			script.onerror = fail;
-			document.head.appendChild(script);
-		}).finally(() => {
-			window.googleMapsLoaderPromise = undefined;
-		});
-
-		return window.googleMapsLoaderPromise ?? Promise.resolve();
-	}
 
 	const initializeMap = useCallback(async () => {
 		if (!mapRef.current || !window.google?.maps) return;

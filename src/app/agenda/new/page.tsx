@@ -62,6 +62,7 @@ export default async function NewAgendaItemPage({
 	const resolvedSearchParams = searchParams ? await searchParams : undefined;
 	const fromDashboard = resolvedSearchParams?.source === "admin-dashboard";
 	const defaultValues = buildDefaultValues(resolvedSearchParams?.date);
+	const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? null;
 
 	let workers: Awaited<ReturnType<typeof getActiveWorkers>> = [];
 	let workersNotice: string | null = null;
@@ -132,6 +133,7 @@ export default async function NewAgendaItemPage({
 						mode="create"
 						workers={workers}
 						defaultValues={defaultValues}
+						googleMapsApiKey={googleMapsApiKey}
 					/>
 				</section>
 			</div>
