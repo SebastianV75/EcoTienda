@@ -69,5 +69,6 @@ export type CompanySettings = {
 	email: string;
 	contact_name: string;
 	payment_terms_days: number;
+	logo_url?: string | null;
 	updated_at: string;
 };

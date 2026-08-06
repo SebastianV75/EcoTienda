@@ -89,7 +89,7 @@ export const getSupplierById = cache(async (id: string) => {
 export const getQuotations = cache(async (query?: string) => {
 	const supabase = await createSupabaseServerClient();
 
-	// Primero obtener los trabajos en etapa cotizacion
+	// Obtener los trabajos en etapa cotizacion para cotizaciones vinculadas
 	const { data: trabajosData, error: trabajosError } = await supabase
 		.from("trabajos")
 		.select("id")
@@ -103,16 +103,17 @@ export const getQuotations = cache(async (query?: string) => {
 
 	const trabajoIds = (trabajosData ?? []).map((t) => t.id);
 
+	// Incluir cotizaciones vinculadas a trabajos en etapa cotizacion
+	// Y también cotizaciones independientes (trabajo_id = null)
 	let request = supabase
 		.from("quotations")
 		.select(
 			"id, quotation_number, trabajo_id, supplier_name, project, subtotal, total, status, created_at, pdf_url",
 		)
-		.in(
-			"trabajo_id",
+		.or(
 			trabajoIds.length > 0
-				? trabajoIds
-				: ["00000000-0000-0000-0000-000000000000"],
+				? `trabajo_id.in.(${trabajoIds.join(",")}),trabajo_id.is.null`
+				: "trabajo_id.is.null",
 		)
 		.order("created_at", { ascending: false });
 
