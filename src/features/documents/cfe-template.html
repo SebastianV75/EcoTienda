@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud de Interconexión CFE</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 6mm 10mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 7.5pt;
+            line-height: 1.2;
+            color: #000000;
+            padding: 0;
+        }
+
+        /* Encabezado superior */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+            padding-bottom: 2px;
+            border-bottom: 1px solid #000000;
+        }
+
+        .header-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 7.5pt;
+        }
+
+        .header-item label {
+            font-weight: bold;
+        }
+
+        .header-item .line {
+            border-bottom: 1px solid #000000;
+            min-width: 120px;
+            height: 12px;
+        }
+
+        /* Secciones */
+        .section {
+            margin-bottom: 2px;
+        }
+
+        .section-header {
+            background-color: #D9D9D9;
+            padding: 1px 3px;
+            font-weight: bold;
+            font-size: 7.5pt;
+            border: 1px solid #000000;
+            margin-bottom: 2px;
+        }
+
+        /* Tablas de datos */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2px;
+        }
+
+        .data-table td,
+        .data-table th {
+            border: 1px solid #000000;
+            padding: 1px 3px;
+            vertical-align: middle;
+        }
+
+        .data-table label {
+            font-weight: bold;
+            display: block;
+            font-size: 7pt;
+            margin-bottom: 1px;
+        }
+
+        .data-table input[type="text"] {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.5pt;
+            background: transparent;
+            padding: 0;
+        }
+
+        /* Casillas de verificación */
+        .checkbox-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: nowrap;
+            margin-bottom: 2px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 7pt;
+        }
+
+        .checkbox {
+            width: 10px;
+            height: 10px;
+            border: 1.5px solid #000000;
+            background-color: #FFFFFF;
+            display: inline-block;
+        }
+
+        /* Grid de columnas */
+        .column-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            border: 1px solid #000000;
+            margin-bottom: 2px;
+        }
+
+        .column-grid .cell {
+            border: 1px solid #000000;
+            padding: 1px 3px;
+        }
+
+        .column-grid .cell label {
+            font-weight: bold;
+            display: block;
+            font-size: 7pt;
+            margin-bottom: 1px;
+        }
+
+        .column-grid .cell input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.5pt;
+            background: transparent;
+            padding: 0;
+        }
+
+        /* Tabla UTM */
+        .utm-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+
+        .utm-table th,
+        .utm-table td {
+            border: 1px solid #000000;
+            padding: 1px 3px;
+            text-align: center;
+            font-size: 7pt;
+        }
+
+        .utm-table th {
+            font-weight: bold;
+            background-color: #FFFFFF;
+        }
+
+        .utm-table td {
+            height: 15px;
+        }
+
+        /* Manifiesto */
+        .manifesto {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2px 0;
+            padding: 1px 3px;
+            border: 1px solid #000000;
+            font-size: 7pt;
+        }
+
+        .manifesto-text {
+            flex: 1;
+        }
+
+        .manifesto-checkbox {
+            width: 12px;
+            height: 12px;
+            border: 1.5px solid #000000;
+            margin-left: 5px;
+        }
+
+        /* Opciones tecnológicas */
+        .tech-options {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 3px;
+            margin: 2px 0;
+        }
+
+        .tech-option {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 7pt;
+        }
+
+        .tech-option input {
+            border-bottom: 1px solid #000000;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.5pt;
+            outline: none;
+            flex: 1;
+        }
+
+        /* Filas de datos */
+        .data-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            margin: 2px 0;
+        }
+
+        .data-row-item {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .data-row-item label {
+            font-weight: bold;
+            font-size: 7pt;
+        }
+
+        .data-row-item input {
+            border-bottom: 1px solid #000000;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            padding: 1px 3px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.5pt;
+            outline: none;
+        }
+
+        /* Párrafo legal */
+        .legal-paragraph {
+            font-size: 6.5pt;
+            line-height: 1.1;
+            margin: 3px 0;
+            text-align: justify;
+        }
+
+        /* Pie de página - Firmas */
+        .footer-signatures {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-top: 3px;
+        }
+
+        .signature-box {
+            border: 1px solid #000000;
+            padding: 2px;
+        }
+
+        .signature-box-header {
+            font-weight: bold;
+            font-size: 7pt;
+            margin-bottom: 2px;
+            text-align: center;
+        }
+
+        .signature-area {
+            height: 40px;
+            border: 1px solid #000000;
+            margin-bottom: 2px;
+        }
+
+        .signature-label {
+            text-align: center;
+            font-weight: bold;
+            font-size: 7pt;
+            margin-bottom: 2px;
+        }
+
+        .signature-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .signature-details label {
+            font-weight: bold;
+            font-size: 7pt;
+        }
+
+        .signature-details input {
+            border-bottom: 1px solid #000000;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            padding: 1px 3px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.5pt;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Encabezado superior -->
+    <div class="header">
+        <div class="header-item">
+            <label>Fecha</label>
+            <div class="line">{{applicationDate}}</div>
+        </div>
+        <div class="header-item">
+            <label>Número de solicitud</label>
+            <div class="line"></div>
+        </div>
+    </div>
+
+    <!-- I. Datos del solicitante -->
+    <div class="section">
+        <div class="section-header">I. Datos del solicitante</div>
+        <table class="data-table">
+            <tr>
+                <td colspan="4">
+                    <label>Nombre</label>
+                    <input type="text" value="{{applicantName}}">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Domicilio: Calle</label>
+                    <input type="text" value="{{applicantStreet}}">
+                </td>
+                <td>
+                    <label>No. Exterior</label>
+                    <input type="text" value="{{applicantExteriorNumber}}">
+                </td>
+                <td>
+                    <label>No. Interior</label>
+                    <input type="text">
+                </td>
+                <td>
+                    <label>Código postal</label>
+                    <input type="text" value="{{applicantPostalCode}}">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Colonia/Población</label>
+                    <input type="text" value="{{applicantNeighborhood}}">
+                </td>
+                <td>
+                    <label>Delegación/Municipio</label>
+                    <input type="text" value="{{applicantMunicipality}}">
+                </td>
+                <td colspan="2">
+                    <label>Estado</label>
+                    <input type="text" value="{{applicantState}}">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Teléfono</label>
+                    <input type="text" value="{{applicantPhone}}">
+                </td>
+                <td>
+                    <label>Correo electrónico</label>
+                    <input type="text" value="{{applicantEmail}}">
+                </td>
+                <td colspan="2">
+                    <label>Fax</label>
+                    <input type="text">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- II. Datos de Contacto -->
+    <div class="section">
+        <div class="section-header">II. Datos de Contacto</div>
+        <table class="data-table">
+            <tr>
+                <td colspan="2">
+                    <label>Nombre</label>
+                    <input type="text" value="{{contactName}}">
+                </td>
+                <td colspan="2">
+                    <label>Puesto</label>
+                    <input type="text" value="{{contactPosition}}">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Domicilio: Calle</label>
+                    <input type="text" value="{{contactStreet}}">
+                </td>
+                <td>
+                    <label>No. Exterior</label>
+                    <input type="text" value="{{contactExteriorNumber}}">
+                </td>
+                <td>
+                    <label>No. Interior</label>
+                    <input type="text">
+                </td>
+                <td>
+                    <label>Código postal</label>
+                    <input type="text" value="{{contactPostalCode}}">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Colonia/Población</label>
+                    <input type="text" value="{{contactNeighborhood}}">
+                </td>
+                <td>
+                    <label>Delegación/Municipio</label>
+                    <input type="text" value="{{contactMunicipality}}">
+                </td>
+                <td colspan="2">
+                    <label>Estado</label>
+                    <input type="text" value="{{contactState}}">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Teléfono</label>
+                    <input type="text" value="{{contactPhone}}">
+                </td>
+                <td>
+                    <label>Correo electrónico</label>
+                    <input type="text" value="{{contactEmail}}">
+                </td>
+                <td colspan="2">
+                    <label>Fax</label>
+                    <input type="text">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- III. Modalidad -->
+    <div class="section">
+        <div class="section-header">III. Datos del solicitante</div>
+        <div class="checkbox-group">
+            <div class="checkbox-item">
+                <div class="checkbox"></div>
+                <span>Baja tensión</span>
+            </div>
+            <div class="checkbox-item">
+                <div class="checkbox"></div>
+                <span>Media tensión</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- IV. Utilización de la energía eléctrica producida -->
+    <div class="section">
+        <div class="section-header">IV. Utilización de la energía eléctrica producida</div>
+        <div class="checkbox-group">
+            <div class="checkbox-item">
+                <div class="checkbox"></div>
+                <span>Consumo de centros de carga</span>
+            </div>
+            <div class="checkbox-item">
+                <div class="checkbox"></div>
+                <span>Consumo de centros de carga y venta de excedentes</span>
+            </div>
+            <div class="checkbox-item">
+                <div class="checkbox"></div>
+                <span>Venta total</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- V. Datos del servicio de suministro actual -->
+    <div class="section">
+        <div class="section-header">V. Datos del servicio de suministro actual</div>
+        <table class="data-table">
+            <tr>
+                <td>
+                    <label>Registro público de usuario (RPU)</label>
+                    <input type="text" value="{{rpu}}">
+                </td>
+                <td>
+                    <label>Nivel de tensión de suministro</label>
+                    <input type="text" value="{{voltage}}">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- VI. Central eléctrica -->
+    <div class="section">
+        <div class="section-header">VI. Central eléctrica</div>
+        <div class="column-grid">
+            <div class="cell">
+                <label>Fecha estimada de operación normal (DD/MM/AAAA)</label>
+                <input type="text" value="{{operationDate}}">
+            </div>
+            <div class="cell">
+                <label>Capacidad bruta instalada (Kw)</label>
+                <input type="text" value="{{installedCapacity}}">
+            </div>
+            <div class="cell">
+                <label>Capacidad a incrementar (Kw) opcional</label>
+                <input type="text" value="{{capacityToIncrease}}">
+            </div>
+            <div class="cell">
+                <label>Generación promedio mensual estimada</label>
+                <input type="text" value="{{monthlyGeneration}}">
+            </div>
+        </div>
+    </div>
+
+    <!-- VII. Manifestación de cumplimiento -->
+    <div class="section">
+        <div class="section-header">VII. Manifestación de cumplimiento de las especificaciones técnicas generales</div>
+        
+        <div class="manifesto">
+            <div class="manifesto-text">
+                Manifiesto bajo protesta de decir verdad que la Central Eléctrica cumple con las especificaciones técnicas requeridas de acuerdo a las disposiciones
+            </div>
+            <div class="manifesto-checkbox"></div>
+        </div>
+
+        <div class="tech-options">
+            <div class="tech-option">
+                <div class="checkbox"></div>
+                <span>Solar</span>
+            </div>
+            <div class="tech-option">
+                <div class="checkbox"></div>
+                <span>Eolico</span>
+            </div>
+            <div class="tech-option">
+                <div class="checkbox"></div>
+                <span>Biomasa</span>
+            </div>
+            <div class="tech-option">
+                <div class="checkbox"></div>
+                <span>Cogeneracion</span>
+            </div>
+            <div class="tech-option">
+                <div class="checkbox"></div>
+                <span>Otro</span>
+            </div>
+            <div class="tech-option">
+                <span>Especificar</span>
+                <input type="text">
+            </div>
+        </div>
+
+        <div class="data-row">
+            <div class="data-row-item">
+                <label>No. de unidades de generación</label>
+                <input type="text" value="{{generationUnits}}">
+            </div>
+            <div class="data-row-item">
+                <label>Combustible principal</label>
+                <input type="text" value="{{primaryFuel}}">
+            </div>
+            <div class="data-row-item">
+                <label>Combustible secundario</label>
+                <input type="text">
+            </div>
+        </div>
+
+        <!-- Cuadrícula UTM -->
+        <table class="utm-table">
+            <thead>
+                <tr>
+                    <th>X</th>
+                    <th>Y</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Párrafo legal -->
+    <div class="legal-paragraph">
+        ____________________________________ (Representante Legal o El Solicitante) (el Solicitante) certifica que la información proporcionada en la presente solicitud es apropiada, precisa y verídica. El solicitante acepta que los datos proporcionados sean utilizados para llevar a cabo los estatutos de interconexión para garantizar la confiabilidad del sistema Eléctrico Nacional con la Interconexión de la Central Eléctrica del Solicitante al amparo de la Ley de la Industria Eléctrica y su Reglamento, en caso de ser requeridos. El solicitante entiende que los datos proporcionados, se añadirán a las bases de datos del Suministrador cuando se firme un contrato de Interconexión respectivo. El solicitante deberá anexar a la presente solicitud la información técnica requerida en el documento "Información Técnica Requerida para Centrales Eléctricas".
+    </div>
+
+    <!-- Pie de página - Firmas -->
+    <div class="footer-signatures">
+        <!-- Contenedor Izquierdo (Firma) -->
+        <div class="signature-box">
+            <div class="signature-box-header">Firma de conformidad</div>
+            <div class="signature-area"></div>
+            <div class="signature-label">Solicitante</div>
+            <div class="signature-details">
+                <label>Nombre</label>
+                <input type="text" value="{{applicantName}}">
+                <label>Cargo</label>
+                <input type="text">
+                <label>Fecha</label>
+                <input type="text" value="{{applicationDate}}">
+            </div>
+        </div>
+
+        <!-- Contenedor Derecho (Sello) -->
+        <div class="signature-box">
+            <div class="signature-area" style="height: 45px;"></div>
+            <div class="signature-label">Sello y firma / Centro de atención</div>
+        </div>
+    </div>
+</body>
+</html>

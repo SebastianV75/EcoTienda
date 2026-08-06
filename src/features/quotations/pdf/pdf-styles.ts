@@ -33,6 +33,12 @@ export const styles = StyleSheet.create({
 		flex: 1,
 		textAlign: "right",
 	},
+	logo: {
+		width: 100,
+		height: 40,
+		marginBottom: 8,
+		objectFit: "contain",
+	},
 	companyName: {
 		fontSize: 24,
 		fontWeight: "bold",

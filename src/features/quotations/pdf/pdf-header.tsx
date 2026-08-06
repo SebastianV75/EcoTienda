@@ -1,4 +1,4 @@
-import { Text, View } from "@react-pdf/renderer";
+import { Image, Text, View } from "@react-pdf/renderer";
 
 import { styles } from "./pdf-styles";
 import type { CompanySettings } from "@/types/quotation";
@@ -17,6 +17,9 @@ export function PDFHeader({
 	return (
 		<View style={styles.header}>
 			<View style={styles.headerLeft}>
+				{company.logo_url && (
+					<Image src={company.logo_url} style={styles.logo} />
+				)}
 				<Text style={styles.companyName}>{company.company_name}</Text>
 				<Text style={styles.companySlogan}>{company.slogan}</Text>
 				<Text style={styles.companyInfo}>

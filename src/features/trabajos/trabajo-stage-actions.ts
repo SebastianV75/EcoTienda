@@ -572,12 +572,14 @@ export async function saveTrabajoVentaAction(
 		return { error: "No se pudo guardar la venta.", success: null };
 	}
 
+	const ventaCompletedAt = result.stagePayload.completed_at;
+
 	const { error: trabajoError, count: trabajoUpdateCount } = await supabase
 		.from("trabajos")
 		.update(
 			{
-				current_stage: "venta",
-				venta_completed_at: result.stagePayload.completed_at,
+				current_stage: "descargables",
+				venta_completed_at: ventaCompletedAt,
 			},
 			{ count: "exact" },
 		)
@@ -607,10 +609,11 @@ export async function saveTrabajoVentaAction(
 	revalidatePath("/admin/trabajos");
 	revalidatePath(`/admin/trabajos/${result.values.trabajo_id}`);
 	revalidatePath(`/admin/visits/${result.values.trabajo_id}`);
+	revalidatePath("/admin/descargables");
 
 	return {
 		error: null,
-		success: "Venta confirmada y trabajo avanzado a Venta.",
+		success: "Venta confirmada y trabajo avanzado a Descargables.",
 	};
 }
 
