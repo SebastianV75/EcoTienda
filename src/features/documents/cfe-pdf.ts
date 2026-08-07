@@ -7,6 +7,7 @@ import {
 } from "pdf-lib";
 
 import { buildTrabajoPreviewSubject } from "./preview-data";
+import { getCfeTemplateBytes } from "./cfe-template";
 import type { TrabajoDocumentSource } from "@/features/trabajos/data";
 
 export type CfePdfData = {
@@ -44,9 +45,6 @@ export type CfePdfData = {
 };
 
 const BLACK = rgb(0, 0, 0);
-const WHITE = rgb(1, 1, 1);
-const LIGHT_GRAY = rgb(0.85, 0.85, 0.85);
-
 const COMPANY_CONTACT = {
 	name: "Ricardo Lopez Beall",
 	position: "Gerente",
@@ -64,9 +62,11 @@ function textValue(value: unknown): string {
 	if (typeof value === "string") {
 		return value.trim();
 	}
+
 	if (typeof value === "number" && Number.isFinite(value)) {
 		return String(value);
 	}
+
 	return "";
 }
 
@@ -86,6 +86,7 @@ function splitStreetAddress(address: string): {
 	if (!match) {
 		return { street: trimmed.replace(/^calle\s+/i, ""), exteriorNumber: "" };
 	}
+
 	return {
 		street: match[1].trim().replace(/^calle\s+/i, ""),
 		exteriorNumber: match[2],
@@ -103,6 +104,7 @@ function formatDate(value: string | null): string {
 	if (!value) return "";
 	const date = new Date(`${value}T12:00:00Z`);
 	if (Number.isNaN(date.getTime())) return "";
+
 	return new Intl.DateTimeFormat("es-MX", {
 		day: "2-digit",
 		month: "2-digit",
@@ -153,1271 +155,222 @@ export function buildCfePdfData(trabajo: TrabajoDocumentSource): CfePdfData {
 		monthlyGeneration: client.estimated_monthly_generation ?? "",
 		generationUnits: panelCount,
 		primaryFuel: hasSolarData ? "SOLAR" : "",
+		// Valores de la modalidad solar autorizados por el usuario en la referencia oficial.
 		useLoadCenters: hasSolarData,
 		complianceAccepted: hasSolarData,
 		solarTechnology: hasSolarData,
 	};
 }
 
-// Letter size in points (72 dpi): 612 x 792
-const PAGE_WIDTH = 612;
-const PAGE_HEIGHT = 792;
-const MARGIN_X = 28; // ~10mm
-const MARGIN_TOP = 17; // ~6mm
-const MARGIN_BOTTOM = 17;
-const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_X * 2;
-
-function drawSectionHeader(
+function drawFittedText(
 	page: PDFPage,
 	font: PDFFont,
-	y: number,
 	text: string,
-): number {
-	const height = 14;
-	page.drawRectangle({
-		x: MARGIN_X,
-		y: y - height,
-		width: CONTENT_WIDTH,
-		height,
-		color: LIGHT_GRAY,
-		borderColor: BLACK,
-		borderWidth: 1,
-	});
-	page.drawText(text, {
-		x: MARGIN_X + 4,
-		y: y - height + 3,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	return y - height - 3;
-}
-
-function drawField(
-	page: PDFPage,
-	font: PDFFont,
-	boldFont: PDFFont,
-	x: number,
-	y: number,
-	width: number,
-	label: string,
-	value: string,
-): { nextY: number } {
-	const labelHeight = 9;
-	const valueHeight = 11;
-	const totalHeight = labelHeight + valueHeight + 2;
-
-	// Label background
-	page.drawRectangle({
+	{
 		x,
-		y: y - labelHeight,
-		width,
-		height: labelHeight,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText(label, {
-		x: x + 2,
-		y: y - labelHeight + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
+		y,
+		maxWidth,
+		fontSize = 8.5,
+		align = "left",
+	}: {
+		x: number;
+		y: number;
+		maxWidth: number;
+		fontSize?: number;
+		align?: "left" | "center";
+	},
+) {
+	if (!text) return;
 
-	// Value area
-	page.drawRectangle({
-		x,
-		y: y - labelHeight - valueHeight,
-		width,
-		height: valueHeight,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	if (value) {
-		page.drawText(value, {
-			x: x + 2,
-			y: y - labelHeight - valueHeight + 2,
-			size: 8,
-			font,
-			color: BLACK,
-		});
+	let size = fontSize;
+	while (size > 5 && font.widthOfTextAtSize(text, size) > maxWidth) {
+		size -= 0.25;
 	}
 
-	return { nextY: y - totalHeight };
+	const textWidth = font.widthOfTextAtSize(text, size);
+	const drawX = align === "center" ? x + (maxWidth - textWidth) / 2 : x;
+	page.drawText(text, { x: drawX, y, size, font, color: BLACK });
 }
 
-function drawCheckboxRow(
+function drawValue(
 	page: PDFPage,
 	font: PDFFont,
-	x: number,
-	y: number,
-	options: { label: string; checked?: boolean }[],
-): { nextY: number } {
-	const boxSize = 8;
-	const spacing = 160;
-	let currentX = x;
+	text: string,
+	box: {
+		x: number;
+		y: number;
+		width: number;
+		size?: number;
+		align?: "left" | "center";
+	},
+) {
+	drawFittedText(page, font, text, {
+		x: box.x,
+		y: box.y,
+		maxWidth: box.width,
+		fontSize: box.size,
+		align: box.align,
+	});
+}
 
-	for (const option of options) {
-		page.drawRectangle({
-			x: currentX,
-			y: y - boxSize,
-			width: boxSize,
-			height: boxSize,
-			borderColor: BLACK,
-			borderWidth: 1,
-			color: WHITE,
-		});
-		if (option.checked) {
-			page.drawText("X", {
-				x: currentX + 2,
-				y: y - boxSize + 1,
-				size: 7,
-				font,
-				color: BLACK,
-			});
-		}
-		page.drawText(option.label, {
-			x: currentX + boxSize + 2,
-			y: y - boxSize + 1,
-			size: 7,
-			font,
-			color: BLACK,
-		});
-		currentX += spacing;
-	}
-
-	return { nextY: y - boxSize - 2 };
+function drawMark(page: PDFPage, font: PDFFont, x: number, y: number) {
+	page.drawText("X", { x, y, size: 8.5, font, color: BLACK });
 }
 
 export async function generateCfePdf(data: CfePdfData): Promise<Uint8Array> {
-	const pdfDoc = await PDFDocument.create();
-	const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-	const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-	const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-
-	let y = PAGE_HEIGHT - MARGIN_TOP;
-
-	// Header: Fecha and Número de solicitud
-	page.drawText("Fecha", {
-		x: MARGIN_X,
-		y: y - 10,
-		size: 8,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawLine({
-		start: { x: MARGIN_X + 30, y: y - 8 },
-		end: { x: MARGIN_X + 120, y: y - 8 },
-		color: BLACK,
-		thickness: 0.5,
-	});
-
-	page.drawText("Número de solicitud", {
-		x: PAGE_WIDTH - MARGIN_X - 120,
-		y: y - 10,
-		size: 8,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawLine({
-		start: { x: PAGE_WIDTH - MARGIN_X - 10, y: y - 8 },
-		end: { x: PAGE_WIDTH - MARGIN_X, y: y - 8 },
-		color: BLACK,
-		thickness: 0.5,
-	});
-
-	y -= 20;
-
-	// I. Datos del solicitante
-	y = drawSectionHeader(page, boldFont, y, "I. Datos del solicitante");
-
-	const fieldWidth = CONTENT_WIDTH / 4;
-	const halfWidth = CONTENT_WIDTH / 2;
-
-	// Nombre (full width)
-	const nombreResult = drawField(
-		page,
-		font,
-		boldFont,
-		MARGIN_X,
-		y,
-		CONTENT_WIDTH,
-		"Nombre",
-		data.applicantName,
-	);
-	y = nombreResult.nextY;
-
-	// Row: Calle, No. Exterior, No. Interior, Código postal
-	const calleW = CONTENT_WIDTH * 0.4;
-	const noExtW = CONTENT_WIDTH * 0.2;
-	const noIntW = CONTENT_WIDTH * 0.15;
-	const cpW = CONTENT_WIDTH * 0.25;
-
-	let cx = MARGIN_X;
-	const row1Y = y;
-	const labelH = 9;
-	const valueH = 11;
-
-	// Calle
-	page.drawRectangle({
-		x: cx,
-		y: row1Y - labelH - valueH,
-		width: calleW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Domicilio: Calle", {
-		x: cx + 2,
-		y: row1Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.applicantStreet, {
-		x: cx + 2,
-		y: row1Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += calleW;
-
-	// No. Exterior
-	page.drawRectangle({
-		x: cx,
-		y: row1Y - labelH - valueH,
-		width: noExtW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("No. Exterior", {
-		x: cx + 2,
-		y: row1Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.applicantExteriorNumber, {
-		x: cx + 2,
-		y: row1Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += noExtW;
-
-	// No. Interior
-	page.drawRectangle({
-		x: cx,
-		y: row1Y - labelH - valueH,
-		width: noIntW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("No. Interior", {
-		x: cx + 2,
-		y: row1Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	cx += noIntW;
-
-	// Código postal
-	page.drawRectangle({
-		x: cx,
-		y: row1Y - labelH - valueH,
-		width: cpW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Código postal", {
-		x: cx + 2,
-		y: row1Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.applicantPostalCode, {
-		x: cx + 2,
-		y: row1Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-
-	y = row1Y - labelH - valueH - 2;
-
-	// Row: Colonia, Delegación, Estado
-	const colW = CONTENT_WIDTH * 0.3;
-	const delW = CONTENT_WIDTH * 0.35;
-	const estW = CONTENT_WIDTH * 0.35;
-
-	cx = MARGIN_X;
-	const row2Y = y;
-
-	page.drawRectangle({
-		x: cx,
-		y: row2Y - labelH - valueH,
-		width: colW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Colonia/Población", {
-		x: cx + 2,
-		y: row2Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.applicantNeighborhood, {
-		x: cx + 2,
-		y: row2Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += colW;
-
-	page.drawRectangle({
-		x: cx,
-		y: row2Y - labelH - valueH,
-		width: delW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Delegación/Municipio", {
-		x: cx + 2,
-		y: row2Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.applicantMunicipality, {
-		x: cx + 2,
-		y: row2Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += delW;
-
-	page.drawRectangle({
-		x: cx,
-		y: row2Y - labelH - valueH,
-		width: estW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Estado", {
-		x: cx + 2,
-		y: row2Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.applicantState, {
-		x: cx + 2,
-		y: row2Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-
-	y = row2Y - labelH - valueH - 2;
-
-	// Row: Teléfono, Correo, Fax
-	const telW = CONTENT_WIDTH * 0.25;
-	const emailW = CONTENT_WIDTH * 0.45;
-	const faxW = CONTENT_WIDTH * 0.3;
-
-	cx = MARGIN_X;
-	const row3Y = y;
-
-	page.drawRectangle({
-		x: cx,
-		y: row3Y - labelH - valueH,
-		width: telW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Teléfono", {
-		x: cx + 2,
-		y: row3Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.applicantPhone, {
-		x: cx + 2,
-		y: row3Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += telW;
-
-	page.drawRectangle({
-		x: cx,
-		y: row3Y - labelH - valueH,
-		width: emailW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Correo electrónico", {
-		x: cx + 2,
-		y: row3Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.applicantEmail, {
-		x: cx + 2,
-		y: row3Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += emailW;
-
-	page.drawRectangle({
-		x: cx,
-		y: row3Y - labelH - valueH,
-		width: faxW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Fax", {
-		x: cx + 2,
-		y: row3Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-
-	y = row3Y - labelH - valueH - 4;
-
-	// II. Datos de Contacto
-	y = drawSectionHeader(page, boldFont, y, "II. Datos de Contacto");
-
-	// Nombre, Puesto
-	const nameW2 = CONTENT_WIDTH * 0.5;
-	const posW2 = CONTENT_WIDTH * 0.5;
-
-	cx = MARGIN_X;
-	const cRow1Y = y;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow1Y - labelH - valueH,
-		width: nameW2,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Nombre", {
-		x: cx + 2,
-		y: cRow1Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.contactName, {
-		x: cx + 2,
-		y: cRow1Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += nameW2;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow1Y - labelH - valueH,
-		width: posW2,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Puesto", {
-		x: cx + 2,
-		y: cRow1Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.contactPosition, {
-		x: cx + 2,
-		y: cRow1Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-
-	y = cRow1Y - labelH - valueH - 2;
-
-	// Calle, No. Ext, No. Int, CP
-	cx = MARGIN_X;
-	const cRow2Y = y;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow2Y - labelH - valueH,
-		width: calleW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Domicilio: Calle", {
-		x: cx + 2,
-		y: cRow2Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.contactStreet, {
-		x: cx + 2,
-		y: cRow2Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += calleW;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow2Y - labelH - valueH,
-		width: noExtW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("No. Exterior", {
-		x: cx + 2,
-		y: cRow2Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.contactExteriorNumber, {
-		x: cx + 2,
-		y: cRow2Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += noExtW;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow2Y - labelH - valueH,
-		width: noIntW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("No. Interior", {
-		x: cx + 2,
-		y: cRow2Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	cx += noIntW;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow2Y - labelH - valueH,
-		width: cpW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Código postal", {
-		x: cx + 2,
-		y: cRow2Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.contactPostalCode, {
-		x: cx + 2,
-		y: cRow2Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-
-	y = cRow2Y - labelH - valueH - 2;
-
-	// Colonia, Delegación, Estado
-	cx = MARGIN_X;
-	const cRow3Y = y;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow3Y - labelH - valueH,
-		width: colW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Colonia/Población", {
-		x: cx + 2,
-		y: cRow3Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.contactNeighborhood, {
-		x: cx + 2,
-		y: cRow3Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += colW;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow3Y - labelH - valueH,
-		width: delW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Delegación/Municipio", {
-		x: cx + 2,
-		y: cRow3Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.contactMunicipality, {
-		x: cx + 2,
-		y: cRow3Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += delW;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow3Y - labelH - valueH,
-		width: estW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Estado", {
-		x: cx + 2,
-		y: cRow3Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.contactState, {
-		x: cx + 2,
-		y: cRow3Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-
-	y = cRow3Y - labelH - valueH - 2;
-
-	// Teléfono, Correo, Fax
-	cx = MARGIN_X;
-	const cRow4Y = y;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow4Y - labelH - valueH,
-		width: telW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Teléfono", {
-		x: cx + 2,
-		y: cRow4Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.contactPhone, {
-		x: cx + 2,
-		y: cRow4Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += telW;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow4Y - labelH - valueH,
-		width: emailW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Correo electrónico", {
-		x: cx + 2,
-		y: cRow4Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.contactEmail, {
-		x: cx + 2,
-		y: cRow4Y - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += emailW;
-
-	page.drawRectangle({
-		x: cx,
-		y: cRow4Y - labelH - valueH,
-		width: faxW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Fax", {
-		x: cx + 2,
-		y: cRow4Y - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-
-	y = cRow4Y - labelH - valueH - 4;
-
-	// III. Datos del solicitante (Modalidad)
-	y = drawSectionHeader(page, boldFont, y, "III. Datos del solicitante");
-
-	// Subtítulo Modalidad de solicitud
-	page.drawText("Modalidad de solicitud", {
-		x: MARGIN_X + 4,
-		y: y - 12,
-		size: 7,
-		font: boldFont,
-		color: BLACK,
-	});
-	y -= 16;
-
-	const isBajaTension = data.voltage === "110" || data.voltage === "220";
-	const checkboxResult = drawCheckboxRow(page, font, MARGIN_X, y, [
-		{ label: "Baja tensión", checked: isBajaTension },
-		{ label: "Media tensión", checked: !isBajaTension },
-	]);
-	y = checkboxResult.nextY - 2;
-
-	// IV. Utilización
-	y = drawSectionHeader(
-		page,
-		boldFont,
-		y,
-		"IV. Utilización de la energía eléctrica producida",
-	);
-
-	const utilResult = drawCheckboxRow(page, font, MARGIN_X, y, [
-		{
-			label: "Consumo de centros de carga",
-			checked: data.useLoadCenters,
-		},
-		{
-			label: "Consumo de centros de carga y venta de excedentes",
-			checked: false,
-		},
-		{ label: "Venta total", checked: false },
-	]);
-	y = utilResult.nextY - 2;
-
-	// V. Datos del servicio de suministro actual
-	y = drawSectionHeader(
-		page,
-		boldFont,
-		y,
-		"V. Datos del servicio de suministro actual",
-	);
-
-	const rpuW = CONTENT_WIDTH * 0.5;
-	const voltW = CONTENT_WIDTH * 0.5;
-
-	cx = MARGIN_X;
-	const vRowY = y;
-
-	page.drawRectangle({
-		x: cx,
-		y: vRowY - labelH - valueH,
-		width: rpuW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Registro público de usuario (RPU)", {
-		x: cx + 2,
-		y: vRowY - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.rpu, {
-		x: cx + 2,
-		y: vRowY - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += rpuW;
-
-	page.drawRectangle({
-		x: cx,
-		y: vRowY - labelH - valueH,
-		width: voltW,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Nivel de tensión de suministro", {
-		x: cx + 2,
-		y: vRowY - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.voltage, {
-		x: cx + 2,
-		y: vRowY - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-
-	y = vRowY - labelH - valueH - 4;
-
-	// VI. Central eléctrica
-	y = drawSectionHeader(page, boldFont, y, "VI. Central eléctrica");
-
-	const colW4 = CONTENT_WIDTH / 4;
-	const dateStr = formatDate(data.operationDate);
-
-	cx = MARGIN_X;
-	const ceRowY = y;
-
-	const ceFields = [
-		{ label: "Fecha estimada de\noperación normal (DD/MM/AAAA)", value: dateStr },
-		{ label: "Capacidad bruta instalada (Kw)", value: data.installedCapacity },
-		{
-			label: "Capacidad a incrementar (Kw) opcional",
-			value: data.capacityToIncrease,
-		},
-		{
-			label: "Generación promedio mensual estimada",
-			value: data.monthlyGeneration,
-		},
-	];
-
-	for (const field of ceFields) {
-		page.drawRectangle({
-			x: cx,
-			y: ceRowY - labelH - valueH - 6,
-			width: colW4,
-			height: labelH + valueH + 6,
-			borderColor: BLACK,
-			borderWidth: 0.5,
-			color: WHITE,
-		});
-		// Handle multiline labels
-		const lines = field.label.split("\n");
-		let labelY = ceRowY - 6;
-		for (const line of lines) {
-			page.drawText(line, {
-				x: cx + 2,
-				y: labelY,
-				size: 5.5,
-				font: boldFont,
-				color: BLACK,
-			});
-			labelY -= 7;
-		}
-		if (field.value) {
-			page.drawText(field.value, {
-				x: cx + 2,
-				y: ceRowY - labelH - valueH + 2,
-				size: 8,
-				font,
-				color: BLACK,
-			});
-		}
-		cx += colW4;
+	const pdf = await PDFDocument.load(getCfeTemplateBytes());
+	const font = await pdf.embedFont(StandardFonts.Helvetica);
+	const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold);
+	const [page] = pdf.getPages();
+
+	if (!page || pdf.getPageCount() !== 1) {
+		throw new Error("La plantilla CFE debe tener exactamente una página.");
 	}
 
-	y = ceRowY - labelH - valueH - 4;
-
-	// VII. Manifestación
-	y = drawSectionHeader(
-		page,
-		boldFont,
-		y,
-		"VII. Manifestación de cumplimiento de las especificaciones técnicas generales",
-	);
-
-	// Manifiesto text with checkbox
-	const manY = y;
-	const manHeight = 16;
-	page.drawRectangle({
-		x: MARGIN_X,
-		y: manY - manHeight,
-		width: CONTENT_WIDTH - 15,
-		height: manHeight,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
+	// Las coordenadas corresponden a la plantilla plana aprobada por el usuario.
+	drawValue(page, font, formatDate(data.applicationDate), {
+		x: 52.43,
+		y: 768.6,
+		width: 118,
+		size: 7.5,
 	});
-	page.drawText(
-		"Manifiesto bajo protesta de decir verdad que la Central Eléctrica cumple con las especificaciones técnicas requeridas de acuerdo a las disposiciones",
-		{
-			x: MARGIN_X + 2,
-			y: manY - manHeight + 4,
-			size: 6,
-			font,
-			color: BLACK,
-		},
-	);
 
-	// Checkbox at right
-	page.drawRectangle({
-		x: PAGE_WIDTH - MARGIN_X - 12,
-		y: manY - manHeight + 3,
-		width: 8,
-		height: 8,
-		borderColor: BLACK,
-		borderWidth: 1,
-		color: WHITE,
+	// I. Datos del solicitante.
+	drawValue(page, font, data.applicantName, { x: 31.5, y: 731.34, width: 545 });
+	drawValue(page, font, data.applicantStreet, {
+		x: 31.5,
+		y: 710.34,
+		width: 134,
 	});
+	drawValue(page, font, data.applicantExteriorNumber, {
+		x: 170.25,
+		y: 710.34,
+		width: 134,
+	});
+	drawValue(page, font, data.applicantPostalCode, {
+		x: 447.75,
+		y: 710.34,
+		width: 129,
+	});
+	drawValue(page, font, data.applicantNeighborhood, {
+		x: 31.5,
+		y: 688.59,
+		width: 134,
+	});
+	drawValue(page, font, data.applicantMunicipality, {
+		x: 170.25,
+		y: 688.59,
+		width: 134,
+	});
+	drawValue(page, font, data.applicantState, {
+		x: 309,
+		y: 688.59,
+		width: 267,
+	});
+	drawValue(page, font, data.applicantPhone, {
+		x: 31.5,
+		y: 667.59,
+		width: 134,
+	});
+	drawValue(page, font, data.applicantEmail, {
+		x: 170.25,
+		y: 667.59,
+		width: 134,
+	});
+
+	// II. Datos de contacto de Ecotienda.
+	drawValue(page, font, data.contactName, { x: 31.5, y: 630.84, width: 273 });
+	drawValue(page, font, data.contactPosition, {
+		x: 309,
+		y: 630.84,
+		width: 267,
+	});
+	drawValue(page, font, data.contactStreet, { x: 31.5, y: 609.84, width: 134 });
+	drawValue(page, font, data.contactExteriorNumber, {
+		x: 170.25,
+		y: 609.84,
+		width: 134,
+	});
+	drawValue(page, font, data.contactPostalCode, {
+		x: 447.75,
+		y: 609.84,
+		width: 129,
+	});
+	drawValue(page, font, data.contactNeighborhood, {
+		x: 31.5,
+		y: 588.84,
+		width: 134,
+	});
+	drawValue(page, font, data.contactMunicipality, {
+		x: 170.25,
+		y: 588.84,
+		width: 134,
+	});
+	drawValue(page, font, data.contactState, { x: 309, y: 588.84, width: 267 });
+	drawValue(page, font, data.contactPhone, { x: 31.5, y: 567.09, width: 134 });
+	drawValue(page, font, data.contactEmail, {
+		x: 170.25,
+		y: 567.09,
+		width: 134,
+	});
+
+	// III. Modalidad y IV. utilización de energía.
+	if (data.voltage === "110" || data.voltage === "220") {
+		drawMark(page, boldFont, 29.1, 541.2);
+	}
+	if (data.useLoadCenters) {
+		drawMark(page, boldFont, 29.1, 516.2);
+	}
+
+	// V. Servicio actual.
+	drawValue(page, font, data.rpu, { x: 31.5, y: 483.84, width: 273 });
+	drawValue(page, font, data.voltage, { x: 309, y: 483.84, width: 267 });
+
+	// VI. Central eléctrica.
+	drawValue(page, font, formatDate(data.operationDate), {
+		x: 32.25,
+		y: 438.09,
+		width: 134,
+	});
+	drawValue(page, font, data.installedCapacity, {
+		x: 170.81,
+		y: 446.34,
+		width: 134,
+	});
+	drawValue(page, font, data.capacityToIncrease, {
+		x: 309.37,
+		y: 446.34,
+		width: 134,
+	});
+	drawValue(page, font, data.monthlyGeneration, {
+		x: 447.94,
+		y: 438.09,
+		width: 129,
+	});
+
+	// VII. Manifestación, tecnología y combustible.
 	if (data.complianceAccepted) {
-		page.drawText("X", {
-			x: PAGE_WIDTH - MARGIN_X - 10,
-			y: manY - manHeight + 4,
-			size: 7,
-			font,
-			color: BLACK,
-		});
+		drawMark(page, boldFont, 573.3, 407.3);
 	}
-
-	y = manY - manHeight - 4;
-
-	// Technology options
-	const techResult = drawCheckboxRow(page, font, MARGIN_X, y, [
-		{ label: "Solar", checked: data.solarTechnology },
-		{ label: "Eolico", checked: false },
-		{ label: "Biomasa", checked: false },
-		{ label: "Cogeneracion", checked: false },
-		{ label: "Otro", checked: false },
-	]);
-	y = techResult.nextY - 2;
-
-	// No. units, Combustible principal, Combustible secundario
-	const row3W = CONTENT_WIDTH / 3;
-	cx = MARGIN_X;
-	const techRowY = y;
-
-	page.drawRectangle({
-		x: cx,
-		y: techRowY - labelH - valueH,
-		width: row3W,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("No. de unidades de generación", {
-		x: cx + 2,
-		y: techRowY - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.generationUnits, {
-		x: cx + 2,
-		y: techRowY - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += row3W;
-
-	page.drawRectangle({
-		x: cx,
-		y: techRowY - labelH - valueH,
-		width: row3W,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Combustible principal", {
-		x: cx + 2,
-		y: techRowY - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.primaryFuel, {
-		x: cx + 2,
-		y: techRowY - labelH - valueH + 2,
-		size: 8,
-		font,
-		color: BLACK,
-	});
-	cx += row3W;
-
-	page.drawRectangle({
-		x: cx,
-		y: techRowY - labelH - valueH,
-		width: row3W,
-		height: labelH + valueH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Combustible secundario", {
-		x: cx + 2,
-		y: techRowY - labelH + 2,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-
-	y = techRowY - labelH - valueH - 4;
-
-	// UTM Grid
-	const utmRowH = 18;
-	const utmColW = CONTENT_WIDTH / 2;
-
-	// Header
-	page.drawRectangle({
-		x: MARGIN_X,
-		y: y - utmRowH,
-		width: utmColW,
-		height: utmRowH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("X", {
-		x: MARGIN_X + utmColW / 2 - 3,
-		y: y - utmRowH + 5,
-		size: 8,
-		font: boldFont,
-		color: BLACK,
-	});
-
-	page.drawRectangle({
-		x: MARGIN_X + utmColW,
-		y: y - utmRowH,
-		width: utmColW,
-		height: utmRowH,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-	page.drawText("Y", {
-		x: MARGIN_X + utmColW + utmColW / 2 - 3,
-		y: y - utmRowH + 5,
-		size: 8,
-		font: boldFont,
-		color: BLACK,
-	});
-
-	y -= utmRowH;
-
-	// 4 empty rows
-	for (let i = 0; i < 4; i++) {
-		page.drawRectangle({
-			x: MARGIN_X,
-			y: y - utmRowH,
-			width: utmColW,
-			height: utmRowH,
-			borderColor: BLACK,
-			borderWidth: 0.5,
-			color: WHITE,
-		});
-		page.drawRectangle({
-			x: MARGIN_X + utmColW,
-			y: y - utmRowH,
-			width: utmColW,
-			height: utmRowH,
-			borderColor: BLACK,
-			borderWidth: 0.5,
-			color: WHITE,
-		});
-		y -= utmRowH;
+	if (data.solarTechnology) {
+		drawMark(page, boldFont, 29.1, 397.6);
 	}
-
-	y -= 4;
-
-	// Legal paragraph - split into multiple lines
-	const legalLines = [
-		"____________________________________ (Representante Legal o El Solicitante) (el Solicitante) certifica que la información",
-		"proporcionada en la presente solicitud es apropiada, precisa y verídica. El solicitante acepta que los datos proporcionados",
-		"sean utilizados para llevar a cabo los estatutos de interconexión para garantizar la confiabilidad del sistema Eléctrico",
-		"Nacional con la Interconexión de la Central Eléctrica del Solicitante al amparo de la Ley de la Industria Eléctrica y su",
-		"Reglamento, en caso de ser requeridos. El solicitante entiende que los datos proporcionados, se añadirán a las bases de",
-		"datos del Suministrador cuando se firme un contrato de Interconexión respectivo. El solicitante deberá anexar a la presente",
-		'solicitud la información técnica requerida en el documento "Información Técnica Requerida para Centrales Eléctricas".',
-	];
-
-	let legalY = y - 10;
-	for (const line of legalLines) {
-		page.drawText(line, {
-			x: MARGIN_X,
-			y: legalY,
-			size: 5,
-			font,
-			color: BLACK,
-		});
-		legalY -= 7;
-	}
-
-	y = legalY - 10;
-
-	// Signature boxes
-	const sigBoxH = 70;
-	const sigBoxW = CONTENT_WIDTH / 2 - 5;
-
-	// Left box - Firma de conformidad
-	page.drawRectangle({
-		x: MARGIN_X,
-		y: y - sigBoxH,
-		width: sigBoxW,
-		height: sigBoxH,
-		borderColor: BLACK,
-		borderWidth: 1,
-		color: WHITE,
+	drawValue(page, font, data.generationUnits, {
+		x: 30.75,
+		y: 375.84,
+		width: 181,
 	});
-	page.drawText("Firma de conformidad", {
-		x: MARGIN_X + sigBoxW / 2 - 40,
-		y: y - 10,
-		size: 7,
-		font: boldFont,
-		color: BLACK,
+	drawValue(page, font, data.primaryFuel, { x: 216.75, y: 375.84, width: 181 });
+
+	// La firma permanece vacía; solo se repite la identificación del solicitante.
+	drawValue(page, font, data.applicantName, { x: 33, y: 204.09, width: 265 });
+	drawValue(page, font, formatDate(data.applicationDate), {
+		x: 33,
+		y: 162.09,
+		width: 265,
 	});
 
-	// Signature area (empty box)
-	page.drawRectangle({
-		x: MARGIN_X + 10,
-		y: y - sigBoxH + 10,
-		width: sigBoxW - 20,
-		height: 25,
-		borderColor: BLACK,
-		borderWidth: 0.5,
-		color: WHITE,
-	});
-
-	// Name, Position, Date fields
-	const fieldY = y - sigBoxH + 5;
-	page.drawText("Nombre:", {
-		x: MARGIN_X + 5,
-		y: fieldY,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(data.applicantName, {
-		x: MARGIN_X + 30,
-		y: fieldY,
-		size: 6,
-		font,
-		color: BLACK,
-	});
-
-	page.drawText("Cargo:", {
-		x: MARGIN_X + 5,
-		y: fieldY - 8,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-
-	page.drawText("Fecha:", {
-		x: MARGIN_X + 5,
-		y: fieldY - 16,
-		size: 6,
-		font: boldFont,
-		color: BLACK,
-	});
-	page.drawText(formatDate(data.applicationDate), {
-		x: MARGIN_X + 30,
-		y: fieldY - 16,
-		size: 6,
-		font,
-		color: BLACK,
-	});
-
-	// Right box - Sello y firma
-	page.drawRectangle({
-		x: MARGIN_X + sigBoxW + 10,
-		y: y - sigBoxH,
-		width: sigBoxW,
-		height: sigBoxH,
-		borderColor: BLACK,
-		borderWidth: 1,
-		color: WHITE,
-	});
-	page.drawText("Sello y firma / Centro de atención", {
-		x: MARGIN_X + sigBoxW + 10 + sigBoxW / 2 - 50,
-		y: y - sigBoxH + 5,
-		size: 7,
-		font: boldFont,
-		color: BLACK,
-	});
-
-	const pdfBytes = await pdfDoc.save();
-	return new Uint8Array(pdfBytes);
+	return pdf.save();
 }
 
 export function getCfeFilename(clientName: string): string {

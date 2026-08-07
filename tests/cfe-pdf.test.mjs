@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 
 import { PDFDocument } from "pdf-lib";
@@ -7,6 +8,7 @@ import {
 	buildCfePdfData,
 	generateCfePdf,
 } from "../src/features/documents/cfe-pdf.ts";
+import { getCfeTemplateBytes } from "../src/features/documents/cfe-template.ts";
 
 function buildTrabajoFixture({ withSolarData = true } = {}) {
 	return {
@@ -104,6 +106,15 @@ test("CFE mantiene vacías las marcas solares si faltan datos del sistema", () =
 	assert.equal(data.complianceAccepted, false);
 	assert.equal(data.solarTechnology, false);
 	assert.equal(data.primaryFuel, "");
+});
+
+test("CFE conserva exactamente la plantilla plana aprobada", () => {
+	const hash = createHash("sha256").update(getCfeTemplateBytes()).digest("hex");
+
+	assert.equal(
+		hash,
+		"10791369e691cc507d22f752c0b9e9e21a4818bc29e59659b85a4f724a1eda3b",
+	);
 });
 
 test("CFE genera una sola página tamaño carta con la plantilla oficial", async () => {
