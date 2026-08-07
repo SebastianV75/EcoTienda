@@ -256,7 +256,7 @@ function drawCheckboxRow(
 	options: { label: string; checked?: boolean }[],
 ): { nextY: number } {
 	const boxSize = 8;
-	const spacing = 60;
+	const spacing = 160;
 	let currentX = x;
 
 	for (const option of options) {
@@ -935,6 +935,16 @@ export async function generateCfePdf(data: CfePdfData): Promise<Uint8Array> {
 	// III. Datos del solicitante (Modalidad)
 	y = drawSectionHeader(page, boldFont, y, "III. Datos del solicitante");
 
+	// Subtítulo Modalidad de solicitud
+	page.drawText("Modalidad de solicitud", {
+		x: MARGIN_X + 4,
+		y: y - 12,
+		size: 7,
+		font: boldFont,
+		color: BLACK,
+	});
+	y -= 16;
+
 	const isBajaTension = data.voltage === "110" || data.voltage === "220";
 	const checkboxResult = drawCheckboxRow(page, font, MARGIN_X, y, [
 		{ label: "Baja tensión", checked: isBajaTension },
@@ -1038,7 +1048,7 @@ export async function generateCfePdf(data: CfePdfData): Promise<Uint8Array> {
 	const ceRowY = y;
 
 	const ceFields = [
-		{ label: "Fecha estimada de operación normal (DD/MM/AAAA)", value: dateStr },
+		{ label: "Fecha estimada de\noperación normal (DD/MM/AAAA)", value: dateStr },
 		{ label: "Capacidad bruta instalada (Kw)", value: data.installedCapacity },
 		{
 			label: "Capacidad a incrementar (Kw) opcional",
@@ -1053,20 +1063,26 @@ export async function generateCfePdf(data: CfePdfData): Promise<Uint8Array> {
 	for (const field of ceFields) {
 		page.drawRectangle({
 			x: cx,
-			y: ceRowY - labelH - valueH,
+			y: ceRowY - labelH - valueH - 6,
 			width: colW4,
-			height: labelH + valueH,
+			height: labelH + valueH + 6,
 			borderColor: BLACK,
 			borderWidth: 0.5,
 			color: WHITE,
 		});
-		page.drawText(field.label, {
-			x: cx + 2,
-			y: ceRowY - labelH + 2,
-			size: 5.5,
-			font: boldFont,
-			color: BLACK,
-		});
+		// Handle multiline labels
+		const lines = field.label.split("\n");
+		let labelY = ceRowY - 6;
+		for (const line of lines) {
+			page.drawText(line, {
+				x: cx + 2,
+				y: labelY,
+				size: 5.5,
+				font: boldFont,
+				color: BLACK,
+			});
+			labelY -= 7;
+		}
 		if (field.value) {
 			page.drawText(field.value, {
 				x: cx + 2,
@@ -1284,25 +1300,36 @@ export async function generateCfePdf(data: CfePdfData): Promise<Uint8Array> {
 
 	y -= 4;
 
-	// Legal paragraph
-	const legalText =
-		"____________________________________ (Representante Legal o El Solicitante) (el Solicitante) certifica que la información proporcionada en la presente solicitud es apropiada, precisa y verídica. El solicitante acepta que los datos proporcionados sean utilizados para llevar a cabo los estatutos de interconexión para garantizar la confiabilidad del sistema Eléctrico Nacional con la Interconexión de la Central Eléctrica del Solicitante al amparo de la Ley de la Industria Eléctrica y su Reglamento, en caso de ser requeridos. El solicitante entiende que los datos proporcionados, se añadirán a las bases de datos del Suministrador cuando se firme un contrato de Interconexión respectivo. El solicitante deberá anexar a la presente solicitud la información técnica requerida en el documento \"Información Técnica Requerida para Centrales Eléctricas\".";
+	// Legal paragraph - split into multiple lines
+	const legalLines = [
+		"____________________________________ (Representante Legal o El Solicitante) (el Solicitante) certifica que la información",
+		"proporcionada en la presente solicitud es apropiada, precisa y verídica. El solicitante acepta que los datos proporcionados",
+		"sean utilizados para llevar a cabo los estatutos de interconexión para garantizar la confiabilidad del sistema Eléctrico",
+		"Nacional con la Interconexión de la Central Eléctrica del Solicitante al amparo de la Ley de la Industria Eléctrica y su",
+		"Reglamento, en caso de ser requeridos. El solicitante entiende que los datos proporcionados, se añadirán a las bases de",
+		"datos del Suministrador cuando se firme un contrato de Interconexión respectivo. El solicitante deberá anexar a la presente",
+		'solicitud la información técnica requerida en el documento "Información Técnica Requerida para Centrales Eléctricas".',
+	];
 
-	page.drawText(legalText, {
-		x: MARGIN_X,
-		y: y - 30,
-		size: 5.5,
-		font,
-		color: BLACK,
-	});
+	let legalY = y - 10;
+	for (const line of legalLines) {
+		page.drawText(line, {
+			x: MARGIN_X,
+			y: legalY,
+			size: 5,
+			font,
+			color: BLACK,
+		});
+		legalY -= 7;
+	}
 
-	y -= 36;
+	y = legalY - 10;
 
 	// Signature boxes
-	const sigBoxH = 50;
+	const sigBoxH = 70;
 	const sigBoxW = CONTENT_WIDTH / 2 - 5;
 
-	// Left box
+	// Left box - Firma de conformidad
 	page.drawRectangle({
 		x: MARGIN_X,
 		y: y - sigBoxH,
@@ -1320,7 +1347,58 @@ export async function generateCfePdf(data: CfePdfData): Promise<Uint8Array> {
 		color: BLACK,
 	});
 
-	// Right box
+	// Signature area (empty box)
+	page.drawRectangle({
+		x: MARGIN_X + 10,
+		y: y - sigBoxH + 10,
+		width: sigBoxW - 20,
+		height: 25,
+		borderColor: BLACK,
+		borderWidth: 0.5,
+		color: WHITE,
+	});
+
+	// Name, Position, Date fields
+	const fieldY = y - sigBoxH + 5;
+	page.drawText("Nombre:", {
+		x: MARGIN_X + 5,
+		y: fieldY,
+		size: 6,
+		font: boldFont,
+		color: BLACK,
+	});
+	page.drawText(data.applicantName, {
+		x: MARGIN_X + 30,
+		y: fieldY,
+		size: 6,
+		font,
+		color: BLACK,
+	});
+
+	page.drawText("Cargo:", {
+		x: MARGIN_X + 5,
+		y: fieldY - 8,
+		size: 6,
+		font: boldFont,
+		color: BLACK,
+	});
+
+	page.drawText("Fecha:", {
+		x: MARGIN_X + 5,
+		y: fieldY - 16,
+		size: 6,
+		font: boldFont,
+		color: BLACK,
+	});
+	page.drawText(formatDate(data.applicationDate), {
+		x: MARGIN_X + 30,
+		y: fieldY - 16,
+		size: 6,
+		font,
+		color: BLACK,
+	});
+
+	// Right box - Sello y firma
 	page.drawRectangle({
 		x: MARGIN_X + sigBoxW + 10,
 		y: y - sigBoxH,
