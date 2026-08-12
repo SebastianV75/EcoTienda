@@ -25,7 +25,7 @@ export default async function QuotationsPage({
 		<AppShell
 			role={user.role}
 			title="Cotizaciones"
-			description="Trabajos en etapa de cotización. Revisa y confirma las cotizaciones generadas automáticamente."
+			description="Consulta todas las cotizaciones y continúa el trabajo desde su registro vinculado."
 			email={user.email}
 		>
 			<div className="space-y-3">
@@ -34,14 +34,14 @@ export default async function QuotationsPage({
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div className="min-w-0 flex-1">
 							<h1 className="text-xl font-semibold tracking-display text-[var(--brand-deep)] sm:text-2xl">
-								Cotizaciones pendientes
+								Cotizaciones
 							</h1>
 							<div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--muted)]">
 								<span>
 									<strong className="font-semibold text-[var(--brand-deep)]">
 										{quotations.length}
 									</strong>{" "}
-									en etapa de cotización
+									en el registro
 								</span>
 								{statusSummary.map((item) => (
 									<span key={item.status}>
@@ -114,14 +114,12 @@ export default async function QuotationsPage({
 					<EmptyState
 						eyebrow="Sin resultados"
 						title={
-							query
-								? "No se encontraron cotizaciones"
-								: "No hay cotizaciones pendientes"
+							query ? "No se encontraron cotizaciones" : "No hay cotizaciones"
 						}
 						description={
 							query
 								? "Intenta con otra búsqueda."
-								: "Las cotizaciones aparecerán aquí automáticamente cuando se complete una visita técnica."
+								: "Las cotizaciones aparecerán aquí cuando se complete una visita técnica o se cree una de forma manual."
 						}
 						action={
 							!query ? (

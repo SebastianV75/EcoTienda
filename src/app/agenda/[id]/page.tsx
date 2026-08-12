@@ -11,22 +11,34 @@ import { hasSupabaseEnv } from "@/lib/env";
 
 const defaultRole = "admin" as const;
 
-function getStageCopy(hasWorkflowBridge: boolean) {
-	return hasWorkflowBridge
-		? {
-				kicker: "Continuidad de Trabajo",
-				title: "Agenda ya está enlazada con Visitas",
-				description:
-					"Este registro ya vive dentro del flujo operativo. Agenda capturó el ingreso y el siguiente paso está en Visitas.",
-				nextStep: "Abrir visita",
-			}
-		: {
-				kicker: "Registro legado",
-				title: "Agenda sigue siendo comprensible sin un Trabajo vinculado",
-				description:
-					"Este elemento no tiene puente a Visitas. Sigue sirviendo como referencia histórica de Agenda sin romper el contexto.",
-				nextStep: "Sin continuidad a Visitas",
-			};
+function getStageCopy(hasWorkflowBridge: boolean, hasCompletedVisit: boolean) {
+	if (!hasWorkflowBridge) {
+		return {
+			kicker: "Registro legado",
+			title: "Agenda sigue siendo comprensible sin un Trabajo vinculado",
+			description:
+				"Este elemento no tiene puente a Visitas. Sigue sirviendo como referencia histórica de Agenda sin romper el contexto.",
+			nextStep: "Sin continuidad a Visitas",
+		};
+	}
+
+	if (hasCompletedVisit) {
+		return {
+			kicker: "Continuidad de Trabajo",
+			title: "La visita ya está cerrada",
+			description:
+				"La información de Agenda y la visita ya están guardadas. Continúa en el Trabajo para revisar o completar la cotización.",
+			nextStep: "Abrir trabajo",
+		};
+	}
+
+	return {
+		kicker: "Continuidad de Trabajo",
+		title: "Agenda ya está enlazada con Visitas",
+		description:
+			"Este registro ya vive dentro del flujo operativo. Agenda capturó el ingreso y el siguiente paso está en Visitas.",
+		nextStep: "Abrir visita",
+	};
 }
 
 export default async function AgendaItemPage({
@@ -46,7 +58,8 @@ export default async function AgendaItemPage({
 
 	const role = user?.role ?? defaultRole;
 	const hasWorkflowBridge = Boolean(item.trabajo_id);
-	const stageCopy = getStageCopy(hasWorkflowBridge);
+	const hasCompletedVisit = hasWorkflowBridge && Boolean(item.visit_id);
+	const stageCopy = getStageCopy(hasWorkflowBridge, hasCompletedVisit);
 
 	return (
 		<AppShell
@@ -82,10 +95,14 @@ export default async function AgendaItemPage({
 							</p>
 							{hasWorkflowBridge ? (
 								<Link
-									href={`/admin/visits/${item.trabajo_id}`}
+									href={
+										hasCompletedVisit
+											? `/admin/trabajos/${item.trabajo_id}`
+											: `/admin/visits/${item.trabajo_id}`
+									}
 									className="mt-2 inline-flex text-sm font-medium text-[var(--brand-deep)] underline decoration-emerald-300 underline-offset-4 transition hover:text-[var(--brand-strong)]"
 								>
-									Abrir visita
+									{hasCompletedVisit ? "Abrir trabajo" : "Abrir visita"}
 								</Link>
 							) : (
 								<p className="mt-2 text-sm font-medium text-[var(--brand-deep)]">

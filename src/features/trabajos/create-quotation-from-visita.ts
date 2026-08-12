@@ -35,11 +35,20 @@ export async function createQuotationFromVisita(
 ): Promise<{ quotationId: string | null; error: string | null }> {
 	try {
 		// Verificar si ya existe una cotización para este trabajo
-		const { data: existingQuotation } = await supabase
-			.from("quotations")
-			.select("id")
-			.eq("trabajo_id", visita.trabajo_id)
-			.maybeSingle();
+		const { data: existingQuotation, error: existingQuotationError } =
+			await supabase
+				.from("quotations")
+				.select("id")
+				.eq("trabajo_id", visita.trabajo_id)
+				.maybeSingle();
+
+		if (existingQuotationError) {
+			return {
+				quotationId: null,
+				error:
+					"No se pudo validar si el trabajo ya tiene una cotización vinculada.",
+			};
+		}
 
 		if (existingQuotation) {
 			// Ya existe una cotización, retornar su ID
@@ -83,6 +92,21 @@ export async function createQuotationFromVisita(
 				"[Visita→Cotización] Error creando cotización:",
 				quotationError,
 			);
+
+			// El índice único protege contra dos finalizaciones simultáneas.
+			// En ese caso, reutilizar la cotización que ganó la carrera.
+			if (quotationError?.code === "23505") {
+				const { data: concurrentQuotation } = await supabase
+					.from("quotations")
+					.select("id")
+					.eq("trabajo_id", visita.trabajo_id)
+					.maybeSingle();
+
+				if (concurrentQuotation) {
+					return { quotationId: concurrentQuotation.id, error: null };
+				}
+			}
+
 			return {
 				quotationId: null,
 				error: quotationError?.message || "Error desconocido",
@@ -102,7 +126,15 @@ export async function createQuotationFromVisita(
 					"[Visita→Cotización] Error insertando items:",
 					itemsError,
 				);
-				// No fallar completamente, la cotización ya se creó
+				await supabase
+					.from("quotation_items")
+					.delete()
+					.eq("quotation_id", quotation.id);
+				await supabase.from("quotations").delete().eq("id", quotation.id);
+				return {
+					quotationId: null,
+					error: "No se pudo completar la cotización generada desde la visita.",
+				};
 			}
 		}
 

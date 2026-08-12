@@ -13,6 +13,7 @@ export type QuotationListItem = {
 	subtotal: number;
 	total: number;
 	status: string;
+	current_stage: string | null;
 	created_at: string;
 	pdf_url: string | null;
 };
@@ -89,31 +90,12 @@ export const getSupplierById = cache(async (id: string) => {
 export const getQuotations = cache(async (query?: string) => {
 	const supabase = await createSupabaseServerClient();
 
-	// Obtener los trabajos en etapa cotizacion para cotizaciones vinculadas
-	const { data: trabajosData, error: trabajosError } = await supabase
-		.from("trabajos")
-		.select("id")
-		.eq("current_stage", "cotizacion");
-
-	if (trabajosError) {
-		throw new Error(
-			"No se pudieron cargar los trabajos en etapa de cotización.",
-		);
-	}
-
-	const trabajoIds = (trabajosData ?? []).map((t) => t.id);
-
-	// Incluir cotizaciones vinculadas a trabajos en etapa cotizacion
-	// Y también cotizaciones independientes (trabajo_id = null)
+	// `quotations` es la fuente canónica. Incluimos tanto cotizaciones
+	// vinculadas como independientes para no ocultar históricos aceptados.
 	let request = supabase
 		.from("quotations")
 		.select(
-			"id, quotation_number, trabajo_id, supplier_name, project, subtotal, total, status, created_at, pdf_url",
-		)
-		.or(
-			trabajoIds.length > 0
-				? `trabajo_id.in.(${trabajoIds.join(",")}),trabajo_id.is.null`
-				: "trabajo_id.is.null",
+			"id, quotation_number, trabajo_id, supplier_name, project, subtotal, total, status, created_at, pdf_url, trabajo:trabajos(current_stage)",
 		)
 		.order("created_at", { ascending: false });
 
@@ -132,7 +114,16 @@ export const getQuotations = cache(async (query?: string) => {
 		throw new Error("No se pudieron cargar las cotizaciones.");
 	}
 
-	const quotations = (data ?? []) as QuotationListItem[];
+	const quotations = (data ?? []).map((quotation) => {
+		const linkedTrabajo = Array.isArray(quotation.trabajo)
+			? quotation.trabajo[0]
+			: quotation.trabajo;
+
+		return {
+			...quotation,
+			current_stage: linkedTrabajo?.current_stage ?? null,
+		};
+	}) as QuotationListItem[];
 	if (quotations.length === 0) {
 		return quotations;
 	}

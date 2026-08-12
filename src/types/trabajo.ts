@@ -113,7 +113,7 @@ export type TrabajoQuotationStage = {
 
 export type TrabajoSaleStage = {
 	trabajo_id: string;
-	quotation_trabajo_id: string;
+	quotation_id: string;
 	confirmed_on: string;
 	agreed_amount: number;
 	notes: string;

@@ -13,7 +13,7 @@ import {
 
 type VentaFormProps = {
 	trabajoId: string;
-	quotationTrabajoId: string;
+	quotationId: string;
 	defaultValues?: Partial<VentaFormValues>;
 };
 
@@ -28,7 +28,7 @@ function sectionFieldClass() {
 
 export function VentaForm({
 	trabajoId,
-	quotationTrabajoId,
+	quotationId,
 	defaultValues = {},
 }: VentaFormProps) {
 	const [state, formAction] = useActionState(
@@ -39,11 +39,7 @@ export function VentaForm({
 	return (
 		<form action={formAction} className="space-y-4">
 			<Input type="hidden" name="trabajo_id" value={trabajoId} />
-			<Input
-				type="hidden"
-				name="quotation_trabajo_id"
-				value={quotationTrabajoId}
-			/>
+			<Input type="hidden" name="quotation_id" value={quotationId} />
 
 			<div className="grid gap-4 md:grid-cols-2">
 				<div className="space-y-2.5">

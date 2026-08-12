@@ -171,11 +171,11 @@ export function isTrabajoQuotationStageComplete(
 export function isTrabajoSaleStageComplete(
 	stage: Pick<
 		TrabajoSaleStage,
-		"quotation_trabajo_id" | "confirmed_on" | "agreed_amount" | "notes"
+		"quotation_id" | "confirmed_on" | "agreed_amount" | "notes"
 	>,
 ): boolean {
 	return (
-		hasText(stage.quotation_trabajo_id) &&
+		hasText(stage.quotation_id) &&
 		hasText(stage.confirmed_on) &&
 		stage.agreed_amount >= 0
 	);

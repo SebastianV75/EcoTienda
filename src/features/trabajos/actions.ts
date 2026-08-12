@@ -7,6 +7,7 @@ import { requireRole } from "@/features/auth/session";
 import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+import { assertVisitActionAccess } from "./visita-action-helpers";
 import { isTrabajoVisitaStageComplete, requiresMinisplitBranch } from "./rules";
 
 export type VisitaActionState = {
@@ -68,6 +69,8 @@ type AgendaStageSnapshot = {
 	trabajo_id: string;
 	completed_at: string | null;
 };
+
+type VisitaStageSnapshot = Record<string, unknown>;
 
 type AgendaBridgeSnapshot = {
 	id: string;
@@ -212,6 +215,24 @@ async function restoreAgendaBridge(
 	await supabase.from("agenda_items").upsert(snapshot, { onConflict: "id" });
 }
 
+async function restoreVisitaStage(
+	supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+	trabajoId: string,
+	snapshot: VisitaStageSnapshot | null,
+) {
+	if (snapshot) {
+		await supabase
+			.from("trabajo_visita_stage")
+			.upsert(snapshot, { onConflict: "trabajo_id" });
+		return;
+	}
+
+	await supabase
+		.from("trabajo_visita_stage")
+		.delete()
+		.eq("trabajo_id", trabajoId);
+}
+
 export async function updateTrabajoAssignmentAction(
 	_previousState: TrabajoAssignmentActionState,
 	formData: FormData,
@@ -331,10 +352,18 @@ export async function saveTrabajoVisitaAction(
 
 	const supabase = await createSupabaseServerClient();
 	const completionIso = result.stagePayload.completed_at;
+	const accessError = await assertVisitActionAccess(
+		supabase,
+		user,
+		result.values.trabajo_id,
+	);
+	if (accessError) return { error: accessError, success: null };
+
 	const [
 		trabajoSnapshotResult,
 		agendaStageSnapshotResult,
 		agendaBridgeSnapshotResult,
+		visitaStageSnapshotResult,
 	] = await Promise.all([
 		supabase
 			.from("trabajos")
@@ -351,12 +380,18 @@ export async function saveTrabajoVisitaAction(
 			.select("id, estado, visit_id")
 			.eq("id", result.values.trabajo_id)
 			.maybeSingle(),
+		supabase
+			.from("trabajo_visita_stage")
+			.select("*")
+			.eq("trabajo_id", result.values.trabajo_id)
+			.maybeSingle(),
 	]);
 
 	if (
 		trabajoSnapshotResult.error ||
 		agendaStageSnapshotResult.error ||
-		agendaBridgeSnapshotResult.error
+		agendaBridgeSnapshotResult.error ||
+		visitaStageSnapshotResult.error
 	) {
 		return {
 			error: "No se pudo preparar la visita para guardarse.",
@@ -370,6 +405,19 @@ export async function saveTrabajoVisitaAction(
 		(agendaStageSnapshotResult.data as AgendaStageSnapshot | null) ?? null;
 	const agendaBridgeSnapshot =
 		(agendaBridgeSnapshotResult.data as AgendaBridgeSnapshot | null) ?? null;
+	const visitaStageSnapshot =
+		(visitaStageSnapshotResult.data as VisitaStageSnapshot | null) ?? null;
+
+	if (
+		!trabajoSnapshot ||
+		(trabajoSnapshot.current_stage !== "agenda" &&
+			trabajoSnapshot.current_stage !== "visita")
+	) {
+		return {
+			error: "La visita ya fue completada o el trabajo ya avanzó a otra etapa.",
+			success: null,
+		};
+	}
 
 	const { error: visitaError } = await supabase
 		.from("trabajo_visita_stage")
@@ -379,16 +427,26 @@ export async function saveTrabajoVisitaAction(
 		return { error: "No se pudo guardar la visita.", success: null };
 	}
 
-	const { error: trabajoError } = await supabase
+	const { error: trabajoError, count: trabajoUpdateCount } = await supabase
 		.from("trabajos")
-		.update({
-			current_stage: "visita",
-			agenda_completed_at: completionIso,
-			visita_completed_at: result.stagePayload.completed_at,
-		})
-		.eq("id", result.values.trabajo_id);
+		.update(
+			{
+				current_stage: "cotizacion",
+				agenda_completed_at:
+					trabajoSnapshot.agenda_completed_at ?? completionIso,
+				visita_completed_at: result.stagePayload.completed_at,
+			},
+			{ count: "exact" },
+		)
+		.eq("id", result.values.trabajo_id)
+		.in("current_stage", ["agenda", "visita"]);
 
-	if (trabajoError) {
+	if (trabajoError || trabajoUpdateCount !== 1) {
+		await restoreVisitaStage(
+			supabase,
+			result.values.trabajo_id,
+			visitaStageSnapshot,
+		);
 		return {
 			error: "Se guardó la visita, pero no se pudo avanzar el trabajo.",
 			success: null,
@@ -401,6 +459,11 @@ export async function saveTrabajoVisitaAction(
 		.eq("trabajo_id", result.values.trabajo_id);
 
 	if (agendaStageError) {
+		await restoreVisitaStage(
+			supabase,
+			result.values.trabajo_id,
+			visitaStageSnapshot,
+		);
 		await restoreTrabajo(supabase, trabajoSnapshot);
 		await restoreAgendaStage(supabase, agendaStageSnapshot);
 		return {
@@ -411,10 +474,15 @@ export async function saveTrabajoVisitaAction(
 
 	const { error: agendaBridgeError } = await supabase
 		.from("agenda_items")
-		.update({ estado: "en_proceso", visit_id: result.values.trabajo_id })
+		.update({ estado: "finalizado", visit_id: result.values.trabajo_id })
 		.eq("id", result.values.trabajo_id);
 
 	if (agendaBridgeError) {
+		await restoreVisitaStage(
+			supabase,
+			result.values.trabajo_id,
+			visitaStageSnapshot,
+		);
 		await restoreAgendaStage(supabase, agendaStageSnapshot);
 		await restoreTrabajo(supabase, trabajoSnapshot);
 		await restoreAgendaBridge(supabase, agendaBridgeSnapshot);
@@ -426,13 +494,16 @@ export async function saveTrabajoVisitaAction(
 	}
 
 	revalidatePath("/agenda");
+	revalidatePath("/admin");
 	revalidatePath("/admin/visits");
+	revalidatePath("/admin/quotations");
 	revalidatePath(`/agenda/${result.values.trabajo_id}`);
 	revalidatePath(`/admin/visits/${result.values.trabajo_id}`);
+	revalidatePath(`/admin/trabajos/${result.values.trabajo_id}`);
 	redirect(
 		user?.role === "technician"
 			? `/admin/visits/${result.values.trabajo_id}`
-			: `/agenda/${result.values.trabajo_id}`,
+			: `/admin/trabajos/${result.values.trabajo_id}`,
 	);
 }
 
@@ -458,7 +529,10 @@ export async function deleteTrabajoAction(
 		.maybeSingle();
 
 	if (existingError || !existingTrabajo) {
-		return { error: "El trabajo no existe o no se puede acceder.", success: false };
+		return {
+			error: "El trabajo no existe o no se puede acceder.",
+			success: false,
+		};
 	}
 
 	// Paso 1: Eliminar trabajo_sale_stage PRIMERO
@@ -469,7 +543,10 @@ export async function deleteTrabajoAction(
 		.eq("trabajo_id", trabajoId);
 
 	if (saleError) {
-		console.error("[deleteTrabajoAction] Error eliminando sale stage:", saleError);
+		console.error(
+			"[deleteTrabajoAction] Error eliminando sale stage:",
+			saleError,
+		);
 		return { error: "No se pudo eliminar la etapa de venta.", success: false };
 	}
 
@@ -477,11 +554,17 @@ export async function deleteTrabajoAction(
 	// quotation_items se elimina en cascade con quotations
 	const results = await Promise.all([
 		supabase.from("quotations").delete().eq("trabajo_id", trabajoId),
-		supabase.from("trabajo_quotation_stage").delete().eq("trabajo_id", trabajoId),
+		supabase
+			.from("trabajo_quotation_stage")
+			.delete()
+			.eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_visita_stage").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_agenda_stage").delete().eq("trabajo_id", trabajoId),
 		supabase.from("trabajo_media_assets").delete().eq("trabajo_id", trabajoId),
-		supabase.from("trabajo_document_overrides").delete().eq("trabajo_id", trabajoId),
+		supabase
+			.from("trabajo_document_overrides")
+			.delete()
+			.eq("trabajo_id", trabajoId),
 		supabase.from("agenda_items").delete().eq("id", trabajoId),
 	]);
 
@@ -518,7 +601,10 @@ export async function deleteTrabajoAction(
 	}
 
 	if (!count || count === 0) {
-		return { error: "El trabajo no pudo ser eliminado. Verificá los permisos.", success: false };
+		return {
+			error: "El trabajo no pudo ser eliminado. Verificá los permisos.",
+			success: false,
+		};
 	}
 
 	// Revalidar todas las rutas relevantes para actualización instantánea

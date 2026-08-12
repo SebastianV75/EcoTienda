@@ -318,7 +318,7 @@ cotizacion:trabajo_quotation_stage (
 ),
 venta:trabajo_sale_stage (
 	trabajo_id,
-	quotation_trabajo_id,
+	quotation_id,
 	confirmed_on,
 	agreed_amount,
 	notes,
@@ -671,7 +671,9 @@ export const getTrabajosForDocumentSelection = cache(async () => {
 	const supabase = await createSupabaseServerClient();
 	const { data, error } = await supabase
 		.from("trabajos")
-		.select("id, current_stage, status, intake_name, intake_phone, intake_address_text")
+		.select(
+			"id, current_stage, status, intake_name, intake_phone, intake_address_text",
+		)
 		.order("updated_at", { ascending: false });
 
 	if (error) {
@@ -809,35 +811,33 @@ export type StageStats = {
 	descargables: number;
 };
 
-export const getTrabajoStageStats = cache(
-	async (): Promise<StageStats> => {
-		const supabase = await createSupabaseServerClient();
-		const { data, error } = await supabase
-			.from("trabajos")
-			.select("current_stage")
-			.eq("status", "open");
+export const getTrabajoStageStats = cache(async (): Promise<StageStats> => {
+	const supabase = await createSupabaseServerClient();
+	const { data, error } = await supabase
+		.from("trabajos")
+		.select("current_stage")
+		.eq("status", "open");
 
-		if (error) {
-			throw new Error(
-				`No se pudieron cargar las estadísticas por etapa. ${error.message}`,
-			);
+	if (error) {
+		throw new Error(
+			`No se pudieron cargar las estadísticas por etapa. ${error.message}`,
+		);
+	}
+
+	const stats: StageStats = {
+		agenda: 0,
+		visita: 0,
+		cotizacion: 0,
+		venta: 0,
+		descargables: 0,
+	};
+
+	(data ?? []).forEach((trabajo) => {
+		const stage = trabajo.current_stage as keyof StageStats;
+		if (stage in stats) {
+			stats[stage]++;
 		}
+	});
 
-		const stats: StageStats = {
-			agenda: 0,
-			visita: 0,
-			cotizacion: 0,
-			venta: 0,
-			descargables: 0,
-		};
-
-		(data ?? []).forEach((trabajo) => {
-			const stage = trabajo.current_stage as keyof StageStats;
-			if (stage in stats) {
-				stats[stage]++;
-			}
-		});
-
-		return stats;
-	},
-);
+	return stats;
+});

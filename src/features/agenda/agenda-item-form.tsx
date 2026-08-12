@@ -16,7 +16,11 @@ import {
 	type AgendaWorkTypeOption,
 } from "@/types/agenda";
 import { workerRoleLabels, type WorkerSummary } from "@/types/worker";
-import { geocodeAddress } from "@/features/trabajos/components/google-maps-picker";
+import {
+	GoogleMapsPicker,
+	type GoogleMapsLocation,
+	geocodeAddress,
+} from "@/features/trabajos/components/google-maps-picker";
 
 type AgendaItemFormProps = {
 	mode: "create" | "edit";
@@ -128,6 +132,8 @@ export function AgendaItemForm({
 	);
 	const assigneeSnapshot =
 		selectedWorker?.full_name ?? defaultValues.assignee_name;
+	const defaultLocation =
+		latitude.trim() && longitude.trim() ? `${latitude},${longitude}` : "";
 
 	function syncGeneratedTitle(
 		nextWorkTypeLabel: string,
@@ -213,14 +219,29 @@ export function AgendaItemForm({
 		);
 	}
 
-	function handleAddressChange(nextAddress: string) {
-		setAddressText(nextAddress);
-		if (latitude.trim() || longitude.trim()) {
+	function handleLocationChange({ address, coordinates }: GoogleMapsLocation) {
+		setAddressText(address);
+
+		const [nextLatitude, nextLongitude] = coordinates
+			.split(",")
+			.map((value) => value.trim());
+
+		if (nextLatitude && nextLongitude) {
+			setLatitude(nextLatitude);
+			setLongitude(nextLongitude);
 			setLocationMessage({
-				tone: "info",
-				text: "La dirección cambió. Actualiza las coordenadas desde el domicilio antes de guardar.",
+				tone: "success",
+				text: "Dirección y coordenadas actualizadas desde Google Maps.",
 			});
+			return;
 		}
+
+		setLatitude("");
+		setLongitude("");
+		setLocationMessage({
+			tone: "info",
+			text: "Selecciona una sugerencia de Google Maps para completar las coordenadas.",
+		});
 	}
 
 	async function handleGeocodeAddress() {
@@ -559,21 +580,14 @@ export function AgendaItemForm({
 				</div>
 
 				<div className="space-y-2.5 md:col-span-2">
-					<label
-						htmlFor="address_text"
-						className="text-sm font-medium text-[var(--brand-deep)]"
-					>
-						Dirección
-					</label>
-					<Textarea
-						id="address_text"
-						name="address_text"
-						value={addressText}
-						onChange={(event) => handleAddressChange(event.target.value)}
-						required
-						rows={3}
-						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-						placeholder="Dirección completa"
+					<GoogleMapsPicker
+						name="agenda_location"
+						addressName="address_text"
+						defaultValue={defaultLocation}
+						defaultAddress={addressText}
+						label="Dirección del trabajo"
+						googleMapsApiKey={googleMapsApiKey}
+						onLocationChangeAction={handleLocationChange}
 					/>
 					<div className="flex flex-wrap items-center gap-2">
 						<button
@@ -584,27 +598,13 @@ export function AgendaItemForm({
 						>
 							{isGeocoding
 								? "Buscando domicilio..."
-								: "Obtener coordenadas desde domicilio"}
+								: "Intentar coordenadas con la dirección"}
 						</button>
 						<p className="text-xs leading-5 text-[var(--muted)]">
-							También puedes usar el botón de ubicación del dispositivo o
-							capturarlas manualmente.
+							Selecciona una sugerencia para completar dirección y coordenadas;
+							la captura manual sigue disponible como respaldo.
 						</p>
 					</div>
-					{/* Mini mapa de Google Maps */}
-					{(addressText || latitude || longitude) && (
-						<div className="mt-3 rounded-xl overflow-hidden border border-[var(--border-soft)]">
-							<iframe
-								width="100%"
-								height={200}
-								frameBorder="0"
-								style={{ border: 0 }}
-								src={`https://maps.google.com/maps?q=${encodeURIComponent(addressText || `${latitude},${longitude}`)}&hl=es&z=15&output=embed`}
-								allowFullScreen
-								title="Ubicación en Google Maps"
-							/>
-						</div>
-					)}
 				</div>
 
 				<div className="space-y-2.5">
@@ -673,6 +673,7 @@ export function AgendaItemForm({
 						id="descripcion"
 						name="descripcion"
 						defaultValue={defaultValues.descripcion}
+						required
 						rows={4}
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						placeholder="Notas útiles para el equipo"

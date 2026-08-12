@@ -79,6 +79,10 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 
 	const isDeleted = deleteState.success;
 	const isConfirmed = confirmState.success;
+	const canConfirm =
+		Boolean(quotation.trabajo_id) &&
+		quotation.current_stage === "cotizacion" &&
+		(quotation.status === "draft" || quotation.status === "sent");
 
 	useEffect(() => {
 		if (confirmState.success) {
@@ -226,7 +230,7 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 									</dt>
 									<dd className="mt-1">
 										<Link
-											href={`/agenda/${quotation.trabajo_id}`}
+											href={`/admin/trabajos/${quotation.trabajo_id}`}
 											className="text-sm font-medium text-[var(--brand-strong)] underline-offset-4 hover:underline"
 										>
 											Abrir trabajo vinculado
@@ -251,7 +255,7 @@ export function QuotationCard({ quotation }: QuotationCardProps) {
 									Descargar PDF
 								</a>
 							)}
-							{quotation.trabajo_id && (
+							{canConfirm && (
 								<button
 									type="button"
 									onClick={handleConfirmQuotation}

@@ -61,7 +61,7 @@ export function SaleCard({ sale }: SaleCardProps) {
 		startTransition(async () => {
 			const formData = new FormData();
 			formData.append("trabajo_id", sale.trabajo_id);
-			formData.append("quotation_trabajo_id", sale.trabajo_id);
+			formData.append("quotation_id", sale.quotation_id ?? "");
 			formData.append(
 				"confirmed_on",
 				sale.confirmed_on || new Date().toISOString().split("T")[0],

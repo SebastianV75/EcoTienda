@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
 import { getVisitSaveRedirectPath } from "./visit-save-redirect";
 import {
+	assertVisitActionAccess,
 	completeVisitWorkflow,
 	existingAttributes,
 	existingText,
@@ -45,6 +46,8 @@ export async function saveCambio220Action(
 	}
 
 	const supabase = await createSupabaseServerClient();
+	const accessError = await assertVisitActionAccess(supabase, user, trabajoId);
+	if (accessError) return { error: accessError, success: null };
 	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
 	const electricalAttributes: Record<string, string> = existingAttributes(
@@ -92,6 +95,7 @@ export async function saveCambio220Action(
 		supabase,
 		trabajoId,
 		payload.completed_at,
+		user,
 	);
 
 	if (workflowError) {
