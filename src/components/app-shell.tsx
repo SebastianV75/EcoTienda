@@ -272,7 +272,7 @@ export function AppShell({
 						</div>
 
 						<div
-							className={`mt-auto overflow-hidden pt-5 transition-[max-height,opacity,transform] duration-300 ease-out ${isSidebarCollapsed ? "max-h-0 translate-y-2 opacity-0" : "max-h-40 translate-y-0 opacity-100"}`}
+							className={`mt-auto overflow-hidden pt-5 transition-[max-height,opacity,transform] duration-300 ease-out ${isSidebarCollapsed ? "max-h-0 translate-y-2 opacity-0" : "max-h-64 translate-y-0 opacity-100"}`}
 						>
 							{email ? <AuthStatus email={email} /> : null}
 						</div>

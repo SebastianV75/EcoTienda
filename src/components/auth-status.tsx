@@ -14,7 +14,7 @@ export function AuthStatus({ email }: AuthStatusProps) {
 			<p className="mt-2 text-sm font-medium text-[var(--brand-deep)]">
 				Conectado como
 			</p>
-			<p className="mt-1 break-all text-sm leading-6 text-[var(--foreground)]">
+			<p className="mt-1 break-words text-sm leading-5 text-[var(--foreground)]">
 				{email ?? "Usuario desconocido"}
 			</p>
 			<form action={signOutAction} className="mt-4">
