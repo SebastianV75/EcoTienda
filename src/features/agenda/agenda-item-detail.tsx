@@ -23,6 +23,7 @@ function formatAgendaTimestamp(value: string) {
 
 export function AgendaItemDetail({ item, role }: AgendaItemDetailProps) {
 	const hasWorkflowBridge = Boolean(item.trabajo_id);
+	const hasCompletedVisit = hasWorkflowBridge && Boolean(item.visit_id);
 
 	return (
 		<div className="space-y-4">
@@ -41,14 +42,18 @@ export function AgendaItemDetail({ item, role }: AgendaItemDetailProps) {
 						Editar elemento
 					</Link>
 				) : null}
-					{hasWorkflowBridge ? (
-						<Link
-							href={`/admin/visits/${item.trabajo_id}`}
-							className="inline-flex rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
-						>
-							Abrir visita
-						</Link>
-					) : null}
+				{hasWorkflowBridge ? (
+					<Link
+						href={
+							hasCompletedVisit
+								? `/admin/trabajos/${item.trabajo_id}`
+								: `/admin/visits/${item.trabajo_id}`
+						}
+						className="inline-flex rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-emerald-200"
+					>
+						{hasCompletedVisit ? "Abrir trabajo" : "Abrir visita"}
+					</Link>
+				) : null}
 			</div>
 
 			<section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
@@ -69,90 +74,124 @@ export function AgendaItemDetail({ item, role }: AgendaItemDetailProps) {
 						</span>
 					</div>
 
-						<dl className="mt-6 grid gap-5 sm:grid-cols-2">
-							<div>
-								<dt className="text-sm font-medium text-[var(--brand-deep)]">Fecha programada</dt>
-								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
-									{item.appointment_at ? formatAgendaTimestamp(item.appointment_at) : item.fecha}
-								</dd>
-							</div>
-							<div>
-								<dt className="text-sm font-medium text-[var(--brand-deep)]">Tipo</dt>
-								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">{agendaItemTypeLabels[item.tipo]}</dd>
-							</div>
-							<div>
-								<dt className="text-sm font-medium text-[var(--brand-deep)]">Asignado a</dt>
-								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
-									{item.assignee_worker?.full_name || item.assignee_name || "Sin asignación"}
-								</dd>
-							</div>
-							<div>
-								<dt className="text-sm font-medium text-[var(--brand-deep)]">Trabajo solicitado</dt>
-								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
-									{item.work_type?.trim() || "Sin descripción de trabajo."}
-								</dd>
-							</div>
-							<div>
-								<dt className="text-sm font-medium text-[var(--brand-deep)]">Contacto</dt>
-								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
-									{item.contact_name?.trim() || "Sin contacto"}
-								</dd>
-							</div>
-							<div>
-								<dt className="text-sm font-medium text-[var(--brand-deep)]">Teléfono</dt>
-								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
-									{item.contact_phone?.trim() || "Sin teléfono"}
-								</dd>
-							</div>
-							<div>
-								<dt className="text-sm font-medium text-[var(--brand-deep)]">Creado</dt>
-								<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">{formatAgendaTimestamp(item.created_at)}</dd>
-							</div>
+					<dl className="mt-6 grid gap-5 sm:grid-cols-2">
 						<div>
-							<dt className="text-sm font-medium text-[var(--brand-deep)]">Última actualización</dt>
-							<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">{formatAgendaTimestamp(item.updated_at)}</dd>
+							<dt className="text-sm font-medium text-[var(--brand-deep)]">
+								Fecha programada
+							</dt>
+							<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
+								{item.appointment_at
+									? formatAgendaTimestamp(item.appointment_at)
+									: item.fecha}
+							</dd>
+						</div>
+						<div>
+							<dt className="text-sm font-medium text-[var(--brand-deep)]">
+								Tipo
+							</dt>
+							<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
+								{agendaItemTypeLabels[item.tipo]}
+							</dd>
+						</div>
+						<div>
+							<dt className="text-sm font-medium text-[var(--brand-deep)]">
+								Asignado a
+							</dt>
+							<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
+								{item.assignee_worker?.full_name ||
+									item.assignee_name ||
+									"Sin asignación"}
+							</dd>
+						</div>
+						<div>
+							<dt className="text-sm font-medium text-[var(--brand-deep)]">
+								Trabajo solicitado
+							</dt>
+							<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
+								{item.work_type?.trim() || "Sin descripción de trabajo."}
+							</dd>
+						</div>
+						<div>
+							<dt className="text-sm font-medium text-[var(--brand-deep)]">
+								Contacto
+							</dt>
+							<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
+								{item.contact_name?.trim() || "Sin contacto"}
+							</dd>
+						</div>
+						<div>
+							<dt className="text-sm font-medium text-[var(--brand-deep)]">
+								Teléfono
+							</dt>
+							<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
+								{item.contact_phone?.trim() || "Sin teléfono"}
+							</dd>
+						</div>
+						<div>
+							<dt className="text-sm font-medium text-[var(--brand-deep)]">
+								Creado
+							</dt>
+							<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
+								{formatAgendaTimestamp(item.created_at)}
+							</dd>
+						</div>
+						<div>
+							<dt className="text-sm font-medium text-[var(--brand-deep)]">
+								Última actualización
+							</dt>
+							<dd className="mt-1 text-sm leading-6 text-[var(--muted)]">
+								{formatAgendaTimestamp(item.updated_at)}
+							</dd>
 						</div>
 					</dl>
 
-						<div className="mt-6 rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface)] p-5">
-							<p className="text-sm font-medium text-[var(--brand-deep)]">Descripción</p>
-							<p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-								{item.descripcion?.trim() || "Sin descripción adicional."}
-							</p>
-						</div>
-					</article>
+					<div className="mt-6 rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface)] p-5">
+						<p className="text-sm font-medium text-[var(--brand-deep)]">
+							Descripción
+						</p>
+						<p className="mt-2 text-sm leading-7 text-[var(--muted)]">
+							{item.descripcion?.trim() || "Sin descripción adicional."}
+						</p>
+					</div>
+				</article>
 
 				<article className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-7">
 					<p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
 						Vinculación operativa
 					</p>
-						<dl className="mt-5 space-y-4 text-sm text-[var(--muted)]">
+					<dl className="mt-5 space-y-4 text-sm text-[var(--muted)]">
+						<div>
+							<dt className="font-medium text-[var(--brand-deep)]">
+								Cliente vinculado
+							</dt>
+							<dd className="mt-1 leading-6">{"Sin cliente asociado"}</dd>
+						</div>
+						{item.address_text ? (
 							<div>
-								<dt className="font-medium text-[var(--brand-deep)]">Cliente vinculado</dt>
+								<dt className="font-medium text-[var(--brand-deep)]">
+									Dirección capturada
+								</dt>
+								<dd className="mt-1 leading-6">{item.address_text}</dd>
+							</div>
+						) : null}
+						{item.latitude !== null && item.longitude !== null ? (
+							<div>
+								<dt className="font-medium text-[var(--brand-deep)]">
+									Coordenadas
+								</dt>
 								<dd className="mt-1 leading-6">
-									{"Sin cliente asociado"}
+									{item.latitude}, {item.longitude}
 								</dd>
 							</div>
-							{item.address_text ? (
-								<div>
-									<dt className="font-medium text-[var(--brand-deep)]">Dirección capturada</dt>
-									<dd className="mt-1 leading-6">{item.address_text}</dd>
-								</div>
-							) : null}
-							{item.latitude !== null && item.longitude !== null ? (
-								<div>
-									<dt className="font-medium text-[var(--brand-deep)]">Coordenadas</dt>
-									<dd className="mt-1 leading-6">
-										{item.latitude}, {item.longitude}
-									</dd>
-								</div>
-							) : null}
-							<div>
-								<dt className="font-medium text-[var(--brand-deep)]">Trabajo</dt>
-								<dd className="mt-1">{item.trabajo_id || item.visit_id || "Sin referencia"}</dd>
-							</div>
-						</dl>
-					</article>
+						) : null}
+						<div>
+							<dt className="font-medium text-[var(--brand-deep)]">Trabajo</dt>
+							<dd className="mt-1">
+								{item.trabajo_id || item.visit_id || "Sin referencia"}
+							</dd>
+						</div>
+					</dl>
+				</article>
 			</section>
 		</div>
 	);

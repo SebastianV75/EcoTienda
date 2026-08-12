@@ -50,6 +50,10 @@ function logQuotationDatabaseError(
 	});
 }
 
+function isUniqueViolation(error: { code?: string } | null) {
+	return error?.code === "23505";
+}
+
 export async function deleteQuotationAction(
 	_previousState: QuotationActionState,
 	id: string,
@@ -88,13 +92,7 @@ export async function confirmQuotationAction(
 	const trabajoId = formData.get("trabajo_id")?.toString();
 	const returnToTrabajo = formData.get("return_to")?.toString() === "trabajo";
 
-	console.log("[confirmQuotationAction] Datos recibidos:", {
-		quotationId,
-		trabajoId,
-	});
-
 	if (!quotationId || !trabajoId) {
-		console.error("[confirmQuotationAction] Faltan datos");
 		return { error: "Faltan datos para confirmar la cotización." };
 	}
 
@@ -109,8 +107,8 @@ export async function confirmQuotationAction(
 		.single();
 
 	if (quotationFetchError || !quotation) {
-		console.error(
-			"[confirmQuotationAction] Error al obtener cotización:",
+		logQuotationDatabaseError(
+			"confirmQuotationAction quotation",
 			quotationFetchError,
 		);
 		return { error: "No se pudo obtener la cotización." };
@@ -122,8 +120,8 @@ export async function confirmQuotationAction(
 		.eq("quotation_id", quotationId);
 
 	if (quotationItemsError) {
-		console.error(
-			"[confirmQuotationAction] Error al obtener productos:",
+		logQuotationDatabaseError(
+			"confirmQuotationAction items",
 			quotationItemsError,
 		);
 		return { error: "No se pudieron obtener los productos de la cotización." };
@@ -136,13 +134,13 @@ export async function confirmQuotationAction(
 
 	const { data: trabajo, error: trabajoFetchError } = await supabase
 		.from("trabajos")
-		.select("current_stage, cotizacion_completed_at")
+		.select("current_stage, visita_completed_at, cotizacion_completed_at")
 		.eq("id", trabajoId)
 		.single();
 
 	if (trabajoFetchError || !trabajo) {
-		console.error(
-			"[confirmQuotationAction] Error al obtener trabajo:",
+		logQuotationDatabaseError(
+			"confirmQuotationAction trabajo",
 			trabajoFetchError,
 		);
 		return { error: "No se pudo validar la etapa del trabajo." };
@@ -155,6 +153,13 @@ export async function confirmQuotationAction(
 		};
 	}
 
+	if (!trabajo.visita_completed_at) {
+		return {
+			error:
+				"La visita técnica debe estar completada antes de confirmar la cotización.",
+		};
+	}
+
 	const { error: quotationStatusError, count: quotationStatusCount } =
 		await supabase
 			.from("quotations")
@@ -163,10 +168,15 @@ export async function confirmQuotationAction(
 			.eq("trabajo_id", trabajoId);
 
 	if (quotationStatusError || quotationStatusCount !== 1) {
-		console.error(
-			"[confirmQuotationAction] Error al aceptar cotización:",
-			quotationStatusError ?? { count: quotationStatusCount },
+		logQuotationDatabaseError(
+			"confirmQuotationAction status",
+			quotationStatusError,
 		);
+		if (!quotationStatusError && quotationStatusCount !== 1) {
+			console.error("[confirmQuotationAction] Unexpected quotation count", {
+				count: quotationStatusCount,
+			});
+		}
 		return { error: "No se pudo confirmar la cotización." };
 	}
 
@@ -184,10 +194,15 @@ export async function confirmQuotationAction(
 		.eq("current_stage", "cotizacion");
 
 	if (trabajoError || trabajoUpdateCount !== 1) {
-		console.error(
-			"[confirmQuotationAction] Error al actualizar trabajo:",
-			trabajoError ?? { count: trabajoUpdateCount },
+		logQuotationDatabaseError(
+			"confirmQuotationAction trabajo update",
+			trabajoError,
 		);
+		if (!trabajoError && trabajoUpdateCount !== 1) {
+			console.error("[confirmQuotationAction] Unexpected trabajo count", {
+				count: trabajoUpdateCount,
+			});
+		}
 		await supabase
 			.from("quotations")
 			.update({ status: quotation.status }, { count: "exact" })
@@ -204,7 +219,7 @@ export async function confirmQuotationAction(
 			.upsert(
 				{
 					trabajo_id: trabajoId,
-					quotation_trabajo_id: trabajoId,
+					quotation_id: quotationId,
 					confirmed_on: today,
 					agreed_amount: total,
 					notes: "Venta confirmada desde cotización",
@@ -213,8 +228,8 @@ export async function confirmQuotationAction(
 			);
 
 		if (saleStageError) {
-			console.error(
-				"[confirmQuotationAction] Error al crear etapa de venta:",
+			logQuotationDatabaseError(
+				"confirmQuotationAction sale stage",
 				saleStageError,
 			);
 			await supabase
@@ -232,6 +247,7 @@ export async function confirmQuotationAction(
 		}
 	}
 
+	revalidatePath("/admin");
 	revalidatePath("/admin/quotations");
 	revalidatePath(`/admin/quotations/${quotationId}`);
 	revalidatePath("/admin/sales");
@@ -272,19 +288,53 @@ export async function createQuotationAction(
 
 	const items = itemsResult.items;
 	const { subtotal, total } = calculateQuotationTotals(items);
-	const quotationNumber = await generateQuotationNumber();
-
 	const supabase = await createSupabaseServerClient();
 
 	if (trabajoId) {
-		await supabase
+		const { data: trabajo, error: trabajoError } = await supabase
 			.from("trabajos")
-			.update({
-				current_stage: "cotizacion",
-				visita_completed_at: new Date().toISOString(),
-			})
-			.eq("id", trabajoId);
+			.select("id, current_stage, visita_completed_at")
+			.eq("id", trabajoId)
+			.maybeSingle();
+
+		if (trabajoError || !trabajo) {
+			logQuotationDatabaseError("createQuotationAction trabajo", trabajoError);
+			return { error: "No se encontró el trabajo vinculado." };
+		}
+
+		if (
+			trabajo.current_stage !== "cotizacion" ||
+			!trabajo.visita_completed_at
+		) {
+			return {
+				error:
+					"La visita técnica debe estar completada antes de crear una cotización vinculada.",
+			};
+		}
+
+		const { data: existingQuotation, error: existingQuotationError } =
+			await supabase
+				.from("quotations")
+				.select("id")
+				.eq("trabajo_id", trabajoId)
+				.maybeSingle();
+
+		if (existingQuotationError) {
+			logQuotationDatabaseError(
+				"createQuotationAction existing quotation",
+				existingQuotationError,
+			);
+			return { error: "No se pudo validar la cotización existente." };
+		}
+
+		if (existingQuotation) {
+			return {
+				error: "Este trabajo ya tiene una cotización vinculada.",
+			};
+		}
 	}
+
+	const quotationNumber = await generateQuotationNumber();
 
 	const { data: quotation, error: quotationError } = await supabase
 		.from("quotations")
@@ -308,7 +358,12 @@ export async function createQuotationAction(
 			"createQuotationAction quotation",
 			quotationError,
 		);
-		return { error: "No se pudo crear la cotización." };
+		return {
+			error:
+				trabajoId && isUniqueViolation(quotationError)
+					? "Este trabajo ya tiene una cotización vinculada."
+					: "No se pudo crear la cotización.",
+		};
 	}
 
 	if (items.length > 0) {
@@ -320,6 +375,10 @@ export async function createQuotationAction(
 
 		if (itemsError) {
 			logQuotationDatabaseError("createQuotationAction items", itemsError);
+			await supabase
+				.from("quotation_items")
+				.delete()
+				.eq("quotation_id", quotation.id);
 			await supabase.from("quotations").delete().eq("id", quotation.id);
 			return { error: "No se pudieron guardar los productos." };
 		}
@@ -342,10 +401,12 @@ export async function createQuotationAction(
 		console.error("[Actions] Tipo de error:", error);
 	}
 
+	revalidatePath("/admin");
 	revalidatePath("/admin/quotations");
 	if (trabajoId) {
 		revalidatePath(`/agenda/${trabajoId}`);
 		revalidatePath(`/admin/visits/${trabajoId}`);
+		revalidatePath(`/admin/trabajos/${trabajoId}`);
 	}
 
 	return { error: null, success: true, quotationId: quotation.id };
@@ -417,7 +478,11 @@ export async function updateQuotationAction(
 				{ quotationId, count },
 			);
 		}
-		return { error: "No se pudo actualizar la cotización." };
+		return {
+			error: isUniqueViolation(quotationError)
+				? "Este trabajo ya tiene otra cotización vinculada."
+				: "No se pudo actualizar la cotización.",
+		};
 	}
 
 	// Eliminar items existentes
@@ -442,17 +507,6 @@ export async function updateQuotationAction(
 			logQuotationDatabaseError("updateQuotationAction items", itemsError);
 			return { error: "No se pudieron actualizar los productos." };
 		}
-	}
-
-	// Regresar el trabajo a la etapa de cotización si tiene trabajo asociado
-	if (trabajoId) {
-		await supabase
-			.from("trabajos")
-			.update({
-				current_stage: "cotizacion",
-				cotizacion_completed_at: null,
-			})
-			.eq("id", trabajoId);
 	}
 
 	try {
@@ -512,108 +566,65 @@ export async function saveDraftAction(data: {
 	}
 
 	const items = itemsResult.items;
-	const { subtotal, total } = calculateQuotationTotals(items);
 
-	// Si ya existe una cotización, actualizarla
-	if (data.quotationId) {
-		const { error: quotationError, count } = await supabase
-			.from("quotations")
-			.update(
-				{
-					trabajo_id: data.trabajoId || null,
-					supplier_name: data.supplierName || null,
-					project: data.project || null,
-					status: data.status || "draft",
-					terms_and_conditions: data.termsAndConditions || null,
-					order_deadline: data.orderDeadline || null,
-					expected_delivery: data.expectedDelivery || null,
-					subtotal,
-					total,
-				},
-				{ count: "exact" },
-			)
-			.eq("id", data.quotationId);
+	let quotationNumber: string | null = null;
+	if (!data.quotationId) {
+		if (data.trabajoId) {
+			const { data: existingQuotation, error: existingQuotationError } =
+				await supabase
+					.from("quotations")
+					.select("id")
+					.eq("trabajo_id", data.trabajoId)
+					.maybeSingle();
 
-		if (quotationError || count !== 1) {
-			if (quotationError) {
-				logQuotationDatabaseError("saveDraftAction quotation", quotationError);
+			if (existingQuotationError) {
+				logQuotationDatabaseError(
+					"saveDraftAction existing quotation",
+					existingQuotationError,
+				);
+				return {
+					success: false,
+					error: "No se pudo validar la cotización existente.",
+				};
 			}
-			return { success: false, error: "No se pudo guardar el borrador." };
-		}
 
-		// Eliminar items existentes
-		const { error: deleteItemsError } = await supabase
-			.from("quotation_items")
-			.delete()
-			.eq("quotation_id", data.quotationId);
-
-		if (deleteItemsError) {
-			logQuotationDatabaseError(
-				"saveDraftAction delete items",
-				deleteItemsError,
-			);
-			return { success: false, error: "No se pudo guardar el borrador." };
-		}
-
-		// Insertar nuevos items
-		if (items.length > 0) {
-			const itemsWithQuotationId = toQuotationItemRows(data.quotationId, items);
-
-			const { error: itemsError } = await supabase
-				.from("quotation_items")
-				.insert(itemsWithQuotationId);
-
-			if (itemsError) {
-				logQuotationDatabaseError("saveDraftAction items", itemsError);
-				return { success: false, error: "No se pudo guardar el borrador." };
+			if (existingQuotation) {
+				return {
+					success: false,
+					error: "Este trabajo ya tiene una cotización vinculada.",
+				};
 			}
 		}
 
-		return { success: true, quotationId: data.quotationId };
+		quotationNumber = await generateQuotationNumber();
 	}
 
-	// Crear nueva cotización como borrador
-	const quotationNumber = await generateQuotationNumber();
+	const { data: savedQuotationId, error: draftError } = await supabase.rpc(
+		"save_quotation_draft",
+		{
+			p_quotation_id: data.quotationId ?? null,
+			p_trabajo_id: data.trabajoId || null,
+			p_quotation_number: quotationNumber,
+			p_supplier_name: data.supplierName.trim(),
+			p_project: data.project.trim(),
+			p_status: data.quotationId ? data.status || "draft" : "draft",
+			p_terms_and_conditions: data.termsAndConditions || null,
+			p_order_deadline: data.orderDeadline || null,
+			p_expected_delivery: data.expectedDelivery || null,
+			p_items: items,
+		},
+	);
 
-	const { data: quotation, error: quotationError } = await supabase
-		.from("quotations")
-		.insert({
-			quotation_number: quotationNumber,
-			trabajo_id: data.trabajoId || null,
-			supplier_name: data.supplierName || null,
-			project: data.project || null,
-			terms_and_conditions: data.termsAndConditions || null,
-			order_deadline: data.orderDeadline || null,
-			expected_delivery: data.expectedDelivery || null,
-			subtotal,
-			total,
-			status: "draft",
-		})
-		.select("id")
-		.single();
-
-	if (quotationError || !quotation) {
-		logQuotationDatabaseError(
-			"saveDraftAction create quotation",
-			quotationError,
-		);
-		return { success: false, error: "No se pudo crear el borrador." };
+	if (draftError || !savedQuotationId) {
+		logQuotationDatabaseError("saveDraftAction atomic draft", draftError);
+		return {
+			success: false,
+			error:
+				data.trabajoId && isUniqueViolation(draftError)
+					? "Este trabajo ya tiene una cotización vinculada."
+					: "No se pudo guardar el borrador.",
+		};
 	}
 
-	// Guardar items si existen
-	if (items.length > 0) {
-		const itemsWithQuotationId = toQuotationItemRows(quotation.id, items);
-
-		const { error: itemsError } = await supabase
-			.from("quotation_items")
-			.insert(itemsWithQuotationId);
-
-		if (itemsError) {
-			logQuotationDatabaseError("saveDraftAction create items", itemsError);
-			await supabase.from("quotations").delete().eq("id", quotation.id);
-			return { success: false, error: "No se pudo crear el borrador." };
-		}
-	}
-
-	return { success: true, quotationId: quotation.id };
+	return { success: true, quotationId: savedQuotationId };
 }

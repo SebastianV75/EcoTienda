@@ -27,6 +27,7 @@ export const getDescargables = cache(async (): Promise<DescargableItem[]> => {
 			intake_name
 		`)
 		.eq("current_stage", "descargables")
+		.not("descargables_completed_at", "is", null)
 		.order("created_at", { ascending: false });
 
 	if (error) {

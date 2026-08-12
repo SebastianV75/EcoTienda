@@ -116,7 +116,7 @@ export type VentaActionState = {
 
 export type VentaFormValues = {
 	trabajo_id: string;
-	quotation_trabajo_id: string;
+	quotation_id: string;
 	confirmed_on: string;
 	agreed_amount: number;
 	notes: string;
@@ -133,7 +133,7 @@ export type DescargablesFormValues = {
 
 type VentaStagePayload = {
 	trabajo_id: string;
-	quotation_trabajo_id: string;
+	quotation_id: string;
 	confirmed_on: string;
 	agreed_amount: number;
 	notes: string;
@@ -147,7 +147,9 @@ type ValidVentaInput =
 function validateVentaInput(formData: FormData): ValidVentaInput {
 	const values: VentaFormValues = {
 		trabajo_id: getString(formData, "trabajo_id"),
-		quotation_trabajo_id: getString(formData, "quotation_trabajo_id"),
+		quotation_id:
+			getString(formData, "quotation_id") ||
+			getString(formData, "quotation_trabajo_id"),
 		confirmed_on: getString(formData, "confirmed_on"),
 		agreed_amount: getNumber(formData, "agreed_amount"),
 		notes: getString(formData, "notes"),
@@ -156,7 +158,7 @@ function validateVentaInput(formData: FormData): ValidVentaInput {
 	const missing: string[] = [];
 
 	if (!values.trabajo_id) missing.push("trabajo");
-	if (!values.quotation_trabajo_id) missing.push("cotización vinculada");
+	if (!values.quotation_id) missing.push("cotización vinculada");
 	if (!values.confirmed_on) missing.push("fecha de confirmación");
 	if (!Number.isFinite(values.agreed_amount) || values.agreed_amount < 0)
 		missing.push("monto acordado válido");
@@ -174,7 +176,7 @@ function validateVentaInput(formData: FormData): ValidVentaInput {
 
 	const stagePayload: VentaStagePayload = {
 		trabajo_id: values.trabajo_id,
-		quotation_trabajo_id: values.quotation_trabajo_id,
+		quotation_id: values.quotation_id,
 		confirmed_on: values.confirmed_on,
 		agreed_amount: values.agreed_amount,
 		notes: values.notes,
@@ -204,7 +206,7 @@ type QuotationStageSnapshot = CotizacionStagePayload;
 
 type SaleStageSnapshot = {
 	trabajo_id: string;
-	quotation_trabajo_id: string;
+	quotation_id: string;
 	confirmed_on: string;
 	agreed_amount: number;
 	notes: string;
@@ -240,11 +242,17 @@ async function restoreSaleStage(
 }
 
 type LegacyQuotationSnapshot = {
+	id: string;
 	total: number | string | null;
 	project: string | null;
 	terms_and_conditions: string | null;
 };
 
+/**
+ * Keeps the sale FK-compatible projection aligned with the canonical
+ * `quotations` row. The legacy stage is not authoritative for price or
+ * scope; it only remains until the sale FK is migrated to quotations.
+ */
 async function ensureTrabajoQuotationStage(
 	supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
 	trabajoId: string,
@@ -254,50 +262,51 @@ async function ensureTrabajoQuotationStage(
 	created: boolean;
 	error: string | null;
 }> {
-	const { data: existingStage, error: existingStageError } = await supabase
-		.from("trabajo_quotation_stage")
-		.select(
-			"trabajo_id, scope_summary, amount, terms_and_conditions, outcome, quotation_type, rfc, rpu, completed_at",
-		)
-		.eq("trabajo_id", trabajoId)
-		.maybeSingle();
+	const [existingStageResult, canonicalQuotationResult] = await Promise.all([
+		supabase
+			.from("trabajo_quotation_stage")
+			.select(
+				"trabajo_id, scope_summary, amount, terms_and_conditions, outcome, quotation_type, rfc, rpu, completed_at",
+			)
+			.eq("trabajo_id", trabajoId)
+			.maybeSingle(),
+		supabase
+			.from("quotations")
+			.select("id, total, project, terms_and_conditions")
+			.eq("trabajo_id", trabajoId)
+			.maybeSingle(),
+	]);
 
-	if (existingStageError) {
-		return {
-			stage: null,
-			created: false,
-			error: existingStageError.message,
-		};
-	}
-
-	if (existingStage) {
-		return {
-			stage: existingStage as QuotationStageSnapshot,
-			created: false,
-			error: null,
-		};
-	}
-
-	const { data: legacyQuotation, error: legacyQuotationError } = await supabase
-		.from("quotations")
-		.select("total, project, terms_and_conditions")
-		.eq("trabajo_id", trabajoId)
-		.order("created_at", { ascending: false })
-		.limit(1)
-		.maybeSingle();
-
-	if (legacyQuotationError || !legacyQuotation) {
+	if (existingStageResult.error || canonicalQuotationResult.error) {
 		return {
 			stage: null,
 			created: false,
 			error:
-				legacyQuotationError?.message ??
-				"No existe una cotización vinculada al trabajo.",
+				existingStageResult.error?.message ??
+				canonicalQuotationResult.error?.message ??
+				"No se pudo leer la cotización vinculada.",
 		};
 	}
 
-	const quotation = legacyQuotation as LegacyQuotationSnapshot;
-	const amount = Number(quotation.total);
+	const existingStage =
+		existingStageResult.data as QuotationStageSnapshot | null;
+	const canonicalQuotation =
+		canonicalQuotationResult.data as LegacyQuotationSnapshot | null;
+
+	if (!canonicalQuotation && existingStage) {
+		// Preserve old stage-only records until they are migrated explicitly.
+		return { stage: existingStage, created: false, error: null };
+	}
+
+	if (!canonicalQuotation) {
+		return {
+			stage: null,
+			created: false,
+			error: "No existe una cotización vinculada al trabajo.",
+		};
+	}
+
+	const amount = Number(canonicalQuotation.total);
 	if (!Number.isFinite(amount) || amount < 0) {
 		return {
 			stage: null,
@@ -308,17 +317,23 @@ async function ensureTrabajoQuotationStage(
 
 	const payload: QuotationStageSnapshot = {
 		trabajo_id: trabajoId,
-		scope_summary: quotation.project?.trim() || "Cotización aceptada",
+		scope_summary:
+			canonicalQuotation.project?.trim() ||
+			existingStage?.scope_summary ||
+			"Cotización aceptada",
 		amount,
-		terms_and_conditions: quotation.terms_and_conditions?.trim() ?? "",
-		outcome: "approved",
-		quotation_type: "Cotización general",
-		rfc: "",
-		rpu: "",
-		completed_at: completedAt,
+		terms_and_conditions:
+			canonicalQuotation.terms_and_conditions?.trim() ??
+			existingStage?.terms_and_conditions ??
+			"",
+		outcome: existingStage?.outcome || "approved",
+		quotation_type: existingStage?.quotation_type || "Cotización general",
+		rfc: existingStage?.rfc || "",
+		rpu: existingStage?.rpu || "",
+		completed_at: existingStage?.completed_at ?? completedAt,
 	};
 
-	const { data: createdStage, error: createStageError } = await supabase
+	const { data: projectedStage, error: projectionError } = await supabase
 		.from("trabajo_quotation_stage")
 		.upsert(payload, { onConflict: "trabajo_id" })
 		.select(
@@ -326,18 +341,19 @@ async function ensureTrabajoQuotationStage(
 		)
 		.single();
 
-	if (createStageError || !createdStage) {
+	if (projectionError || !projectedStage) {
 		return {
 			stage: null,
 			created: false,
 			error:
-				createStageError?.message ?? "No se pudo crear la etapa de cotización.",
+				projectionError?.message ??
+				"No se pudo sincronizar la cotización vinculada.",
 		};
 	}
 
 	return {
-		stage: createdStage as QuotationStageSnapshot,
-		created: true,
+		stage: projectedStage as QuotationStageSnapshot,
+		created: !existingStage,
 		error: null,
 	};
 }
@@ -494,7 +510,7 @@ export async function saveTrabajoVentaAction(
 		supabase
 			.from("trabajo_sale_stage")
 			.select(
-				"trabajo_id, quotation_trabajo_id, confirmed_on, agreed_amount, notes, completed_at",
+				"trabajo_id, quotation_id, confirmed_on, agreed_amount, notes, completed_at",
 			)
 			.eq("trabajo_id", result.values.trabajo_id)
 			.maybeSingle(),
@@ -549,9 +565,23 @@ export async function saveTrabajoVentaAction(
 		};
 	}
 
+	const { data: canonicalQuotation, error: canonicalQuotationError } =
+		await supabase
+			.from("quotations")
+			.select("id")
+			.eq("trabajo_id", trabajoSnapshot.id)
+			.maybeSingle();
+
+	if (canonicalQuotationError || !canonicalQuotation) {
+		return {
+			error: "No existe una cotización canónica válida para guardar la venta.",
+			success: null,
+		};
+	}
+
 	const salePayload: VentaStagePayload = {
 		...result.stagePayload,
-		quotation_trabajo_id: quotationStageResult.stage.trabajo_id,
+		quotation_id: canonicalQuotation.id,
 	};
 
 	const { error: ventaError } = await supabase
@@ -606,9 +636,11 @@ export async function saveTrabajoVentaAction(
 		};
 	}
 
+	revalidatePath("/admin");
 	revalidatePath("/admin/trabajos");
 	revalidatePath(`/admin/trabajos/${result.values.trabajo_id}`);
 	revalidatePath(`/admin/visits/${result.values.trabajo_id}`);
+	revalidatePath("/admin/sales");
 	revalidatePath("/admin/descargables");
 
 	return {

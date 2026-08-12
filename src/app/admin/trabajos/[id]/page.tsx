@@ -309,6 +309,23 @@ export default async function TrabajoDetailPage({
 							</p>
 						) : (
 							<div className="grid gap-4 md:grid-cols-2">
+								<div className="flex flex-wrap items-center justify-between gap-3 md:col-span-2 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3">
+									<div>
+										<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
+											Reporte de visita
+										</p>
+										<p className="mt-1 text-sm text-[var(--foreground)]">
+											Descarga una copia clara de la información capturada.
+										</p>
+									</div>
+									<a
+										href={`/api/trabajos/${trabajo.id}/visita`}
+										className="inline-flex items-center rounded-full bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-strong)]"
+										download
+									>
+										Descargar reporte PDF
+									</a>
+								</div>
 								<div className="space-y-1.5">
 									<p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-strong)]">
 										Fecha de ejecución
@@ -475,6 +492,24 @@ export default async function TrabajoDetailPage({
 									</div>
 								) : null}
 							</div>
+						) : isCotizacionEditable && !trabajo.cotizacion ? (
+							<div className="space-y-4 rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-4">
+								<div>
+									<p className="text-sm font-semibold text-amber-900">
+										Cotización pendiente de crear
+									</p>
+									<p className="mt-1 text-sm leading-6 text-amber-800">
+										Las cotizaciones nuevas se gestionan desde el módulo de
+										Cotizaciones para mantener un solo registro, PDF y estado.
+									</p>
+								</div>
+								<Link
+									href={`/admin/quotations/new?trabajoId=${encodeURIComponent(trabajo.id)}`}
+									className="ui-primary-action w-full justify-center sm:w-auto"
+								>
+									Crear cotización vinculada
+								</Link>
+							</div>
 						) : isCotizacionEditable ? (
 							<CotizacionForm
 								trabajoId={trabajo.id}
@@ -560,9 +595,7 @@ export default async function TrabajoDetailPage({
 							currentStage === "venta" ? (
 								<VentaForm
 									trabajoId={trabajo.id}
-									quotationTrabajoId={
-										trabajo.cotizacion?.trabajo_id ?? trabajo.id
-									}
+									quotationId={linkedQuotation?.id ?? ""}
 								/>
 							) : (
 								<div className="space-y-4">

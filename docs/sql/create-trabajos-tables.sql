@@ -343,7 +343,7 @@ using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
 create table if not exists public.trabajo_sale_stage (
   trabajo_id uuid primary key references public.trabajos (id) on delete cascade,
-  quotation_trabajo_id uuid not null references public.trabajo_quotation_stage (trabajo_id) on delete restrict,
+  quotation_id uuid not null references public.quotations (id) on delete restrict,
   confirmed_on date not null,
   agreed_amount numeric(12,2) not null check (agreed_amount >= 0),
   notes text not null default '',
@@ -352,8 +352,8 @@ create table if not exists public.trabajo_sale_stage (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create index if not exists trabajo_sale_stage_quotation_trabajo_id_idx
-  on public.trabajo_sale_stage (quotation_trabajo_id);
+create index if not exists trabajo_sale_stage_quotation_id_idx
+  on public.trabajo_sale_stage (quotation_id);
 
 create or replace function public.set_trabajo_sale_stage_updated_at()
 returns trigger

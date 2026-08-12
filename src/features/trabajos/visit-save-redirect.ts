@@ -9,8 +9,10 @@ export function getVisitSaveRedirectPath({
 	trabajoId: string;
 	quotationId?: string | null;
 }) {
-	if (role === "admin" && quotationId) {
-		return `/admin/quotations/${quotationId}/edit`;
+	if (role === "admin") {
+		return quotationId
+			? `/admin/quotations/${quotationId}/edit`
+			: `/admin/trabajos/${trabajoId}`;
 	}
 
 	return `/admin/visits/${trabajoId}`;

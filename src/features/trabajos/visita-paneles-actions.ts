@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createQuotationFromVisita } from "./create-quotation-from-visita";
 import { getVisitSaveRedirectPath } from "./visit-save-redirect";
 import {
+	assertVisitActionAccess,
 	completeVisitWorkflow,
 	existingAttributes,
 	existingText,
@@ -100,6 +101,8 @@ export async function saveVisitaPanelesAction(
 	// La tabla guarda únicamente la fecha; la hora del formulario no se persiste.
 
 	const supabase = await createSupabaseServerClient();
+	const accessError = await assertVisitActionAccess(supabase, user, trabajoId);
+	if (accessError) return { error: accessError, success: null };
 	const existingVisita = await getExistingVisita(supabase, trabajoId);
 
 	const houseAttributes: Record<string, string> = existingAttributes(
@@ -207,6 +210,7 @@ export async function saveVisitaPanelesAction(
 		supabase,
 		trabajoId,
 		payload.completed_at,
+		user,
 	);
 
 	if (workflowError) {

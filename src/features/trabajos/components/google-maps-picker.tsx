@@ -2,11 +2,19 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
+export type GoogleMapsLocation = {
+	address: string;
+	coordinates: string;
+};
+
 type GoogleMapsPickerProps = {
 	name: string;
+	addressName?: string;
 	defaultValue?: string;
+	defaultAddress?: string;
 	label?: string;
 	googleMapsApiKey?: string | null;
+	onLocationChangeAction?: (location: GoogleMapsLocation) => void;
 };
 
 type GoogleLatLng = {
@@ -36,7 +44,10 @@ type GoogleMarkerInstance = {
 };
 
 type GoogleAutocompleteInstance = {
-	getPlace: () => { geometry?: { location?: GoogleLatLng } };
+	getPlace: () => {
+		formatted_address?: string;
+		geometry?: { location?: GoogleLatLng };
+	};
 	addListener: (
 		eventName: string,
 		handler: () => void,
@@ -179,11 +190,16 @@ export async function geocodeAddress(address: string, apiKey: string) {
 
 export function GoogleMapsPicker({
 	name,
+	addressName,
 	defaultValue = "",
+	defaultAddress = "",
 	label = "📍 Seleccionar ubicación en el mapa",
 	googleMapsApiKey = null,
+	onLocationChangeAction,
 }: GoogleMapsPickerProps) {
+	const [address, setAddress] = useState(defaultAddress);
 	const [coordinates, setCoordinates] = useState(defaultValue);
+	const addressRef = useRef(defaultAddress);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [mapLoaded, setMapLoaded] = useState(false);
@@ -192,6 +208,30 @@ export function GoogleMapsPicker({
 	const mapInstanceRef = useRef<GoogleMapInstance | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const scriptLoadedRef = useRef(false);
+
+	const notifyLocationChange = useCallback(
+		(nextAddress: string, nextCoordinates: string) => {
+			addressRef.current = nextAddress;
+			setAddress(nextAddress);
+			setCoordinates(nextCoordinates);
+			onLocationChangeAction?.({
+				address: nextAddress,
+				coordinates: nextCoordinates,
+			});
+		},
+		[onLocationChangeAction],
+	);
+
+	const notifyCoordinatesChange = useCallback(
+		(nextCoordinates: string) => {
+			setCoordinates(nextCoordinates);
+			onLocationChangeAction?.({
+				address: addressRef.current,
+				coordinates: nextCoordinates,
+			});
+		},
+		[onLocationChangeAction],
+	);
 
 	const getCurrentPosition = useCallback((): Promise<GeolocationPosition> => {
 		return new Promise((resolve, reject) => {
@@ -264,7 +304,7 @@ export function GoogleMapsPicker({
 				if (position) {
 					const lat = position.lat();
 					const lng = position.lng();
-					setCoordinates(`${lat},${lng}`);
+					notifyCoordinatesChange(`${lat},${lng}`);
 					map.panTo(position);
 				}
 			});
@@ -274,7 +314,7 @@ export function GoogleMapsPicker({
 				const lat = event.latLng.lat();
 				const lng = event.latLng.lng();
 				marker.setPosition(event.latLng);
-				setCoordinates(`${lat},${lng}`);
+				notifyCoordinatesChange(`${lat},${lng}`);
 			});
 
 			// Configurar autocompletado de búsqueda si existe el input
@@ -286,13 +326,21 @@ export function GoogleMapsPicker({
 
 				autocomplete.addListener("place_changed", () => {
 					const place = autocomplete.getPlace();
+					const selectedAddress =
+						place.formatted_address?.trim() ||
+						inputRef.current?.value.trim() ||
+						"";
+
 					if (place.geometry?.location) {
 						const lat = place.geometry.location.lat();
 						const lng = place.geometry.location.lng();
 						map.panTo(place.geometry.location);
 						marker.setPosition(place.geometry.location);
-						setCoordinates(`${lat},${lng}`);
+						notifyLocationChange(selectedAddress, `${lat},${lng}`);
+						return;
 					}
+
+					notifyLocationChange(selectedAddress, "");
 				});
 			}
 
@@ -303,7 +351,12 @@ export function GoogleMapsPicker({
 				"Error al inicializar el mapa. Verifica la consola para más detalles.",
 			);
 		}
-	}, [defaultValue, getCurrentPosition]);
+	}, [
+		defaultValue,
+		getCurrentPosition,
+		notifyCoordinatesChange,
+		notifyLocationChange,
+	]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -363,7 +416,7 @@ export function GoogleMapsPicker({
 			const lat = position.coords.latitude;
 			const lng = position.coords.longitude;
 
-			setCoordinates(`${lat},${lng}`);
+			notifyCoordinatesChange(`${lat},${lng}`);
 
 			// Centrar mapa en la ubicación actual
 			if (mapInstanceRef.current && window.google?.maps) {
@@ -393,7 +446,9 @@ export function GoogleMapsPicker({
 					<input
 						ref={inputRef}
 						type="text"
+						value={address}
 						placeholder="Buscar dirección..."
+						onChange={(event) => notifyLocationChange(event.target.value, "")}
 						onKeyDown={(event) => {
 							if (event.key === "Enter") {
 								event.preventDefault();
@@ -446,6 +501,9 @@ export function GoogleMapsPicker({
 				</div>
 			)}
 
+			{addressName ? (
+				<input type="hidden" name={addressName} value={address} />
+			) : null}
 			<input type="hidden" name={name} value={coordinates} />
 		</div>
 	);
