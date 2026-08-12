@@ -58,7 +58,7 @@ type NewAgendaItemPageProps = {
 export default async function NewAgendaItemPage({
 	searchParams,
 }: NewAgendaItemPageProps) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const resolvedSearchParams = searchParams ? await searchParams : undefined;
 	const fromDashboard = resolvedSearchParams?.source === "admin-dashboard";
 	const defaultValues = buildDefaultValues(resolvedSearchParams?.date);
@@ -81,7 +81,7 @@ export default async function NewAgendaItemPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title="Nuevo trabajo de Agenda"
 			description="Crea el ingreso inicial del Trabajo desde Agenda con una sola superficie sobria y continua."
 			email={user.email}

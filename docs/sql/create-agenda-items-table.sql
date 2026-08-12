@@ -1,3 +1,4 @@
+-- Run docs/sql/create-workers-table.sql first so app_private.current_worker_role() exists.
 create extension if not exists pgcrypto;
 
 create table if not exists public.agenda_items (
@@ -47,23 +48,27 @@ drop policy if exists "staff can read agenda items" on public.agenda_items;
 create policy "staff can read agenda items"
 on public.agenda_items
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "admins can insert agenda items" on public.agenda_items;
 create policy "admins can insert agenda items"
 on public.agenda_items
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 drop policy if exists "admins can update agenda items" on public.agenda_items;
 create policy "admins can update agenda items"
 on public.agenda_items
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 drop policy if exists "admins can delete agenda items" on public.agenda_items;
 create policy "admins can delete agenda items"
 on public.agenda_items
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));

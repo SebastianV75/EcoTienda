@@ -4,11 +4,11 @@ import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
 
 export default async function DiagramaUnifilarTemplatePage() {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 
 	return (
 		<AppShell
-			role="admin"
+		role={user.role}
 			title="Diagrama unifilar"
 			description="Elige un trabajo para revisar el panel de datos que acompaña al diagrama unifilar."
 			email={user.email}

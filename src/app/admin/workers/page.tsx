@@ -29,7 +29,7 @@ export default async function WorkersPage({
 						<input
 							name="q"
 							defaultValue={query}
-							placeholder="Buscar por nombre, rol o teléfono"
+							placeholder="Buscar por nombre, correo, rol o teléfono"
 							className="w-full rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						/>
 						<button

@@ -38,6 +38,9 @@ export async function signInAction(
 	}
 
 	const role = await resolveUserRole(data.user);
+	if (!role) {
+		redirect("/unauthorized");
+	}
 	redirect(getDefaultRouteForRole(role));
 }
 

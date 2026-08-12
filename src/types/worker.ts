@@ -1,12 +1,20 @@
-export type WorkerRole = "admin" | "technician" | "staff";
+import type { AppRole } from "@/types/auth";
+
+export type WorkerRole = AppRole;
+
+export type WorkerAccessMode = "profile" | "invite";
+
+export type WorkerAccessStatus = "none" | "pending" | "linked" | "unknown";
 
 export type WorkerRecord = {
 	id: string;
 	full_name: string;
+	email: string | null;
 	phone: string | null;
 	role: WorkerRole;
 	auth_user_id: string | null;
 	active: boolean;
+	accessStatus: WorkerAccessStatus;
 	created_at: string;
 	updated_at: string;
 };
@@ -18,14 +26,15 @@ export type WorkerSummary = Pick<
 
 export type WorkerFormValues = {
 	full_name: string;
+	email: string;
 	phone: string;
 	role: WorkerRole;
-	auth_user_id: string;
+	access_mode: WorkerAccessMode;
 	active: boolean;
 };
 
 export const workerRoleLabels: Record<WorkerRole, string> = {
-	admin: "Administrativo",
+	admin: "Administrador",
+	administrative: "Administrativo",
 	technician: "Técnico",
-	staff: "Personal interno",
 };

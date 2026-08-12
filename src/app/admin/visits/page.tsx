@@ -12,7 +12,9 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { orderVisitsByProgress } from "@/features/trabajos/visit-order";
 
 export default async function VisitsPage() {
-	const user = hasSupabaseEnv() ? await requireRole(["admin"]) : null;
+	const user = hasSupabaseEnv()
+		? await requireRole(["admin", "administrative"])
+		: null;
 
 	let visitItems: AgendaItem[] = [];
 	let visitsNotice: string | null = null;
@@ -35,7 +37,7 @@ export default async function VisitsPage() {
 
 	return (
 		<AppShell
-			role="admin"
+			role={user?.role ?? "admin"}
 			title="Visitas Técnicas"
 			description="Trabajos en etapa de visita. Completa la visita técnica para avanzar a cotización."
 			email={user?.email}

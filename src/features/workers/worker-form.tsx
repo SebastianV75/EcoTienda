@@ -15,6 +15,7 @@ import { workerRoleLabels, type WorkerFormValues } from "@/types/worker";
 type WorkerFormProps = {
 	mode: "create" | "edit";
 	workerId?: string;
+	workerUpdatedAt?: string;
 	defaultValues?: Partial<WorkerFormValues>;
 };
 
@@ -22,14 +23,22 @@ const initialState: WorkerActionState = {
 	error: null,
 };
 
-export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
+export function WorkerForm({
+	mode,
+	workerId,
+	workerUpdatedAt,
+	defaultValues,
+}: WorkerFormProps) {
 	const action = mode === "create" ? createWorkerAction : updateWorkerAction;
 	const [state, formAction] = useActionState(action, initialState);
 
 	return (
 		<form action={formAction} className="space-y-5">
 			{mode === "edit" ? (
-				<input type="hidden" name="id" value={workerId} />
+				<>
+					<input type="hidden" name="id" value={workerId} />
+					<input type="hidden" name="updated_at" value={workerUpdatedAt} />
+				</>
 			) : null}
 
 			<div className="grid gap-5 md:grid-cols-2">
@@ -48,6 +57,27 @@ export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 						placeholder="Nombre completo del trabajador"
 					/>
+				</div>
+
+				<div className="space-y-2.5 md:col-span-2">
+					<label
+						htmlFor="email"
+						className="text-sm font-medium text-[var(--brand-deep)]"
+					>
+						Correo de contacto
+					</label>
+					<Input
+						id="email"
+						name="email"
+						type="email"
+						defaultValue={defaultValues?.email ?? ""}
+						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						placeholder="Opcional"
+					/>
+					<p className="text-xs leading-5 text-[var(--muted)]">
+						Es obligatorio para invitar. En trabajadores ya vinculados es solo un
+						correo de contacto y no cambia el correo de inicio de sesión.
+					</p>
 				</div>
 
 				<div className="space-y-2.5">
@@ -76,7 +106,7 @@ export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 					<Select
 						id="role"
 						name="role"
-						defaultValue={defaultValues?.role ?? "staff"}
+						defaultValue={defaultValues?.role ?? "technician"}
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 					>
 						{Object.entries(workerRoleLabels).map(([value, label]) => (
@@ -87,25 +117,29 @@ export function WorkerForm({ mode, workerId, defaultValues }: WorkerFormProps) {
 					</Select>
 				</div>
 
-				<div className="space-y-2.5 md:col-span-2">
-					<label
-						htmlFor="auth_user_id"
-						className="text-sm font-medium text-[var(--brand-deep)]"
-					>
-						ID de auth
-					</label>
-					<Input
-						id="auth_user_id"
-						name="auth_user_id"
-						defaultValue={defaultValues?.auth_user_id ?? ""}
-						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-						placeholder="Opcional"
-					/>
-					<p className="text-xs leading-5 text-[var(--muted)]">
-						Puedes vincular el trabajador con un usuario de auth más adelante
-						sin bloquear el alta.
-					</p>
-				</div>
+				{mode === "create" ? (
+					<div className="space-y-2.5 md:col-span-2">
+						<label
+							htmlFor="access_mode"
+							className="text-sm font-medium text-[var(--brand-deep)]"
+						>
+							Modalidad de acceso
+						</label>
+						<Select
+							id="access_mode"
+							name="access_mode"
+							defaultValue="profile"
+							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
+						>
+							<option value="profile">Solo perfil, sin acceso</option>
+							<option value="invite">Invitar acceso por correo</option>
+						</Select>
+						<p className="text-xs leading-5 text-[var(--muted)]">
+							La invitación crea el usuario, asigna el rol y lo vincula automáticamente;
+							nunca necesitas copiar un UUID.
+						</p>
+					</div>
+				) : null}
 			</div>
 
 			<label className="flex items-start gap-3 rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] p-4 text-sm text-[var(--brand-deep)]">

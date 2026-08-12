@@ -25,7 +25,7 @@ export async function createProjectAction(
 	formData: FormData,
 ): Promise<ProjectActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "administrative"]);
 	}
 
 	const supabase = await createSupabaseServerClient();
@@ -47,7 +47,7 @@ export async function updateProjectStageAction(
 	formData: FormData,
 ): Promise<ProjectActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "administrative"]);
 	}
 
 	const projectId = formData.get("project_id")?.toString().trim() ?? "";
@@ -94,7 +94,7 @@ export async function advancePostSaleStepAction(
 	formData: FormData,
 ): Promise<ProjectActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "administrative"]);
 	}
 
 	const projectId = formData.get("project_id")?.toString().trim() ?? "";
@@ -152,7 +152,7 @@ export async function restoreProjectAction(
 	formData: FormData,
 ): Promise<ProjectActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "administrative"]);
 	}
 
 	const projectId = formData.get("project_id")?.toString().trim() ?? "";

@@ -4,11 +4,11 @@ import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
 
 export default async function UbicacionClienteTemplatePage() {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 
 	return (
 		<AppShell
-			role="admin"
+		role={user.role}
 			title="Ubicación del cliente"
 			description="Elige un trabajo para revisar la ubicación guardada y el mapa centrado en sus coordenadas."
 			email={user.email}

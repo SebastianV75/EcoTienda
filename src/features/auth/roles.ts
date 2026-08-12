@@ -6,6 +6,11 @@ export const roleConfig: Record<AppRole, RoleConfig> = {
 		description:
 			"Acceso completo a administración, descargables, cotizaciones y configuración.",
 	},
+	administrative: {
+		label: "Administrativo",
+		description:
+			"Acceso operativo a agenda, trabajos, cotizaciones, ventas y documentos; sin administrar usuarios ni seguridad.",
+	},
 	technician: {
 		label: "Técnico",
 		description:

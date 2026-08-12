@@ -52,6 +52,11 @@ const primaryMobileNavigationByRole: Record<AppRole, PrimaryItem[]> = {
 		{ href: "/agenda", label: "Agenda", icon: Calendar },
 		{ href: "/admin/quotations", label: "Cotización", icon: Clipboard },
 	],
+	administrative: [
+		{ href: "/agenda", label: "Agenda", icon: Calendar, exact: true },
+		{ href: "/admin/trabajos", label: "Trabajos", icon: Briefcase },
+		{ href: "/admin/quotations", label: "Cotización", icon: Clipboard },
+	],
 	technician: [
 		{
 			href: "/technician",
@@ -74,6 +79,16 @@ const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
 		{ href: "/admin/workers", label: "Trabajadores", icon: Profile },
 		{ href: "/admin/visits", label: "Visitas", icon: Location },
 		{ href: "/admin/settings", label: "Configuración", icon: Settings },
+	],
+	administrative: [
+		{ href: "/admin/sales", label: "Ventas", icon: Clipboard },
+		{ href: "/admin/descargables", label: "Descargables", icon: DocumentText },
+		{
+			href: "/technician/materiales-cliente",
+			label: "Info para cliente",
+			icon: DocumentText,
+		},
+		{ href: "/admin/visits", label: "Visitas", icon: Location },
 	],
 	technician: [
 		{

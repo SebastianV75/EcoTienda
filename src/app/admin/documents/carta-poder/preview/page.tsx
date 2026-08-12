@@ -24,7 +24,7 @@ export default async function CartaPoderPreviewPage({
 		witnessTwoName?: string;
 	}>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const params = searchParams ? await searchParams : undefined;
 	const trabajoId = await resolveTrabajoPreviewId(params);
 	const powerAcceptorName = params?.powerAcceptorName?.trim() ?? DEFAULT_POWER_ACCEPTOR;
@@ -72,7 +72,7 @@ export default async function CartaPoderPreviewPage({
 	if (!trabajoId) {
 		return (
 			<AppShell
-				role="admin"
+				role={user.role}
 				title="Carta poder"
 				description="Selecciona un trabajo para generar la vista previa del documento."
 				email={user.email}
@@ -99,7 +99,7 @@ export default async function CartaPoderPreviewPage({
 	if (!trabajo) {
 		return (
 			<AppShell
-				role="admin"
+				role={user.role}
 				title="Carta poder"
 				description="No fue posible cargar el trabajo solicitado."
 				email={user.email}
@@ -125,7 +125,7 @@ export default async function CartaPoderPreviewPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title="Vista previa · Carta poder"
 			description="Revisa el documento autollenado desde el trabajo y descárgalo o imprímelo cuando esté correcto."
 			email={user.email}

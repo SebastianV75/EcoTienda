@@ -6,7 +6,7 @@ import { getWorkerByAuthUserId } from "@/features/workers/data";
 import { getTrabajoVisitaById } from "./data";
 
 export async function loadAuthorizedVisitWork(trabajoId: string) {
-	const user = await requireRole(["admin", "technician"]);
+	const user = await requireRole(["admin", "administrative", "technician"]);
 	const work = await getTrabajoVisitaById(trabajoId);
 
 	if (!work) {
@@ -38,7 +38,7 @@ export async function loadAuthorizedVisitWork(trabajoId: string) {
 		user,
 		worker: null,
 		work,
-		shellRole: "admin" as const,
+		shellRole: user.role,
 		hubHref: `/admin/visits/${trabajoId}`,
 		homeHref: "/admin/visits",
 	};

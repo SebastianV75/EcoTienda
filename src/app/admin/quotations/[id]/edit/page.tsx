@@ -10,7 +10,7 @@ export default async function EditQuotationPage({
 }: {
 	params: Promise<{ id: string }>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const { id } = await params;
 
 	const quotation = await getQuotationById(id);
@@ -30,7 +30,7 @@ export default async function EditQuotationPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title={`Editar cotización ${quotation.quotation_number ?? ""}`}
 			description="Modifica los datos de la cotización, productos y términos."
 			email={user.email}

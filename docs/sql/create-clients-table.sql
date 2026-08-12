@@ -1,3 +1,4 @@
+-- Run docs/sql/create-workers-table.sql first so app_private.current_worker_role() exists.
 create extension if not exists pgcrypto;
 
 create table if not exists public.clients (
@@ -48,17 +49,20 @@ drop policy if exists "admins can read clients" on public.clients;
 create policy "admins can read clients"
 on public.clients
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 drop policy if exists "admins can insert clients" on public.clients;
 create policy "admins can insert clients"
 on public.clients
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 drop policy if exists "admins can update clients" on public.clients;
 create policy "admins can update clients"
 on public.clients
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative'));

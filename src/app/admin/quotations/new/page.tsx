@@ -9,7 +9,7 @@ export default async function NewQuotationPage({
 }: {
 	searchParams?: Promise<{ trabajoId?: string }>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const params = searchParams ? await searchParams : undefined;
 
 	// Establecer fecha actual como valor por defecto
@@ -18,7 +18,7 @@ export default async function NewQuotationPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title="Nueva cotización"
 			description="Crea una nueva solicitud de cotización con datos del proveedor, productos y términos."
 			email={user.email}

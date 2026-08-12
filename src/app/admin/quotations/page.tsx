@@ -15,7 +15,7 @@ export default async function QuotationsPage({
 }: {
 	searchParams?: Promise<{ q?: string }>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const params = searchParams ? await searchParams : undefined;
 	const query = params?.q ?? "";
 	const quotations = await getQuotations(query);
@@ -23,7 +23,7 @@ export default async function QuotationsPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title="Cotizaciones"
 			description="Trabajos en etapa de cotización. Revisa y confirma las cotizaciones generadas automáticamente."
 			email={user.email}

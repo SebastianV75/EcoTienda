@@ -71,7 +71,7 @@ export async function saveTrabajoDocumentInfoAction(
 	_previousState: DocumentInfoActionState,
 	formData: FormData,
 ): Promise<DocumentInfoActionState> {
-	await requireRole(["admin"]);
+	await requireRole(["admin", "administrative"]);
 
 	const trabajoId = getString(formData, "trabajo_id");
 	const values: DocumentFieldValues = {

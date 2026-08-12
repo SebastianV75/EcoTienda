@@ -54,7 +54,7 @@ export async function deleteQuotationAction(
 	_previousState: QuotationActionState,
 	id: string,
 ): Promise<QuotationActionState> {
-	await requireRole(["admin"]);
+	await requireRole(["admin", "administrative"]);
 	const supabase = await createSupabaseServerClient();
 
 	const { error: itemsError } = await supabase
@@ -83,7 +83,7 @@ export async function confirmQuotationAction(
 	_previousState: QuotationActionState,
 	formData: FormData,
 ): Promise<QuotationActionState> {
-	await requireRole(["admin"]);
+	await requireRole(["admin", "administrative"]);
 	const quotationId = formData.get("quotation_id")?.toString();
 	const trabajoId = formData.get("trabajo_id")?.toString();
 	const returnToTrabajo = formData.get("return_to")?.toString() === "trabajo";
@@ -249,7 +249,7 @@ export async function createQuotationAction(
 	_previousState: QuotationActionState,
 	formData: FormData,
 ): Promise<QuotationActionState> {
-	await requireRole(["admin"]);
+	await requireRole(["admin", "administrative"]);
 	const trabajoId = getString(formData, "trabajo_id");
 	const supplierName = getString(formData, "supplier_name");
 	const project = getString(formData, "project");
@@ -355,7 +355,7 @@ export async function updateQuotationAction(
 	_previousState: QuotationActionState,
 	formData: FormData,
 ): Promise<QuotationActionState> {
-	await requireRole(["admin"]);
+	await requireRole(["admin", "administrative"]);
 	const quotationId = getString(formData, "quotation_id");
 	const trabajoId = getString(formData, "trabajo_id");
 	const supplierName = getString(formData, "supplier_name");
@@ -495,7 +495,7 @@ export async function saveDraftAction(data: {
 	expectedDelivery?: string;
 	items?: QuotationItem[];
 }): Promise<DraftSaveState> {
-	await requireRole(["admin"]);
+	await requireRole(["admin", "administrative"]);
 
 	if (!data.supplierName?.trim() || !data.project?.trim()) {
 		return {

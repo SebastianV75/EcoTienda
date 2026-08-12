@@ -16,7 +16,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(_request: Request, { params }: RouteContext) {
-	await requireRole(["admin"]);
+	await requireRole(["admin", "administrative"]);
 
 	const { id } = await params;
 	const trabajo = await getTrabajoDocumentById(id);

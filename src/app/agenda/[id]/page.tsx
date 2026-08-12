@@ -35,7 +35,7 @@ export default async function AgendaItemPage({
 	params: Promise<{ id: string }>;
 }) {
 	const user = hasSupabaseEnv()
-		? await requireRole(["admin"])
+		? await requireRole(["admin", "administrative"])
 		: await getCurrentUser();
 	const { id } = await params;
 	const item = await getAgendaItemById(id);

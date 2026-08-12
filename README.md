@@ -52,7 +52,8 @@ The repository already includes:
    cp .env.example .env.local
    ```
 
-3. Fill the required Supabase keys in `.env.local`.
+3. Fill the required Supabase keys in `.env.local`. The service role key is
+   server-only and must never be exposed to browser code.
    Preferred key names:
 
    ```env
@@ -84,11 +85,21 @@ npm run start
 - `/admin` → protected admin shell foundation
 - `/technician` → protected technician area placeholder
 
+## User management
+
+Administrators can create a profile without access or invite a user by email from
+`/admin/workers`. The invitation assigns `app_metadata.role` and links the Auth
+user to `workers.auth_user_id` on the server. No Auth UUID is copied through the UI.
+
+The legacy `scripts/make-admin.mjs` script is retained for bootstrap recovery, but
+is no longer required for normal user creation or role delegation.
+
 ## Documentation
 
 - `docs/development-plan.md`
 - `docs/phase-0-bootstrap.md`
 - `docs/supabase-setup.md`
+- `docs/user-management.md`
 
 ## Next step
 
@@ -97,4 +108,3 @@ Create the first authenticated admin user in Supabase and start the Phase 1 docu
 
 ## Proyect ARCH
 Next.js 16 con React 19 + TypeScript + Tailwind CSS 4, usando Supabase como backend (Auth + Postgres + Storage). Corre con Turbopack en desarrollo. 
-

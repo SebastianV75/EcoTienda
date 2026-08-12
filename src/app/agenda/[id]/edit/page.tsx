@@ -71,7 +71,7 @@ export default async function EditAgendaItemPage({
 }: {
 	params: Promise<{ id: string }>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const { id } = await params;
 	const item = await getAgendaItemById(id);
 
@@ -100,7 +100,7 @@ export default async function EditAgendaItemPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title={`Editar ${item.titulo}`}
 			description="Ajusta el ingreso de Agenda sin cambiar la lógica de etapa ni romper la continuidad del Trabajo."
 			email={user.email}

@@ -12,7 +12,7 @@ export default async function QuotationDetailPage({
 }: {
 	params: Promise<{ id: string }>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const { id } = await params;
 
 	const supabase = await createSupabaseServerClient();
@@ -26,7 +26,7 @@ export default async function QuotationDetailPage({
 	if (quotationError || !quotation) {
 		return (
 			<AppShell
-				role="admin"
+				role={user.role}
 				title="Cotización no encontrada"
 				description="La cotización que buscas no existe o no tienes permisos para verla."
 				email={user.email}
@@ -80,7 +80,7 @@ export default async function QuotationDetailPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title={`Cotización ${quotationData.quotation_number ?? ""}`}
 			description="Detalles de la solicitud de cotización."
 			email={user.email}

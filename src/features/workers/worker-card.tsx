@@ -32,21 +32,44 @@ export function WorkerCard({ worker }: WorkerCardProps) {
 					>
 						{worker.active ? "Activo" : "Inactivo"}
 					</Badge>
+					<Badge
+						className={
+							worker.accessStatus === "linked"
+								? "border-emerald-200 bg-emerald-50 text-emerald-800"
+								: worker.accessStatus === "pending"
+									? "border-amber-200 bg-amber-50 text-amber-800"
+									: worker.accessStatus === "unknown"
+										? "border-rose-200 bg-rose-50 text-rose-800"
+										: "border-slate-200 bg-slate-50 text-slate-700"
+						}
+					>
+						{worker.accessStatus === "linked"
+							? "Acceso vinculado"
+							: worker.accessStatus === "pending"
+								? "Invitación pendiente"
+								: worker.accessStatus === "unknown"
+									? "Acceso sin verificar"
+									: "Sin acceso"}
+					</Badge>
 				</div>
 			</div>
 
 			<dl className="mt-4 space-y-3 text-sm text-[var(--muted)]">
 				<div>
+					<dt className="font-medium text-[var(--brand-deep)]">
+						Correo de contacto
+					</dt>
+					<dd>{worker.email ?? "Sin correo"}</dd>
+				</div>
+				{worker.accessStatus === "unknown" ? (
+					<div className="rounded-[16px] border border-rose-200 bg-rose-50 px-3 py-2 text-rose-800">
+						No se pudo consultar Supabase Auth. El vínculo puede existir; revisa antes
+						de crear o modificar accesos.
+					</div>
+				) : null}
+				<div>
 					<dt className="font-medium text-[var(--brand-deep)]">Teléfono</dt>
 					<dd>{worker.phone ?? "Sin teléfono"}</dd>
-				</div>
-				<div>
-					<dt className="font-medium text-[var(--brand-deep)]">
-						Vínculo de auth
-					</dt>
-					<dd className="break-all font-mono text-xs text-[var(--muted)]">
-						{worker.auth_user_id ?? "Sin vínculo"}
-					</dd>
 				</div>
 			</dl>
 

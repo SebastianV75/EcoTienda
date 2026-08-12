@@ -1,3 +1,4 @@
+-- Run docs/sql/create-workers-table.sql first so app_private.current_worker_role() exists.
 create extension if not exists pgcrypto;
 
 create table if not exists public.projects (
@@ -49,23 +50,27 @@ drop policy if exists "admins can read projects" on public.projects;
 create policy "admins can read projects"
 on public.projects
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 drop policy if exists "admins can insert projects" on public.projects;
 create policy "admins can insert projects"
 on public.projects
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 drop policy if exists "admins can update projects" on public.projects;
 create policy "admins can update projects"
 on public.projects
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 drop policy if exists "admins can delete projects" on public.projects;
 create policy "admins can delete projects"
 on public.projects
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));

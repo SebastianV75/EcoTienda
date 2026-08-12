@@ -86,7 +86,7 @@ export default async function WorkVisitHubPage({
 							</Link>
 						</div>
 					</section>
-					<AgendaItemDetail item={legacyItem} role="admin" />
+					<AgendaItemDetail item={legacyItem} role={shellRole} />
 				</div>
 			</AppShell>
 		);

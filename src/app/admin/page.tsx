@@ -26,7 +26,7 @@ const emptyStageStats: StageStats = {
 
 export default async function AdminPage() {
 	const user = hasSupabaseEnv()
-		? await requireRole(["admin"])
+		? await requireRole(["admin", "administrative"])
 		: await getCurrentUser();
 
 	const [activeTrabajosResult, stageStatsResult] = hasSupabaseEnv()
@@ -56,7 +56,7 @@ export default async function AdminPage() {
 
 	return (
 		<AppShell
-			role="admin"
+			role={user?.role ?? "admin"}
 			title="Tablero operativo"
 			description="Trabajo activo primero. Accesos de apoyo abajo."
 			email={user?.email}

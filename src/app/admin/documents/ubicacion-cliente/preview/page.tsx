@@ -14,7 +14,7 @@ export default async function UbicacionClientePreviewPage({
 }: {
 	searchParams?: Promise<{ trabajoId?: string }>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const params = searchParams ? await searchParams : undefined;
 	const trabajoId = await resolveTrabajoPreviewId(params);
 
@@ -58,7 +58,7 @@ export default async function UbicacionClientePreviewPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title={`Vista previa · Ubicación de ${previewClient.full_name}`}
 			description="Revisa la información guardada del trabajo y la vista de mapa centrada en sus coordenadas."
 			email={user.email ?? ""}

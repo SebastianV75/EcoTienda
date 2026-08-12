@@ -22,7 +22,7 @@ type AgendaPageProps = {
 
 export default async function AgendaPage({ searchParams }: AgendaPageProps) {
 	const user = hasSupabaseEnv()
-		? await requireRole(["admin"])
+		? await requireRole(["admin", "administrative"])
 		: await getCurrentUser();
 	const resolvedSearchParams = searchParams ? await searchParams : undefined;
 

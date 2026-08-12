@@ -1,3 +1,7 @@
+import "server-only";
+
+import { normalizeAppUrl } from "@/features/auth/invitation-rules";
+
 const requiredPublicKeys = ["NEXT_PUBLIC_SUPABASE_URL"] as const;
 
 function getPublicKey() {
@@ -43,4 +47,29 @@ export function getSupabaseEnv() {
 		url,
 		publishableKey: publicKey,
 	};
+}
+
+export function getSupabaseAdminEnv() {
+	const { url } = getSupabaseEnv();
+	const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+	if (!serviceRoleKey) {
+		throw new Error(
+			"Missing Supabase environment variable: SUPABASE_SERVICE_ROLE_KEY. This server-only variable is required for user administration.",
+		);
+	}
+
+	return { url, serviceRoleKey };
+}
+
+export function getAppUrl() {
+	const appUrl = normalizeAppUrl(process.env.APP_URL);
+
+	if (!appUrl) {
+		throw new Error(
+			"Missing or invalid APP_URL. Use the canonical HTTPS origin, or HTTP only for localhost development.",
+		);
+	}
+
+	return appUrl;
 }

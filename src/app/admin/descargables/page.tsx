@@ -7,12 +7,12 @@ import { getDescargables } from "@/features/descargables/data";
 import { requireRole } from "@/features/auth/session";
 
 export default async function DescargablesPage() {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const descargables = await getDescargables();
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title="Descargables"
 			description="Trabajos finalizados. Descarga los documentos y archivos generados."
 			email={user.email}

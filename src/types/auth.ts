@@ -1,4 +1,4 @@
-export type AppRole = "admin" | "technician";
+export type AppRole = "admin" | "administrative" | "technician";
 
 export type RoleConfig = {
 	label: string;

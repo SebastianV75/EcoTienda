@@ -55,7 +55,7 @@ export default async function DocumentWorkSelectionPage({
 }: {
 	searchParams?: Promise<{ template?: DocumentTemplateSlug }>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const params = searchParams ? await searchParams : undefined;
 	const template = params?.template;
 	const templateLabel =
@@ -64,7 +64,7 @@ export default async function DocumentWorkSelectionPage({
 	if (!template) {
 		return (
 			<AppShell
-				role="admin"
+				role={user.role}
 				title="Documentos de trabajo"
 				description="Elige una plantilla para abrirla con datos del trabajo en curso."
 				email={user.email}
@@ -110,7 +110,7 @@ export default async function DocumentWorkSelectionPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title={`Documentos de trabajo · ${templateLabel}`}
 			description="Selecciona el trabajo para abrir la vista previa con datos capturados en el flujo operativo."
 			email={user.email}

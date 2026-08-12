@@ -11,14 +11,14 @@ export default async function SalesPage({
 }: {
 	searchParams?: Promise<{ q?: string }>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const params = searchParams ? await searchParams : undefined;
 	const query = params?.q ?? "";
 	const sales = await getSales(query);
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title="Ventas"
 			description="Gestiona las ventas confirmadas y marca las que no se concretaron."
 			email={user.email}

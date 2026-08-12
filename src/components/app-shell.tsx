@@ -50,14 +50,14 @@ const workflowNavigation: NavigationItem[] = [
 	{
 		href: "/agenda",
 		label: "Agenda",
-		roles: ["admin", "technician"],
+		roles: ["admin", "administrative", "technician"],
 		icon: Calendar,
 	},
-	{ href: "/admin/visits", label: "Visitas", roles: ["admin"], icon: Location },
+	{ href: "/admin/visits", label: "Visitas", roles: ["admin", "administrative"], icon: Location },
 	{
 		href: "/admin/trabajos",
 		label: "Trabajos",
-		roles: ["admin"],
+		roles: ["admin", "administrative"],
 		icon: Briefcase,
 	},
 ];
@@ -66,13 +66,13 @@ const supportNavigation: NavigationItem[] = [
 	{
 		href: "/admin/descargables",
 		label: "Descargables",
-		roles: ["admin"],
+		roles: ["admin", "administrative"],
 		icon: DocumentText,
 	},
 	{
 		href: "/technician/materiales-cliente",
 		label: "Info para cliente",
-		roles: ["admin", "technician"],
+		roles: ["admin", "administrative", "technician"],
 		icon: DocumentText,
 	},
 	{
@@ -84,13 +84,13 @@ const supportNavigation: NavigationItem[] = [
 	{
 		href: "/admin/quotations",
 		label: "Cotizaciones",
-		roles: ["admin"],
+		roles: ["admin", "administrative"],
 		icon: Clipboard,
 	},
 	{
 		href: "/admin/sales",
 		label: "Ventas",
-		roles: ["admin"],
+		roles: ["admin", "administrative"],
 		icon: Money,
 	},
 	{

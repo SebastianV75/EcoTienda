@@ -316,7 +316,7 @@ export async function createAgendaItemAction(
 	formData: FormData,
 ): Promise<AgendaActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "administrative"]);
 	}
 
 	const { error, values } = validateAgendaItemInput(formData);
@@ -399,7 +399,7 @@ export async function updateAgendaItemAction(
 	formData: FormData,
 ): Promise<AgendaActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "administrative"]);
 	}
 
 	const agendaItemId = getString(formData, "id");
@@ -547,7 +547,7 @@ export async function updateAgendaItemAction(
 
 export async function deleteAgendaItemAction(formData: FormData) {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "administrative"]);
 	}
 
 	const agendaItemId = getString(formData, "id");

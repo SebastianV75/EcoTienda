@@ -14,7 +14,7 @@ export default async function DiagramaUnifilarPreviewPage({
 }: {
 	searchParams?: Promise<{ trabajoId?: string }>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const params = searchParams ? await searchParams : undefined;
 	const trabajoId = await resolveTrabajoPreviewId(params);
 
@@ -57,7 +57,7 @@ export default async function DiagramaUnifilarPreviewPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title={`Vista previa · Diagrama unifilar de ${previewClient.full_name}`}
 			description="Revisa el panel de datos del trabajo y del equipo de generación solar."
 			email={user.email ?? ""}

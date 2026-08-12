@@ -1,5 +1,6 @@
 -- Let technicians read and update only the work assigned to them.
 -- This complements worker-linked role resolution from `workers.auth_user_id`.
+-- Run create-workers-table.sql or add-administrative-role-to-workers.sql first.
 
 alter table public.trabajos enable row level security;
 alter table public.trabajo_agenda_stage enable row level security;
@@ -10,7 +11,10 @@ drop policy if exists "technician can read assigned trabajos" on public.trabajos
 create policy "technician can read assigned trabajos"
 on public.trabajos
 for select
+to authenticated
 using (
+  (select app_private.current_worker_role()) = 'technician'
+  and
   exists (
     select 1
     from public.trabajo_agenda_stage tas
@@ -26,7 +30,10 @@ drop policy if exists "technician can update assigned trabajos" on public.trabaj
 create policy "technician can update assigned trabajos"
 on public.trabajos
 for update
+to authenticated
 using (
+  (select app_private.current_worker_role()) = 'technician'
+  and
   exists (
     select 1
     from public.trabajo_agenda_stage tas
@@ -38,6 +45,8 @@ using (
   )
 )
 with check (
+  (select app_private.current_worker_role()) = 'technician'
+  and
   exists (
     select 1
     from public.trabajo_agenda_stage tas
@@ -54,7 +63,10 @@ drop policy if exists "technician can read assigned agenda stage" on public.trab
 create policy "technician can read assigned agenda stage"
 on public.trabajo_agenda_stage
 for select
+to authenticated
 using (
+  (select app_private.current_worker_role()) = 'technician'
+  and
   exists (
     select 1
     from public.workers w
@@ -69,7 +81,10 @@ drop policy if exists "technician can update assigned agenda stage" on public.tr
 create policy "technician can update assigned agenda stage"
 on public.trabajo_agenda_stage
 for update
+to authenticated
 using (
+  (select app_private.current_worker_role()) = 'technician'
+  and
   exists (
     select 1
     from public.workers w
@@ -80,6 +95,8 @@ using (
   )
 )
 with check (
+  (select app_private.current_worker_role()) = 'technician'
+  and
   exists (
     select 1
     from public.workers w
@@ -95,7 +112,10 @@ drop policy if exists "technician can read assigned visita stage" on public.trab
 create policy "technician can read assigned visita stage"
 on public.trabajo_visita_stage
 for select
+to authenticated
 using (
+  (select app_private.current_worker_role()) = 'technician'
+  and
   exists (
     select 1
     from public.trabajo_agenda_stage tas
@@ -111,7 +131,10 @@ drop policy if exists "technician can insert assigned visita stage" on public.tr
 create policy "technician can insert assigned visita stage"
 on public.trabajo_visita_stage
 for insert
+to authenticated
 with check (
+  (select app_private.current_worker_role()) = 'technician'
+  and
   exists (
     select 1
     from public.trabajo_agenda_stage tas
@@ -127,7 +150,10 @@ drop policy if exists "technician can update assigned visita stage" on public.tr
 create policy "technician can update assigned visita stage"
 on public.trabajo_visita_stage
 for update
+to authenticated
 using (
+  (select app_private.current_worker_role()) = 'technician'
+  and
   exists (
     select 1
     from public.trabajo_agenda_stage tas
@@ -139,6 +165,8 @@ using (
   )
 )
 with check (
+  (select app_private.current_worker_role()) = 'technician'
+  and
   exists (
     select 1
     from public.trabajo_agenda_stage tas

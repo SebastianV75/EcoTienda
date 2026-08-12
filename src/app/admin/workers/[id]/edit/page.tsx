@@ -18,7 +18,7 @@ export default async function EditWorkerPage({
 		<AppShell
 			role="admin"
 			title={`Editar ${worker.full_name}`}
-			description="Actualiza el nombre, el rol, el vínculo de auth y el estado activo del trabajador."
+			description="Actualiza el perfil, el rol y el estado activo. El vínculo de acceso se conserva automáticamente."
 			email={user.email}
 		>
 			<div className="space-y-4">
@@ -33,11 +33,12 @@ export default async function EditWorkerPage({
 					<WorkerForm
 						mode="edit"
 						workerId={worker.id}
+						workerUpdatedAt={worker.updated_at}
 						defaultValues={{
 							full_name: worker.full_name,
+							email: worker.email ?? "",
 							phone: worker.phone ?? "",
 							role: worker.role,
-							auth_user_id: worker.auth_user_id ?? "",
 							active: worker.active,
 						}}
 					/>

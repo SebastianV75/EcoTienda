@@ -1,3 +1,4 @@
+-- Run docs/sql/create-workers-table.sql first so app_private.current_worker_role() exists.
 create extension if not exists pgcrypto;
 
 create table if not exists public.quotations (
@@ -47,26 +48,30 @@ drop policy if exists "staff can read quotations" on public.quotations;
 create policy "staff can read quotations"
 on public.quotations
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can insert quotations" on public.quotations;
 create policy "staff can insert quotations"
 on public.quotations
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can update quotations" on public.quotations;
 create policy "staff can update quotations"
 on public.quotations
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can delete quotations" on public.quotations;
 create policy "staff can delete quotations"
 on public.quotations
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 create table if not exists public.quotation_items (
   id uuid primary key default gen_random_uuid(),
@@ -107,23 +112,27 @@ drop policy if exists "staff can read quotation items" on public.quotation_items
 create policy "staff can read quotation items"
 on public.quotation_items
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can insert quotation items" on public.quotation_items;
 create policy "staff can insert quotation items"
 on public.quotation_items
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can update quotation items" on public.quotation_items;
 create policy "staff can update quotation items"
 on public.quotation_items
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can delete quotation items" on public.quotation_items;
 create policy "staff can delete quotation items"
 on public.quotation_items
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));

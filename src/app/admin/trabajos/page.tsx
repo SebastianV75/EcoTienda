@@ -17,7 +17,7 @@ type TrabajosPageProps = {
 export default async function TrabajosPage({
 	searchParams,
 }: TrabajosPageProps) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const params = searchParams ? await searchParams : undefined;
 	const filters = parseTrabajoListFilters(params ?? {});
 	const [trabajos, workers] = await Promise.all([
@@ -36,7 +36,7 @@ export default async function TrabajosPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title="Trabajos"
 			description="Seguimiento centralizado de todos los trabajos, desde la agenda hasta la venta."
 			email={user.email}

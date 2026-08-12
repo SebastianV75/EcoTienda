@@ -1,3 +1,4 @@
+-- Run docs/sql/create-workers-table.sql first so app_private.current_worker_role() exists.
 create extension if not exists pgcrypto;
 
 create table if not exists public.trabajos (
@@ -57,26 +58,30 @@ drop policy if exists "staff can read trabajos" on public.trabajos;
 create policy "staff can read trabajos"
 on public.trabajos
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can insert trabajos" on public.trabajos;
 create policy "staff can insert trabajos"
 on public.trabajos
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can update trabajos" on public.trabajos;
 create policy "staff can update trabajos"
 on public.trabajos
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "admin can delete trabajos" on public.trabajos;
 create policy "admin can delete trabajos"
 on public.trabajos
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 create table if not exists public.trabajo_agenda_stage (
   trabajo_id uuid primary key references public.trabajos (id) on delete cascade,
@@ -123,26 +128,30 @@ drop policy if exists "staff can read trabajo agenda stage" on public.trabajo_ag
 create policy "staff can read trabajo agenda stage"
 on public.trabajo_agenda_stage
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can insert trabajo agenda stage" on public.trabajo_agenda_stage;
 create policy "staff can insert trabajo agenda stage"
 on public.trabajo_agenda_stage
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can update trabajo agenda stage" on public.trabajo_agenda_stage;
 create policy "staff can update trabajo agenda stage"
 on public.trabajo_agenda_stage
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "admin can delete trabajo agenda stage" on public.trabajo_agenda_stage;
 create policy "admin can delete trabajo agenda stage"
 on public.trabajo_agenda_stage
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 create table if not exists public.trabajo_media_assets (
   id uuid primary key default gen_random_uuid(),
@@ -191,26 +200,30 @@ drop policy if exists "staff can read trabajo media assets" on public.trabajo_me
 create policy "staff can read trabajo media assets"
 on public.trabajo_media_assets
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can insert trabajo media assets" on public.trabajo_media_assets;
 create policy "staff can insert trabajo media assets"
 on public.trabajo_media_assets
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can update trabajo media assets" on public.trabajo_media_assets;
 create policy "staff can update trabajo media assets"
 on public.trabajo_media_assets
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "admin can delete trabajo media assets" on public.trabajo_media_assets;
 create policy "admin can delete trabajo media assets"
 on public.trabajo_media_assets
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 create table if not exists public.trabajo_visita_stage (
   trabajo_id uuid primary key references public.trabajos (id) on delete cascade,
@@ -260,26 +273,30 @@ drop policy if exists "staff can read trabajo visita stage" on public.trabajo_vi
 create policy "staff can read trabajo visita stage"
 on public.trabajo_visita_stage
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can insert trabajo visita stage" on public.trabajo_visita_stage;
 create policy "staff can insert trabajo visita stage"
 on public.trabajo_visita_stage
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can update trabajo visita stage" on public.trabajo_visita_stage;
 create policy "staff can update trabajo visita stage"
 on public.trabajo_visita_stage
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "admin can delete trabajo visita stage" on public.trabajo_visita_stage;
 create policy "admin can delete trabajo visita stage"
 on public.trabajo_visita_stage
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 create table if not exists public.trabajo_quotation_stage (
   trabajo_id uuid primary key references public.trabajos (id) on delete cascade,
@@ -320,26 +337,30 @@ drop policy if exists "staff can read trabajo quotation stage" on public.trabajo
 create policy "staff can read trabajo quotation stage"
 on public.trabajo_quotation_stage
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can insert trabajo quotation stage" on public.trabajo_quotation_stage;
 create policy "staff can insert trabajo quotation stage"
 on public.trabajo_quotation_stage
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can update trabajo quotation stage" on public.trabajo_quotation_stage;
 create policy "staff can update trabajo quotation stage"
 on public.trabajo_quotation_stage
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "admin can delete trabajo quotation stage" on public.trabajo_quotation_stage;
 create policy "admin can delete trabajo quotation stage"
 on public.trabajo_quotation_stage
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 create table if not exists public.trabajo_sale_stage (
   trabajo_id uuid primary key references public.trabajos (id) on delete cascade,
@@ -377,26 +398,30 @@ drop policy if exists "staff can read trabajo sale stage" on public.trabajo_sale
 create policy "staff can read trabajo sale stage"
 on public.trabajo_sale_stage
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can insert trabajo sale stage" on public.trabajo_sale_stage;
 create policy "staff can insert trabajo sale stage"
 on public.trabajo_sale_stage
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can update trabajo sale stage" on public.trabajo_sale_stage;
 create policy "staff can update trabajo sale stage"
 on public.trabajo_sale_stage
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "admin can delete trabajo sale stage" on public.trabajo_sale_stage;
 create policy "admin can delete trabajo sale stage"
 on public.trabajo_sale_stage
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));
 
 create table if not exists public.trabajo_document_overrides (
   id uuid primary key default gen_random_uuid(),
@@ -438,23 +463,27 @@ drop policy if exists "staff can read trabajo document overrides" on public.trab
 create policy "staff can read trabajo document overrides"
 on public.trabajo_document_overrides
 for select
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can insert trabajo document overrides" on public.trabajo_document_overrides;
 create policy "staff can insert trabajo document overrides"
 on public.trabajo_document_overrides
 for insert
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "staff can update trabajo document overrides" on public.trabajo_document_overrides;
 create policy "staff can update trabajo document overrides"
 on public.trabajo_document_overrides
 for update
-using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'))
-with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'technician'));
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'))
+with check ((select app_private.current_worker_role()) in ('admin', 'administrative', 'technician'));
 
 drop policy if exists "admin can delete trabajo document overrides" on public.trabajo_document_overrides;
 create policy "admin can delete trabajo document overrides"
 on public.trabajo_document_overrides
 for delete
-using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+to authenticated
+using ((select app_private.current_worker_role()) in ('admin', 'administrative'));

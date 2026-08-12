@@ -24,12 +24,12 @@ function formatDate(value: string | null) {
 }
 
 export default async function ArchivedProjectsPage() {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const archivedProjects = await getArchivedProjects();
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title="Trabajos archivados"
 			description="Trabajos vendidos que completaron su activación hace más de un mes."
 			email={user.email}

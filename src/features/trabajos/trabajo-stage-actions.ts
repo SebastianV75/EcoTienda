@@ -357,7 +357,7 @@ export async function saveTrabajoCotizacionAction(
 	formData: FormData,
 ): Promise<CotizacionActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "administrative"]);
 	}
 
 	const result = validateCotizacionInput(formData);
@@ -472,7 +472,7 @@ export async function saveTrabajoVentaAction(
 	formData: FormData,
 ): Promise<VentaActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "administrative"]);
 	}
 
 	const result = validateVentaInput(formData);
@@ -647,7 +647,7 @@ export async function saveTrabajoDescargablesAction(
 	formData: FormData,
 ): Promise<DescargablesActionState> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin"]);
+		await requireRole(["admin", "administrative"]);
 	}
 
 	const result = validateDescargablesInput(formData);

@@ -13,9 +13,8 @@ export default function UnauthorizedPage() {
 					No tienes permiso para entrar a esta sección.
 				</h1>
 				<p className="mt-4 text-sm leading-7 text-slate-300">
-					La Fase 0 ya separa las áreas protegidas por rol. Actualiza el rol del
-					usuario autenticado en los metadatos o en el perfil de Supabase antes
-					de probar flujos restringidos.
+					Tu cuenta no tiene un trabajador activo con un rol autorizado. Solicita al
+					administrador que revise el perfil y el acceso vinculado.
 				</p>
 				<div className="mt-6 flex flex-wrap items-center justify-center gap-3">
 					<Link

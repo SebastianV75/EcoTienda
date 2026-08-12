@@ -66,7 +66,7 @@ export default async function TrabajoDetailPage({
 }: {
 	params: Promise<{ id: string }>;
 }) {
-	const user = await requireRole(["admin"]);
+	const user = await requireRole(["admin", "administrative"]);
 	const { id } = await params;
 
 	const trabajo = await getTrabajoDocumentById(id);
@@ -144,7 +144,7 @@ export default async function TrabajoDetailPage({
 
 	return (
 		<AppShell
-			role="admin"
+			role={user.role}
 			title={clientName}
 			description="Vista unificada del trabajo"
 			email={user.email}
