@@ -2,17 +2,20 @@
 
 ## Flujo
 
-- **Solo perfil, sin acceso** guarda la información del trabajador con
-  `auth_user_id = null`.
-- **Invitar acceso por correo** exige `APP_URL`, crea la invitación con Supabase
-  Auth, asigna el rol en `app_metadata.role` y vincula el usuario confirmado a
-  `workers.auth_user_id`.
-- El enlace llega a `/auth/confirm`, pero el GET no consume el token: solo valida
-  su forma y muestra un botón. El POST explícito verifica `token_hash` con
-  `type=invite`, establece la sesión y una prueba HttpOnly de activación breve,
-  y redirige a `/auth/set-password`.
-- La persona invitada define y confirma su contraseña. Después se valida de nuevo
-  el vínculo Worker/Auth y se redirige a la ruta correspondiente a su rol.
+- Desde **Trabajadores > Nuevo trabajador**, el administrador captura nombre
+  completo, correo electrónico obligatorio, teléfono opcional, rol obligatorio y
+  estado activo. Al guardar siempre se envía una invitación por correo.
+- La invitación exige `APP_URL`, crea el usuario con Supabase Auth, asigna el rol
+  en `app_metadata.role` y vincula el usuario confirmado a `workers.auth_user_id`.
+- El enlace llega a `/auth/confirm`. La app acepta tanto el enlace personalizado
+  con `token_hash` como el enlace predeterminado de Supabase con la sesión en el
+  fragmento de URL. En el segundo caso, el navegador establece la sesión y la
+  app crea una prueba HttpOnly de activación breve antes de redirigir a
+  `/auth/set-password`.
+- La persona invitada define y confirma su contraseña; después se cierra la sesión
+  temporal y se muestra el inicio de sesión para que entre con ese correo y
+  contraseña. El acceso posterior valida el vínculo Worker/Auth y redirige a la
+  ruta correspondiente a su rol.
 - El administrador puede elegir `admin`, `administrative` o `technician` desde
   `/admin/workers`. La interfaz muestra los nombres en español: Administrador,
   Administrativo y Técnico.
@@ -48,6 +51,11 @@
 - Los cambios de Worker usan `updated_at` como control optimista. La metadata Auth
   se vuelve a leer antes de cambiar solo `role`; los rollbacks también son
   condicionales y nunca reemplazan metadata concurrente completa.
+- El botón **Eliminar** solo está disponible para administradores y elimina el
+  registro de `public.workers` y, si existe, su usuario de Supabase Auth. Las
+  referencias históricas de agenda/trabajos se conservan, pero sus columnas de
+  asignación quedan en `null` mediante `ON DELETE SET NULL`.
+- No se permite que un administrador elimine su propio acceso desde esta pantalla.
 
 ## Configuración externa obligatoria en Supabase
 
@@ -60,8 +68,13 @@ entorno, configura en **Authentication > URL Configuration**:
   agrega por separado `http://localhost:3000/auth/confirm` si corresponde.
 - No uses comodines en producción para este flujo.
 
-En **Authentication > Email Templates > Invite user**, configura exactamente este
-contenido (puedes cambiar solo el texto visible, no el `href`):
+No necesitas configurar SMTP personalizado ni editar una plantilla para el flujo
+predeterminado. La plantilla estándar de **Invite user**, con su enlace
+`{{ .ConfirmationURL }}`, ya es compatible con la app.
+
+Si más adelante habilitas edición de plantillas, también puedes usar el flujo
+server-side con este contenido (puedes cambiar solo el texto visible, no el
+`href`):
 
 ```html
 <h2>Activa tu acceso a EcoTienda</h2>
@@ -73,11 +86,11 @@ contenido (puedes cambiar solo el texto visible, no el `href`):
 </p>
 ```
 
-La plantilla debe usar `TokenHash`; no uses `ConfirmationURL` para este callback
-SSR. `inviteUserByEmail` no usa PKCE porque normalmente la invitación se solicita
-y se acepta en navegadores distintos. La verificación server-side con
-`verifyOtp({ token_hash, type: "invite" })` es el mecanismo documentado para
-establecer la sesión en cookies.
+La plantilla personalizada usa `TokenHash`; la estándar usa `ConfirmationURL` y
+la app procesa su fragmento en el navegador. `inviteUserByEmail` no usa PKCE
+porque normalmente la invitación se solicita y se acepta en navegadores
+distintos. La verificación server-side con `verifyOtp({ token_hash, type:
+"invite" })` continúa disponible para el enlace personalizado.
 
 La página GET intermedia existe para evitar que Safe Links, antivirus o previews de
 correo consuman el token. Solo el formulario POST ejecutado por la persona invitada
@@ -95,8 +108,8 @@ llama `verifyOtp`.
 
 Aplicar **ambos SQL es obligatorio antes de habilitar invitaciones**. El flujo **no
 está listo para enviar invitaciones reales** hasta completar esas migraciones y
-hasta que `APP_URL`, Site URL, Redirect URLs, proveedor SMTP/email y esta plantilla
-estén configurados y probados en el proyecto Supabase del entorno.
+hasta que `APP_URL`, Site URL y Redirect URLs estén configurados y probados en el
+proyecto Supabase del entorno. El SMTP personalizado es opcional para este flujo.
 
 En instalaciones nuevas, ejecuta primero `docs/sql/create-workers-table.sql`; los
 demás scripts base usan `app_private.current_worker_role()` y fallarán de forma

@@ -47,6 +47,7 @@ export function validateWorkerFields(input: {
 	phone: string;
 	role: string;
 	accessMode?: string;
+	requireEmail?: boolean;
 }): WorkerFieldsValidation {
 	const fullName = normalizeName(input.fullName);
 	const email = input.email ? normalizeEmail(input.email) : null;
@@ -55,6 +56,10 @@ export function validateWorkerFields(input: {
 
 	if (fullName.length < 2 || fullName.length > 120) {
 		return { error: "El nombre debe tener entre 2 y 120 caracteres.", values: null };
+	}
+
+	if (input.requireEmail && !email) {
+		return { error: "El correo electrónico es obligatorio.", values: null };
 	}
 
 	if (input.email && !email) {

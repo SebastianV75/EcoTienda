@@ -135,7 +135,7 @@ export function MobileBottomNavigation({
 					style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0px)" }}
 				>
 					<div
-						className="grid h-16"
+						className="grid h-16 min-w-0"
 						style={{
 							gridTemplateColumns: `repeat(${primaryMobileNavigation.length + 1}, minmax(0, 1fr))`,
 						}}
@@ -149,7 +149,7 @@ export function MobileBottomNavigation({
 									href={item.href}
 									aria-current={active ? "page" : undefined}
 									className={
-										"flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-[transform,color] duration-200 ease-out active:scale-[0.96] motion-reduce:transition-none " +
+									"flex min-w-0 flex-col items-center justify-center gap-1 overflow-hidden px-1 text-[11px] font-medium transition-[transform,color] duration-200 ease-out active:scale-[0.96] motion-reduce:transition-none " +
 										(active
 											? "text-[var(--brand-deep)]"
 											: "text-[var(--muted)] hover:text-[var(--brand-strong)]")
@@ -160,7 +160,7 @@ export function MobileBottomNavigation({
 											"h-5 w-5 " + (active ? "text-[var(--brand-strong)]" : "")
 										}
 									/>
-									<span>{item.label}</span>
+									<span className="max-w-full truncate">{item.label}</span>
 								</Link>
 							);
 						})}
@@ -170,22 +170,20 @@ export function MobileBottomNavigation({
 							aria-expanded={isMoreOpen}
 							onClick={() => setIsMoreOpen((open) => !open)}
 							className={
-								"flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-[transform,color] duration-200 ease-out active:scale-[0.96] motion-reduce:transition-none " +
+								"flex min-w-0 flex-col items-center justify-center gap-1 overflow-hidden px-1 text-[11px] font-medium transition-[transform,color] duration-200 ease-out active:scale-[0.96] motion-reduce:transition-none " +
 								(onSecondaryRoute || isMoreOpen
 									? "text-[var(--brand-deep)]"
 									: "text-[var(--muted)] hover:text-[var(--brand-strong)]")
 							}
 						>
 							<More
-								size={20}
-								weight="Outline"
-								className={
-									onSecondaryRoute || isMoreOpen
-										? "text-[var(--brand-strong)]"
-										: undefined
-								}
-							/>
-							<span>Más</span>
+									size={20}
+									weight="Outline"
+									className={
+										`transition-transform duration-200 ease-out ${onSecondaryRoute || isMoreOpen ? "text-[var(--brand-strong)]" : ""} ${isMoreOpen ? "rotate-90" : "rotate-0"}`
+									}
+								/>
+							<span className="max-w-full truncate">Más</span>
 						</button>
 					</div>
 				</div>
@@ -215,21 +213,22 @@ export function MobileBottomNavigation({
 						aria-label="Secciones secundarias"
 						className="flex flex-col gap-2 px-5 pt-4"
 					>
-						{secondaryMobileNavigation.map((item) => {
+						{secondaryMobileNavigation.map((item, index) => {
 							const Icon = item.icon;
 							return (
 								<Link
 									key={item.href}
 									href={item.href}
 									onClick={() => setIsMoreOpen(false)}
-									className="flex min-h-[44px] items-center gap-3 rounded-2xl border border-[var(--border-soft)] bg-white px-4 py-3 text-sm font-medium text-[var(--brand-deep)] transition-[transform,background-color,border-color] duration-200 ease-out hover:border-[var(--brand-strong)]/40 hover:bg-[var(--surface-strong)] active:scale-[0.96] motion-reduce:transition-none"
+									className="flex min-h-[44px] min-w-0 items-center gap-3 rounded-2xl border border-[var(--border-soft)] bg-white px-4 py-3 text-sm font-medium text-[var(--brand-deep)] transition-[transform,background-color,border-color] duration-200 ease-out hover:border-[var(--brand-strong)]/40 hover:bg-[var(--surface-strong)] active:scale-[0.96] motion-safe:animate-[drawer-item-in_220ms_ease-out_both] motion-reduce:animate-none"
+									style={{ animationDelay: `${index * 28}ms` }}
 								>
 									<Icon
 										size={20}
 										weight="Outline"
 										className="text-[var(--brand-strong)]"
 									/>
-									<span>{item.label}</span>
+									<span className="min-w-0 truncate">{item.label}</span>
 								</Link>
 							);
 						})}

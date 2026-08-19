@@ -9,9 +9,14 @@ import {
 } from "@/features/auth/session";
 import { hasSupabaseEnv } from "@/lib/env";
 
-export default async function SignInPage() {
+export default async function SignInPage({
+	searchParams,
+}: {
+	searchParams?: Promise<{ activated?: string }>;
+}) {
 	const isConfigured = hasSupabaseEnv();
 	const user = isConfigured ? await getCurrentUser() : null;
+	const params = searchParams ? await searchParams : undefined;
 
 	if (user) {
 		redirect(getDefaultRouteForRole(user.role));
@@ -34,15 +39,15 @@ export default async function SignInPage() {
 				<p>Acceso serio, rápido y claro para administración y operación técnica.</p>
 			}
 		>
-			<div className="rounded-[28px] border border-[var(--border-soft)] bg-white/95 p-5 shadow-[0_16px_50px_rgba(13,79,46,0.06)] sm:p-6 lg:p-7">
+				<div className="border-t border-[rgba(13,79,46,0.14)] pt-7">
 				<div className="space-y-2">
-					<p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-strong)]">
+						<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
 						Acceso de usuarios
 					</p>
-					<h2 className="text-2xl font-semibold tracking-[-0.05em] text-[var(--brand-deep)] sm:text-[2rem]">
+						<h2 className="text-3xl font-semibold tracking-[-0.07em] text-[var(--brand-deep)] sm:text-[2.65rem]">
 						Ingresa tus credenciales
 					</h2>
-					<p className="max-w-md text-sm leading-6 text-[var(--muted)] sm:text-base sm:leading-7">
+						<p className="max-w-md text-sm leading-6 text-[var(--muted)] sm:text-base sm:leading-7">
 						Usa tu correo y contraseña registrados. Si el entorno todavía no
 						está configurado, verás un aviso aquí mismo.
 					</p>
@@ -50,6 +55,11 @@ export default async function SignInPage() {
 
 				{isConfigured ? (
 					<div className="mt-6">
+						{params?.activated === "1" ? (
+							<p className="mb-4 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
+								Contraseña creada. Inicia sesión con el correo invitado y tu nueva contraseña.
+							</p>
+						) : null}
 						<SignInForm />
 					</div>
 				) : (

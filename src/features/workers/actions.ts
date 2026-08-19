@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requireRole } from "@/features/auth/session";
+import { getCurrentUser, requireRole } from "@/features/auth/session";
 import { normalizeWorkerRole } from "@/features/auth/role-rules";
 import {
 	appendCompensationFailures,
@@ -33,7 +33,7 @@ function getString(formData: FormData, key: string) {
 	return formData.get(key)?.toString().trim() ?? "";
 }
 
-function validateWorkerInput(formData: FormData, requireAccessMode = false) {
+function validateWorkerInput(formData: FormData, options?: { requireEmail?: boolean }) {
 	const fullName = getString(formData, "full_name");
 	const email = getString(formData, "email");
 	const phone = getString(formData, "phone");
@@ -41,19 +41,13 @@ function validateWorkerInput(formData: FormData, requireAccessMode = false) {
 	const accessMode = getString(formData, "access_mode");
 	const active = formData.get("active") !== null;
 
-	if (requireAccessMode && !accessMode) {
-		return {
-			error: "Selecciona una modalidad de acceso.",
-			values: null,
-		};
-	}
-
 	const validation = validateWorkerFields({
 		fullName,
 		email,
 		phone,
 		role,
 		accessMode: accessMode || undefined,
+		requireEmail: options?.requireEmail,
 	});
 
 	if (validation.error || !validation.values) {
@@ -148,6 +142,73 @@ async function deleteAuthUser(admin: AdminClient, authUserId: string) {
 	} catch {
 		return false;
 	}
+}
+
+export async function deleteWorkerAction(
+	_previousState: WorkerActionState,
+	formData: FormData,
+): Promise<WorkerActionState> {
+	const authorizationError = await authorizeAdmin();
+	if (authorizationError) {
+		return authorizationError;
+	}
+
+	const workerId = getString(formData, "id");
+	if (!workerId) {
+		return { error: "Falta el identificador del trabajador." };
+	}
+
+	const currentUser = await getCurrentUser();
+	const adminResult = getAdminClient();
+	if (!adminResult.admin) {
+		return { error: adminResult.error };
+	}
+
+	const admin = adminResult.admin;
+	const { data: worker, error: lookupError } = await admin
+		.from("workers")
+		.select("id, full_name, auth_user_id")
+		.eq("id", workerId)
+		.maybeSingle();
+
+	if (lookupError) {
+		return {
+			error: getWorkerOperationError(
+				lookupError,
+				"No se pudo verificar el trabajador antes de eliminarlo.",
+			),
+		};
+	}
+
+	if (!worker) {
+		return { error: "El trabajador ya no existe o fue eliminado." };
+	}
+
+	if (worker.auth_user_id && worker.auth_user_id === currentUser?.id) {
+		return { error: "No puedes eliminar tu propio acceso de administrador." };
+	}
+
+	if (!worker.auth_user_id) {
+		if (!(await deleteWorker(admin, workerId))) {
+			return { error: "No se pudo eliminar el trabajador de la base de datos." };
+		}
+	} else {
+		// Remove the Worker row first. The FK uses ON DELETE SET NULL, so historical
+		// agenda/work records survive without retaining a dangling worker link.
+		if (!(await deleteWorker(admin, workerId))) {
+			return { error: "No se pudo eliminar el trabajador de la base de datos." };
+		}
+
+		if (!(await deleteAuthUser(admin, worker.auth_user_id))) {
+			return {
+				error: "El perfil fue eliminado, pero no se pudo eliminar su cuenta de acceso en Supabase Auth. Revisa ese usuario manualmente.",
+			};
+		}
+	}
+
+	revalidatePath("/admin/workers");
+	revalidatePath("/admin");
+	redirect("/admin/workers");
 }
 
 async function restoreAuthRole(
@@ -256,7 +317,7 @@ export async function createWorkerAction(
 	if (authorizationError) {
 		return authorizationError;
 	}
-	const { error, values } = validateWorkerInput(formData, true);
+	const { error, values } = validateWorkerInput(formData, { requireEmail: true });
 
 	if (error || !values) {
 		return { error };
@@ -268,7 +329,14 @@ export async function createWorkerAction(
 	}
 
 	const admin = adminResult.admin;
-	const { access_mode: accessMode, ...workerValues } = values;
+	const workerValues = {
+		full_name: values.full_name,
+		email: values.email,
+		phone: values.phone,
+		role: values.role,
+		active: values.active,
+	};
+	const accessMode = "invite" as const;
 	let inviteRedirectTo: string | null = null;
 
 	if (accessMode === "invite") {

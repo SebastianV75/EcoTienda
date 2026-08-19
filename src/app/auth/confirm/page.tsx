@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ActionButton } from "@/components/ui/action-button";
 import { PreloginShell } from "@/features/auth/components/prelogin-shell";
 import { confirmInvitationAction } from "@/features/auth/confirm-actions";
+import { DefaultInviteCallback } from "@/features/auth/default-invite-callback";
 import { parseInviteConfirmation } from "@/features/auth/invitation-rules";
 
 export const dynamic = "force-dynamic";
@@ -41,8 +42,9 @@ export default async function ConfirmInvitationPage({
 					Ir al inicio de sesión
 				</Link>
 			}
-		>
-			<div className="rounded-[28px] border border-[var(--border-soft)] bg-white/95 p-6 shadow-[0_16px_50px_rgba(13,79,46,0.06)]">
+			>
+				<DefaultInviteCallback />
+				<div className="rounded-[28px] border border-[var(--border-soft)] bg-white/95 p-6 shadow-[0_16px_50px_rgba(13,79,46,0.06)]">
 				{confirmation ? (
 					<form action={confirmInvitationAction} className="space-y-5">
 						<input type="hidden" name="token_hash" value={confirmation.token_hash} />
