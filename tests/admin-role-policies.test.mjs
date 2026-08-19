@@ -161,3 +161,39 @@ test("el alta invitada preserva app_metadata ajena al rol", async () => {
 	assert.match(action, /\{ app_metadata: appMetadata \}/);
 	assert.doesNotMatch(action, /app_metadata: \{ role: workerValues\.role \}/);
 });
+
+test("la RPC de borradores usa el resolver privado y no metadata manipulable", async () => {
+	const sql = await readFile(
+		new URL(
+			"../supabase/migrations/20260818090000_harden_quotation_draft_authorization.sql",
+			import.meta.url,
+		),
+		"utf8",
+	);
+	assert.match(sql, /app_private\.current_worker_role\(\)/);
+	assert.match(sql, /not in \('admin', 'administrative'\)/);
+	assert.doesNotMatch(sql, /user_metadata/);
+	assert.doesNotMatch(sql, /auth\.jwt\(\)/);
+	assert.match(sql, /revoke all on function public\.save_quotation_draft/);
+	assert.match(sql, /grant execute on function public\.save_quotation_draft/);
+});
+
+test("las descargas y acciones de venta tienen autorización explícita", async () => {
+	const pdfRoute = await readFile(
+		new URL("../src/app/api/quotations/[id]/pdf/route.ts", import.meta.url),
+		"utf8",
+	);
+	const salesActions = await readFile(
+		new URL("../src/features/sales/actions.ts", import.meta.url),
+		"utf8",
+	);
+	assert.match(pdfRoute, /getCurrentUser/);
+	assert.match(pdfRoute, /status: 401/);
+	assert.match(pdfRoute, /status: 403/);
+	assert.doesNotMatch(pdfRoute, /console\.(log|error)/);
+	assert.match(
+		salesActions,
+		/markSaleAsLostAction[\s\S]*?requireRole\(\["admin", "administrative"\]\)/,
+	);
+	assert.doesNotMatch(salesActions, /console\.(log|error)/);
+});
