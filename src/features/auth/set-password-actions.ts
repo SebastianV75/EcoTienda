@@ -11,10 +11,6 @@ import {
 	invitationSessionCookie,
 	verifyInvitationSessionProof,
 } from "@/features/auth/invitation-session";
-import {
-	getDefaultRouteForRole,
-	resolveUserRole,
-} from "@/features/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminEnv } from "@/lib/env";
 
@@ -63,7 +59,7 @@ export async function setPasswordAction(
 		return { error: getPasswordUpdateError(error) };
 	}
 
-	const role = await resolveUserRole(data.user);
 	cookieStore.delete(invitationSessionCookie.name);
-	redirect(getDefaultRouteForRole(role));
+	await supabase.auth.signOut({ scope: "local" });
+	redirect("/auth/sign-in?activated=1");
 }

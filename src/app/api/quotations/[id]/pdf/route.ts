@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getCurrentUser } from "@/features/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { generateAndSavePDF } from "@/features/quotations/pdf-generator";
 
@@ -7,9 +8,23 @@ export async function GET(
 	_request: Request,
 	{ params }: { params: Promise<{ id: string }> },
 ) {
+	const user = await getCurrentUser();
+
+	if (!user) {
+		return NextResponse.json(
+			{ error: "Necesitas iniciar sesión para descargar este PDF." },
+			{ status: 401 },
+		);
+	}
+
+	if (user.role !== "admin" && user.role !== "administrative") {
+		return NextResponse.json(
+			{ error: "No tienes permiso para descargar este PDF." },
+			{ status: 403 },
+		);
+	}
+
 	const { id } = await params;
-	console.log('[PDF Download] Solicitando PDF para cotización:', id);
-	
 	const supabase = await createSupabaseServerClient();
 
 	const { data: quotation, error } = await supabase
@@ -19,53 +34,36 @@ export async function GET(
 		.single();
 
 	if (error || !quotation) {
-		console.error('[PDF Download] Cotización no encontrada:', error?.message);
 		return NextResponse.json(
 			{ error: "Cotización no encontrada." },
 			{ status: 404 },
 		);
 	}
 
-	console.log('[PDF Download] Cotización encontrada:', {
-		quotationNumber: quotation.quotation_number,
-		hasPdfUrl: !!quotation.pdf_url
-	});
-
 	let pdfUrl = quotation.pdf_url;
 
 	if (!pdfUrl) {
-		console.log('[PDF Download] pdf_url es null, generando PDF on-demand...');
 		try {
 			pdfUrl = await generateAndSavePDF(id);
-			console.log('[PDF Download] PDF generado exitosamente:', pdfUrl);
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-			console.error('[PDF Download] Error generando PDF:', errorMessage);
-			console.error('[PDF Download] Stack:', error instanceof Error ? error.stack : 'No stack');
+		} catch {
 			return NextResponse.json(
-				{ error: `No se pudo generar el PDF: ${errorMessage}` },
+				{ error: "No se pudo preparar el PDF." },
 				{ status: 500 },
 			);
 		}
 	}
 
 	const filename = `${quotation.quotation_number}.pdf`;
-	console.log('[PDF Download] Descargando archivo de Storage:', filename);
-	
 	const { data: pdfData, error: downloadError } = await supabase.storage
 		.from("quotations")
 		.download(filename);
 
 	if (downloadError || !pdfData) {
-		console.error('[PDF Download] Error descargando de Storage:', downloadError?.message);
-		console.error('[PDF Download] Error details:', downloadError);
 		return NextResponse.json(
-			{ error: `No se pudo descargar el PDF: ${downloadError?.message || 'Archivo no encontrado'}` },
+			{ error: "No se pudo descargar el PDF." },
 			{ status: 500 },
 		);
 	}
-
-	console.log('[PDF Download] Archivo descargado, tamaño:', pdfData.size, 'bytes');
 
 	const buffer = await pdfData.arrayBuffer();
 

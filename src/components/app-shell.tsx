@@ -138,9 +138,9 @@ export function AppShell({
 	);
 
 	return (
-		<div className="min-h-screen bg-[linear-gradient(180deg,rgba(247,249,246,0.98),rgba(240,245,240,0.94))] px-3 pb-[calc(88px+env(safe-area-inset-bottom))] pt-3 text-[var(--foreground)] sm:px-5 sm:pb-[calc(88px+env(safe-area-inset-bottom))] lg:px-0 lg:pt-0 lg:pb-0 print:min-h-0 print:bg-white print:p-0">
+		<div className="min-h-screen min-w-0 overflow-x-clip bg-[linear-gradient(180deg,rgba(247,249,246,0.98),rgba(240,245,240,0.94))] px-3 pb-[calc(88px+env(safe-area-inset-bottom))] pt-3 text-[var(--foreground)] sm:px-5 sm:pb-[calc(88px+env(safe-area-inset-bottom))] lg:px-0 lg:pt-0 lg:pb-0 print:min-h-0 print:bg-white print:p-0">
 			<div
-				className={`mx-auto grid min-h-[calc(100vh-24px)] w-full max-w-7xl gap-4 transition-[grid-template-columns] duration-300 ease-out lg:max-w-none lg:min-h-screen lg:gap-0 ${isSidebarCollapsed ? "lg:grid-cols-[88px_minmax(0,1fr)]" : "lg:grid-cols-[272px_minmax(0,1fr)]"} print:min-h-0 print:grid-cols-1 print:gap-0`}
+				className={`mx-auto grid min-h-[calc(100vh-24px)] min-w-0 w-full max-w-7xl gap-4 transition-[grid-template-columns] duration-300 ease-out lg:max-w-none lg:min-h-screen lg:gap-0 ${isSidebarCollapsed ? "lg:grid-cols-[88px_minmax(0,1fr)]" : "lg:grid-cols-[272px_minmax(0,1fr)]"} print:min-h-0 print:grid-cols-1 print:gap-0`}
 			>
 				<aside
 					className={`hidden border-r border-[rgba(13,79,46,0.10)] bg-[rgba(250,251,248,0.98)] transition-[border-radius] duration-300 ease-out lg:flex lg:min-h-screen lg:flex-col ${isSidebarCollapsed ? "lg:rounded-r-[22px]" : "lg:rounded-r-[28px]"} print:hidden`}
@@ -279,7 +279,7 @@ export function AppShell({
 					</div>
 				</aside>
 
-				<main className="rounded-[32px] border border-[rgba(13,79,46,0.10)] bg-[rgba(255,255,255,0.86)] shadow-[0_24px_64px_rgba(10,44,21,0.08)] backdrop-blur-sm lg:rounded-none lg:border-y-0 lg:border-r-0 lg:shadow-none print:rounded-none print:border-0 print:bg-white print:shadow-none print:backdrop-blur-none">
+				<main className="min-w-0 overflow-hidden rounded-[32px] border border-[rgba(13,79,46,0.10)] bg-[rgba(255,255,255,0.86)] shadow-[0_24px_64px_rgba(10,44,21,0.08)] backdrop-blur-sm motion-safe:animate-[mobile-content-in_280ms_ease-out] sm:animate-none lg:rounded-none lg:border-y-0 lg:border-r-0 lg:shadow-none print:rounded-none print:border-0 print:bg-white print:shadow-none print:backdrop-blur-none">
 					<div className="border-b border-[var(--border-soft)] px-4 py-4 sm:hidden print:hidden">
 						<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
 							EcoTienda interno

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireRole } from "@/features/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { saveTrabajoVentaAction } from "@/features/trabajos/trabajo-stage-actions";
 
@@ -34,6 +35,8 @@ export async function markSaleAsLostAction(
 	_previousState: SaleActionState,
 	formData: FormData,
 ): Promise<SaleActionState> {
+	await requireRole(["admin", "administrative"]);
+
 	const trabajoId = formData.get("trabajo_id") as string;
 
 	if (!trabajoId) {
@@ -51,7 +54,6 @@ export async function markSaleAsLostAction(
 		.eq("id", trabajoId);
 
 	if (error) {
-		console.error("[markSaleAsLostAction] Error:", error);
 		return { error: "Error al marcar venta como perdida", success: null };
 	}
 

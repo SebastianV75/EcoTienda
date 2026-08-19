@@ -50,7 +50,7 @@ export function Overlay({
 				type="button"
 				aria-label={label}
 				onClick={onCloseAction}
-				className="absolute inset-0 bg-black/45 backdrop-blur-sm motion-reduce:backdrop-blur-none"
+				className="absolute inset-0 bg-black/45 backdrop-blur-sm motion-safe:animate-[scrim-in_180ms_ease-out] motion-reduce:animate-none motion-reduce:backdrop-blur-none"
 			/>
 			{children}
 		</div>
@@ -216,8 +216,8 @@ export function Drawer({
 			titleId={titleId}
 		>
 			<div
-				className={`absolute inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-[28px] bg-white shadow-[0_-24px_60px_rgba(10,44,21,0.22)] motion-safe:animate-[slide-up_200ms_ease-out] motion-reduce:animate-none ${isDragging ? "transition-none" : "transition-transform duration-200 ease-out motion-reduce:transition-none"}`}
-				style={{ transform: `translateY(${dragOffset}px)` }}
+				className={`absolute inset-x-0 bottom-0 max-h-[90dvh] overflow-y-auto overscroll-contain rounded-t-[28px] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-24px_60px_rgba(10,44,21,0.22)] motion-safe:animate-[drawer-in_240ms_ease-out] motion-reduce:animate-none ${isDragging ? "transition-none" : "transition-transform duration-200 ease-out motion-reduce:transition-none"}`}
+				style={dragOffset ? { transform: `translateY(${dragOffset}px)` } : undefined}
 			>
 				<div
 					aria-label="Desliza hacia abajo para cerrar"

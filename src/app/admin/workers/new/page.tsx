@@ -11,7 +11,7 @@ export default async function NewWorkerPage() {
 		<AppShell
 			role="admin"
 			title="Nuevo trabajador"
-			description="Registra a una persona del equipo con su rol operativo y vínculo de auth opcional."
+			description="Registra a una persona del equipo y envíale una invitación para activar su acceso."
 			email={user.email}
 		>
 			<div className="space-y-4">

@@ -64,19 +64,21 @@ export function WorkerForm({
 						htmlFor="email"
 						className="text-sm font-medium text-[var(--brand-deep)]"
 					>
-						Correo de contacto
+							Correo electrónico{mode === "create" ? " *" : ""}
 					</label>
 					<Input
 						id="email"
 						name="email"
 						type="email"
-						defaultValue={defaultValues?.email ?? ""}
+							defaultValue={defaultValues?.email ?? ""}
+							required={mode === "create"}
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-						placeholder="Opcional"
+							placeholder={mode === "create" ? "correo@ejemplo.com" : "Opcional"}
 					/>
 					<p className="text-xs leading-5 text-[var(--muted)]">
-						Es obligatorio para invitar. En trabajadores ya vinculados es solo un
-						correo de contacto y no cambia el correo de inicio de sesión.
+							{mode === "create"
+								? "Aquí recibirá la invitación para confirmar su correo y crear una contraseña."
+								: "En trabajadores ya vinculados es solo un correo de contacto y no cambia el correo de inicio de sesión."}
 					</p>
 				</div>
 
@@ -106,10 +108,16 @@ export function WorkerForm({
 					<Select
 						id="role"
 						name="role"
-						defaultValue={defaultValues?.role ?? "technician"}
+							defaultValue={defaultValues?.role ?? ""}
+							required={mode === "create"}
 						className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
 					>
-						{Object.entries(workerRoleLabels).map(([value, label]) => (
+							{mode === "create" ? (
+								<option value="" disabled>
+									Selecciona un rol
+								</option>
+							) : null}
+							{Object.entries(workerRoleLabels).map(([value, label]) => (
 							<option key={value} value={value}>
 								{label}
 							</option>
@@ -117,29 +125,12 @@ export function WorkerForm({
 					</Select>
 				</div>
 
-				{mode === "create" ? (
-					<div className="space-y-2.5 md:col-span-2">
-						<label
-							htmlFor="access_mode"
-							className="text-sm font-medium text-[var(--brand-deep)]"
-						>
-							Modalidad de acceso
-						</label>
-						<Select
-							id="access_mode"
-							name="access_mode"
-							defaultValue="profile"
-							className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-[var(--foreground)] outline-none transition duration-200 ease-out focus:border-emerald-300"
-						>
-							<option value="profile">Solo perfil, sin acceso</option>
-							<option value="invite">Invitar acceso por correo</option>
-						</Select>
-						<p className="text-xs leading-5 text-[var(--muted)]">
-							La invitación crea el usuario, asigna el rol y lo vincula automáticamente;
-							nunca necesitas copiar un UUID.
+					{mode === "create" ? (
+						<p className="rounded-[18px] border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm leading-6 text-[var(--brand-deep)] md:col-span-2">
+							Al guardar, se enviará una invitación al correo indicado. El acceso
+							quedará vinculado automáticamente con el rol seleccionado.
 						</p>
-					</div>
-				) : null}
+					) : null}
 			</div>
 
 			<label className="flex items-start gap-3 rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] p-4 text-sm text-[var(--brand-deep)]">
@@ -167,10 +158,10 @@ export function WorkerForm({
 
 			<ActionButton
 				type="submit"
-				pendingLabel={mode === "create" ? "Guardando..." : "Actualizando..."}
+					pendingLabel={mode === "create" ? "Enviando invitación..." : "Actualizando..."}
 				className="w-full rounded-full bg-[var(--brand)] px-5 py-3.5 font-medium text-white shadow-[0_18px_35px_rgba(47,179,20,0.22)] transition duration-200 ease-out hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
 			>
-				{mode === "create" ? "Guardar trabajador" : "Actualizar trabajador"}
+					{mode === "create" ? "Crear y enviar invitación" : "Actualizar trabajador"}
 			</ActionButton>
 		</form>
 	);

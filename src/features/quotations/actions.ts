@@ -33,20 +33,12 @@ function getString(formData: FormData, key: string) {
 
 function logQuotationDatabaseError(
 	context: string,
-	error: {
-		code?: string;
-		message?: string;
-		details?: string;
-		hint?: string;
-	} | null,
+	error: { code?: string } | null,
 ) {
 	if (!error) return;
 	console.error("[Quotation database error]", {
 		context,
 		code: error.code,
-		message: error.message,
-		details: error.details,
-		hint: error.hint,
 	});
 }
 
@@ -385,20 +377,9 @@ export async function createQuotationAction(
 	}
 
 	try {
-		console.log(
-			"[Actions] Iniciando generación de PDF para cotización:",
-			quotation.id,
-		);
 		await generateAndSavePDF(quotation.id);
-		console.log("[Actions] PDF generado y guardado exitosamente");
-	} catch (error) {
-		const errorMessage =
-			error instanceof Error ? error.message : "Error desconocido";
-		const errorStack =
-			error instanceof Error ? error.stack : "No stack available";
-		console.error("[Actions] Error generando PDF:", errorMessage);
-		console.error("[Actions] Stack trace:", errorStack);
-		console.error("[Actions] Tipo de error:", error);
+	} catch {
+		// La cotización queda guardada; el PDF se puede regenerar al descargarlo.
 	}
 
 	revalidatePath("/admin");
@@ -510,20 +491,9 @@ export async function updateQuotationAction(
 	}
 
 	try {
-		console.log(
-			"[Actions] Iniciando generación de PDF para cotización:",
-			quotationId,
-		);
 		await generateAndSavePDF(quotationId);
-		console.log("[Actions] PDF generado y guardado exitosamente");
-	} catch (error) {
-		const errorMessage =
-			error instanceof Error ? error.message : "Error desconocido";
-		const errorStack =
-			error instanceof Error ? error.stack : "No stack available";
-		console.error("[Actions] Error generando PDF:", errorMessage);
-		console.error("[Actions] Stack trace:", errorStack);
-		console.error("[Actions] Tipo de error:", error);
+	} catch {
+		// La cotización queda guardada; el PDF se puede regenerar al descargarlo.
 	}
 
 	revalidatePath("/admin/quotations");

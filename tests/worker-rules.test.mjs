@@ -55,6 +55,19 @@ test("rechaza datos inválidos para una invitación", () => {
 	);
 });
 
+test("exige correo electrónico para crear un trabajador", () => {
+	assert.match(
+		validateWorkerFields({
+			fullName: "Ana López",
+			email: "",
+			phone: "",
+			role: "technician",
+			requireEmail: true,
+		}).error,
+		/obligatorio/i,
+	);
+});
+
 test("mantiene compatibilidad segura con staff solo al normalizarlo", () => {
 	assert.equal(normalizeRole("staff"), "administrative");
 	assert.equal(normalizeRole("superuser"), null);

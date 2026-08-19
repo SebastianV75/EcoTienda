@@ -16,6 +16,22 @@
       "sessions": 5,
       "memories": 2,
       "prompts": 5
+    },
+    {
+      "id": "ecef8c8a",
+      "created_by": "sebas",
+      "created_at": "2026-08-14T19:53:17Z",
+      "sessions": 0,
+      "memories": 0,
+      "prompts": 0
+    },
+    {
+      "id": "f23e7950",
+      "created_by": "sebas",
+      "created_at": "2026-08-19T21:30:51Z",
+      "sessions": 1,
+      "memories": 10,
+      "prompts": 3
     }
   ]
 }
