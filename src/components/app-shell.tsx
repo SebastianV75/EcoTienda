@@ -96,7 +96,7 @@ const supportNavigation: NavigationItem[] = [
 	{
 		href: "/admin/settings",
 		label: "Configuración",
-		roles: ["admin"],
+		roles: ["admin", "administrative", "technician"],
 		icon: Settings,
 	},
 	{

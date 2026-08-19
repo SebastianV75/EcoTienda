@@ -12,7 +12,7 @@ import { hasSupabaseEnv } from "@/lib/env";
 export default async function SignInPage({
 	searchParams,
 }: {
-	searchParams?: Promise<{ activated?: string }>;
+	searchParams?: Promise<{ activated?: string; reset?: string }>;
 }) {
 	const isConfigured = hasSupabaseEnv();
 	const user = isConfigured ? await getCurrentUser() : null;
@@ -55,11 +55,16 @@ export default async function SignInPage({
 
 				{isConfigured ? (
 					<div className="mt-6">
-						{params?.activated === "1" ? (
-							<p className="mb-4 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
-								Contraseña creada. Inicia sesión con el correo invitado y tu nueva contraseña.
-							</p>
-						) : null}
+							{params?.activated === "1" ? (
+								<p className="mb-4 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
+									Contraseña creada. Inicia sesión con el correo invitado y tu nueva contraseña.
+								</p>
+							) : null}
+							{params?.reset === "1" ? (
+								<p className="mb-4 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
+									Contraseña restablecida. Inicia sesión con tu nueva contraseña.
+								</p>
+							) : null}
 						<SignInForm />
 					</div>
 				) : (
