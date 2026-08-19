@@ -9,6 +9,8 @@ import {
 import { buildTrabajoPreviewSubject } from "./preview-data";
 import { getCfeTemplateBytes } from "./cfe-template";
 import type { TrabajoDocumentSource } from "@/features/trabajos/data";
+import { defaultCompanySettings } from "@/features/settings/defaults";
+import type { CompanySettings } from "@/types/quotation";
 
 export type CfePdfData = {
 	applicationDate: string | null;
@@ -45,19 +47,6 @@ export type CfePdfData = {
 };
 
 const BLACK = rgb(0, 0, 0);
-const COMPANY_CONTACT = {
-	name: "Ricardo Lopez Beall",
-	position: "Gerente",
-	street: "Tecnológico",
-	exteriorNumber: "5109",
-	neighborhood: "Las Granjas",
-	municipality: "Chihuahua",
-	state: "Chihuahua",
-	postalCode: "31100",
-	phone: "6144511555",
-	email: "ecotecnologias1@gmail.com",
-} as const;
-
 function textValue(value: unknown): string {
 	if (typeof value === "string") {
 		return value.trim();
@@ -113,10 +102,14 @@ function formatDate(value: string | null): string {
 	}).format(date);
 }
 
-export function buildCfePdfData(trabajo: TrabajoDocumentSource): CfePdfData {
+export function buildCfePdfData(
+	trabajo: TrabajoDocumentSource,
+	company: CompanySettings = defaultCompanySettings,
+): CfePdfData {
 	const client = buildTrabajoPreviewSubject(trabajo, "diagrama-unifilar");
 	const cfeClient = buildTrabajoPreviewSubject(trabajo, "cfe");
 	const applicantAddress = splitStreetAddress(client.address ?? "");
+	const companyAddress = splitStreetAddress(company.address);
 	const voltage = normalizeVoltage(getElectricalAttribute(trabajo, "voltage"));
 	const panelCount = textValue(client.panel_count);
 	const hasSolarData = Boolean(
@@ -137,16 +130,16 @@ export function buildCfePdfData(trabajo: TrabajoDocumentSource): CfePdfData {
 		applicantState: cfeClient.state ?? "",
 		applicantPhone: client.phone ?? "",
 		applicantEmail: cfeClient.email ?? "",
-		contactName: COMPANY_CONTACT.name,
-		contactPosition: COMPANY_CONTACT.position,
-		contactStreet: COMPANY_CONTACT.street,
-		contactExteriorNumber: COMPANY_CONTACT.exteriorNumber,
-		contactNeighborhood: COMPANY_CONTACT.neighborhood,
-		contactMunicipality: COMPANY_CONTACT.municipality,
-		contactState: COMPANY_CONTACT.state,
-		contactPostalCode: COMPANY_CONTACT.postalCode,
-		contactPhone: COMPANY_CONTACT.phone,
-		contactEmail: COMPANY_CONTACT.email,
+		contactName: company.contact_name || company.company_name,
+		contactPosition: company.company_name,
+		contactStreet: companyAddress.street,
+		contactExteriorNumber: companyAddress.exteriorNumber,
+		contactNeighborhood: "",
+		contactMunicipality: company.city,
+		contactState: company.state,
+		contactPostalCode: company.zip_code,
+		contactPhone: company.phone,
+		contactEmail: company.email,
 		voltage,
 		rpu: client.rpu ?? "",
 		operationDate: null,

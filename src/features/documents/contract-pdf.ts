@@ -7,9 +7,13 @@ import {
 } from "pdf-lib";
 
 import { getContractTemplateBytes } from "./contract-template";
+import { defaultCompanySettings } from "@/features/settings/defaults";
 
 export type ContractPdfData = {
 	clientName: string;
+	companyName?: string;
+	representativeName?: string;
+	companyCity?: string;
 	agreedAmount: number;
 	confirmedOn: string;
 };
@@ -105,6 +109,19 @@ export async function generateContractPdf(
 	const date = `${formatContractDate(data.confirmedOn)}.`;
 
 	const firstPage = pages[0];
+	const companyName = data.companyName?.trim() || defaultCompanySettings.company_name;
+	const representativeName =
+		data.representativeName?.trim() || defaultCompanySettings.contact_name;
+	const companyCity = data.companyCity?.trim() || defaultCompanySettings.city;
+	// Sustituye la identidad institucional de la plantilla sin modificar el PDF oficial.
+	drawWhiteField(firstPage, { x: 30, y: 674, width: 548, height: 30 });
+	drawFittedText(firstPage, boldFont, `${companyName} · Representada por ${representativeName}`, {
+		x: 32,
+		y: 684,
+		maxWidth: 544,
+		fontSize: 9,
+		align: "center",
+	});
 	drawWhiteField(firstPage, { x: 258, y: 638, width: 235, height: 14 });
 	drawFittedText(firstPage, boldFont, clientName, {
 		x: 258,
@@ -126,7 +143,7 @@ export async function generateContractPdf(
 
 	const fourthPage = pages[3];
 	drawWhiteField(fourthPage, { x: 360, y: 515, width: 68, height: 18 });
-	drawFittedText(fourthPage, font, "Chihuahua, el", {
+	drawFittedText(fourthPage, font, `${companyCity}, el`, {
 		x: 362,
 		y: 519,
 		maxWidth: 66,

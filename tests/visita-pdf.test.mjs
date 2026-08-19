@@ -50,6 +50,20 @@ test("construye datos de visita y conserva campos capturados", () => {
 	assert.equal(data.groups[0].fields[0].label, "Orientación");
 });
 
+test("visita conserva la identidad configurada de la empresa", () => {
+const data = buildVisitaPdfData(buildTrabajoFixture(), {
+company_name: "Soluciones del Norte",
+contact_name: "Laura Configurada",
+phone: "8180000000",
+email: "hola@soluciones.test",
+});
+
+assert.equal(data.companyName, "Soluciones del Norte");
+assert.equal(data.companyContact, "Laura Configurada");
+assert.equal(data.companyPhone, "8180000000");
+assert.equal(data.companyEmail, "hola@soluciones.test");
+});
+
 test("incrusta imágenes capturadas en el PDF", async () => {
 	const image =
 		"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";

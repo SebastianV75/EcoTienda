@@ -4,6 +4,7 @@ import type { DocumentPreviewSubject } from "./preview-data";
 
 type CartaPoderPreviewProps = {
 	client: DocumentPreviewSubject;
+	companyName: string;
 	powerAcceptorName: string;
 	witnessOneName: string;
 	witnessTwoName: string;
@@ -36,6 +37,7 @@ function InlineField({
 
 export function CartaPoderPreview({
 	client,
+	companyName,
 	powerAcceptorName,
 	witnessOneName,
 	witnessTwoName,
@@ -49,14 +51,14 @@ export function CartaPoderPreview({
 			<div className="flex items-start justify-between gap-6 border-b border-neutral-200 pb-6 print:pb-5">
 				<div className="space-y-2">
 					<p className="text-sm font-semibold uppercase tracking-[0.32em]">
-						EcoTienda
+						{companyName}
 					</p>
 					<h1 className="text-4xl font-bold tracking-[0.08em]">CARTA PODER</h1>
 				</div>
 				<div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-emerald-100 bg-white print:h-16 print:w-16 print:rounded-xl print:border-neutral-200">
 					<Image
 						src="/ecotienda-logo-temp.png"
-						alt="EcoTienda"
+						alt={companyName}
 						width={80}
 						height={80}
 						className="h-full w-full object-contain"

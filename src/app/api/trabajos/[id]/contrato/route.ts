@@ -7,6 +7,7 @@ import {
 } from "@/features/documents/contract-pdf";
 import { buildTrabajoPreviewSubject } from "@/features/documents/preview-data";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
+import { getCompanySettings } from "@/features/settings/data";
 
 type RouteContext = {
 	params: Promise<{ id: string }>;
@@ -47,8 +48,12 @@ export async function GET(_request: Request, { params }: RouteContext) {
 		);
 	}
 
+	const { settings: company } = await getCompanySettings();
 	const pdf = await generateContractPdf({
 		clientName,
+		companyName: company?.company_name,
+		representativeName: company?.contact_name,
+		companyCity: company?.city,
 		agreedAmount,
 		confirmedOn: trabajo.venta.confirmed_on,
 	});
