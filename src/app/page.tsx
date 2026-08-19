@@ -71,7 +71,11 @@ export default function HomePage() {
 
 			<section className="relative mx-auto flex min-h-[calc(100vh-32px)] w-full max-w-[1440px] flex-col border border-[rgba(13,79,46,0.14)] bg-[rgba(255,253,247,0.74)] px-5 py-5 shadow-[0_28px_90px_rgba(10,44,21,0.09)] backdrop-blur-[2px] motion-safe:animate-[home-reveal_700ms_var(--ease-out)_both] sm:min-h-[calc(100vh-48px)] sm:px-8 sm:py-7 lg:px-12 lg:py-8">
 				<header className="flex items-center justify-between gap-6 border-b border-[rgba(13,79,46,0.12)] pb-5 sm:pb-6">
-					<Link href="/" className="group flex items-center gap-3" aria-label="EcoTienda, inicio">
+					<Link
+						href="/"
+						className="group flex items-center gap-3"
+						aria-label="EcoTienda, inicio"
+					>
 						<span className="grid h-10 w-10 place-items-center border border-[var(--brand-deep)] bg-[var(--brand-deep)] text-[10px] font-bold uppercase tracking-[0.18em] text-white transition-transform duration-200 ease-out group-hover:-rotate-3 group-active:scale-95">
 							ET
 						</span>
@@ -100,7 +104,10 @@ export default function HomePage() {
 				</header>
 
 				<div className="grid flex-1 gap-10 py-10 sm:py-14 lg:grid-cols-[minmax(0,1.04fr)_minmax(360px,0.96fr)] lg:items-center lg:gap-16 lg:py-16">
-					<section className="flex flex-col justify-center" aria-labelledby="home-title">
+					<section
+						className="flex flex-col justify-center"
+						aria-labelledby="home-title"
+					>
 						<div className="mb-7 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-strong)] motion-safe:animate-[home-reveal_650ms_120ms_var(--ease-out)_both]">
 							<span className="h-px w-8 bg-[var(--brand-strong)]" />
 							Energía · climatización · operación
@@ -119,10 +126,13 @@ export default function HomePage() {
 						<div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center motion-safe:animate-[home-reveal_700ms_340ms_var(--ease-out)_both]">
 							<Link
 								href="/auth/sign-in"
-								className="group inline-flex min-h-12 w-full items-center justify-center gap-3 bg-[var(--brand-deep)] px-5 text-sm font-semibold text-white shadow-[0_18px_34px_rgba(13,79,46,0.2)] transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[var(--brand-strong)] hover:shadow-[0_22px_40px_rgba(13,79,46,0.24)] active:scale-[0.98] sm:w-auto"
+								className="group inline-flex min-h-12 w-full items-center justify-center gap-3 bg-[#f6d979] px-5 text-sm font-semibold text-[var(--brand-deep)] shadow-[0_18px_34px_rgba(113,85,20,0.16)] transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[#ffe69b] hover:shadow-[0_22px_40px_rgba(113,85,20,0.2)] active:scale-[0.98] sm:w-auto"
 							>
 								Entrar al sistema
-								<span aria-hidden="true" className="transition-transform duration-200 ease-out group-hover:translate-x-1">
+								<span
+									aria-hidden="true"
+									className="transition-transform duration-200 ease-out group-hover:translate-x-1"
+								>
 									→
 								</span>
 							</Link>
@@ -134,7 +144,10 @@ export default function HomePage() {
 							</Link>
 						</div>
 
-						<div id="soluciones" className="mt-12 grid max-w-xl grid-cols-2 gap-2 sm:grid-cols-4 motion-safe:animate-[home-reveal_700ms_420ms_var(--ease-out)_both]">
+						<div
+							id="soluciones"
+							className="mt-12 grid max-w-xl grid-cols-2 gap-2 sm:grid-cols-4 motion-safe:animate-[home-reveal_700ms_420ms_var(--ease-out)_both]"
+						>
 							<IconTile icon={Sun} label="Solar" />
 							<IconTile icon={Ac} label="Clima" />
 							<IconTile icon={Bolt} label="Energía" />
@@ -171,15 +184,36 @@ export default function HomePage() {
 								<div className="grid h-24 w-24 place-items-center border border-[#f6d979]/55 bg-[#f6d979]/10 text-[#f6d979] shadow-[0_0_60px_rgba(246,217,121,0.12)]">
 									<Bolt aria-hidden="true" size={46} weight="Outline" />
 								</div>
-								<span className="absolute left-0 top-8 text-white/60"><Sun aria-hidden="true" size={16} weight="Outline" /></span>
-								<span className="absolute bottom-8 right-0 text-white/60"><Wind aria-hidden="true" size={18} weight="Outline" /></span>
+								<span className="absolute left-0 top-8 text-white/60">
+									<Sun aria-hidden="true" size={16} weight="Outline" />
+								</span>
+								<span className="absolute bottom-8 right-0 text-white/60">
+									<Wind aria-hidden="true" size={18} weight="Outline" />
+								</span>
 							</div>
 
 							<div className="grid gap-4 sm:grid-cols-2">
-								<ConsoleSignal icon={BatteryCharging} label="Energía" detail="Generación y consumo bajo control." accent />
-								<ConsoleSignal icon={Thermometer} label="Clima" detail="Confort que se mantiene estable." />
-								<ConsoleSignal icon={Activity} label="Seguimiento" detail="Cada etapa visible para el equipo." />
-								<ConsoleSignal icon={ChartLine} label="Eficiencia" detail="Decisiones con mejor información." />
+								<ConsoleSignal
+									icon={BatteryCharging}
+									label="Energía"
+									detail="Generación y consumo bajo control."
+									accent
+								/>
+								<ConsoleSignal
+									icon={Thermometer}
+									label="Clima"
+									detail="Confort que se mantiene estable."
+								/>
+								<ConsoleSignal
+									icon={Activity}
+									label="Seguimiento"
+									detail="Cada etapa visible para el equipo."
+								/>
+								<ConsoleSignal
+									icon={ChartLine}
+									label="Eficiencia"
+									detail="Decisiones con mejor información."
+								/>
 							</div>
 						</div>
 					</aside>
@@ -188,8 +222,14 @@ export default function HomePage() {
 				<footer className="flex flex-col gap-4 border-t border-[rgba(13,79,46,0.12)] pt-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
 					<span>Soluciones para una operación más precisa</span>
 					<div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-						<span className="inline-flex items-center gap-2"><CloudSun aria-hidden="true" size={15} weight="Outline" /> Paneles solares</span>
-						<span className="inline-flex items-center gap-2"><Temperature aria-hidden="true" size={15} weight="Outline" /> Climatización</span>
+						<span className="inline-flex items-center gap-2">
+							<CloudSun aria-hidden="true" size={15} weight="Outline" /> Paneles
+							solares
+						</span>
+						<span className="inline-flex items-center gap-2">
+							<Temperature aria-hidden="true" size={15} weight="Outline" />{" "}
+							Climatización
+						</span>
 					</div>
 				</footer>
 			</section>
