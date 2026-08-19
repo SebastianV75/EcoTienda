@@ -1,6 +1,7 @@
 const authFlowPaths = {
 	confirm: "/auth/confirm",
 	"set-password": "/auth/set-password",
+	"reset-password": "/auth/reset-password/callback",
 	"link-error": "/auth/link-error",
 } as const;
 

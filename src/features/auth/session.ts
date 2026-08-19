@@ -12,6 +12,10 @@ export type AuthUser = {
 	id: string;
 	email: string | null;
 	role: AppRole | null;
+	username: string;
+	fullName: string;
+	phone: string;
+	personalData: string;
 };
 
 export type AuthorizedUser = AuthUser & { role: AppRole };
@@ -27,7 +31,7 @@ async function getWorkerLinkedRole(userId: string) {
 	const supabase = createSupabaseAdminClient();
 	const { data, error } = await supabase
 		.from("workers")
-		.select("role, active")
+		.select("role, active, full_name, phone")
 		.eq("auth_user_id", userId)
 		.maybeSingle();
 
@@ -35,6 +39,8 @@ async function getWorkerLinkedRole(userId: string) {
 		exists: Boolean(data),
 		active: data?.active === true,
 		role: normalizeWorkerRole(data?.role),
+		fullName: typeof data?.full_name === "string" ? data.full_name : "",
+		phone: typeof data?.phone === "string" ? data.phone : "",
 		error: Boolean(error),
 	};
 }
@@ -87,11 +93,26 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
 	}
 
 	const role = await resolveUserRole(user);
+	const workerProfile = await getWorkerLinkedRole(user.id);
+	const email = user.email ?? "";
+	const emailUsername = email.split("@")[0] ?? "";
 
 	return {
 		id: user.id,
 		email: user.email ?? null,
 		role,
+		username: typeof user.user_metadata?.username === "string"
+			? user.user_metadata.username
+			: emailUsername,
+		fullName: typeof user.user_metadata?.full_name === "string"
+			? user.user_metadata.full_name
+			: workerProfile.fullName,
+		phone: typeof user.user_metadata?.phone === "string"
+			? user.user_metadata.phone
+			: workerProfile.phone,
+		personalData: typeof user.user_metadata?.personal_data === "string"
+			? user.user_metadata.personal_data
+			: "",
 	};
 });
 

@@ -99,6 +99,25 @@ test("CFE conserva los datos de Ecotienda y las marcas aprobadas de la referenci
 	assert.equal(data.primaryFuel, "SOLAR");
 });
 
+test("CFE usa la identidad configurada de la empresa", () => {
+	const data = buildCfePdfData(buildTrabajoFixture(), {
+		company_name: "Soluciones del Norte",
+		contact_name: "Laura Configurada",
+		address: "Nueva 42",
+		city: "Monterrey",
+		state: "Nuevo León",
+		zip_code: "64000",
+		phone: "8180000000",
+		email: "hola@soluciones.test",
+	});
+
+	assert.equal(data.contactName, "Laura Configurada");
+	assert.equal(data.contactStreet, "Nueva");
+	assert.equal(data.contactExteriorNumber, "42");
+	assert.equal(data.contactMunicipality, "Monterrey");
+	assert.equal(data.contactEmail, "hola@soluciones.test");
+});
+
 test("CFE mantiene vacías las marcas solares si faltan datos del sistema", () => {
 	const data = buildCfePdfData(buildTrabajoFixture({ withSolarData: false }));
 

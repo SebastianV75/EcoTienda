@@ -1,24 +1,51 @@
 import { AppShell } from "@/components/app-shell";
-import { requireRole } from "@/features/auth/session";
+import { requireUser } from "@/features/auth/session";
+import { AccountSettingsForm } from "@/features/settings/account-settings-form";
 import { CompanySettingsForm } from "@/features/settings/company-settings-form";
 import { getCompanySettings } from "@/features/settings/data";
-import { hasSupabaseEnv } from "@/lib/env";
 
 export default async function SettingsPage() {
-	const user = hasSupabaseEnv() ? await requireRole(["admin"]) : null;
-	const { settings, error } = await getCompanySettings();
-	const canSave = Boolean(settings) && hasSupabaseEnv() && !error;
+	const user = await requireUser();
+	const accountValues = {
+		username: user.username,
+		fullName: user.fullName,
+		email: user.email ?? "",
+		phone: user.phone,
+		personalData: user.personalData,
+	};
+	const companyResult =
+		user.role === "admin"
+			? await getCompanySettings()
+			: { settings: null, error: null };
+	const canSave = Boolean(companyResult.settings) && !companyResult.error;
 
 	return (
 		<AppShell
 			role="admin"
 			title="Configuración"
 			description="Administra la identidad de tu empresa y la información que aparecerá en tus documentos."
-			email={user?.email}
-		>
-			<div className="space-y-5">
-				<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-8">
-					<div className="mb-7 max-w-2xl">
+				email={user?.email}
+			>
+				<div className="space-y-5">
+					<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-8">
+						<div className="mb-7 max-w-2xl">
+							<p className="text-xs font-semibold uppercase tracking-eyebrow text-[var(--brand-strong)]">
+								Configuración de la cuenta
+							</p>
+							<h1 className="mt-2 text-2xl font-semibold tracking-display text-[var(--brand-deep)]">
+								Mis datos
+							</h1>
+							<p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+								Actualiza la información personal de la cuenta con la que estás usando EcoTienda.
+							</p>
+						</div>
+
+						<AccountSettingsForm defaultValues={accountValues} />
+					</section>
+
+					{user.role === "admin" ? (
+					<section className="rounded-[28px] border border-[var(--border-soft)] bg-white p-6 shadow-sm sm:p-8">
+						<div className="mb-7 max-w-2xl">
 						<p className="text-xs font-semibold uppercase tracking-eyebrow text-[var(--brand-strong)]">
 							Configuración general
 						</p>
@@ -31,22 +58,23 @@ export default async function SettingsPage() {
 						</p>
 					</div>
 
-					{error ? (
-						<div className="mb-6 rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm leading-6 text-amber-900">
-							{error}
+						{companyResult.error ? (
+							<div className="mb-6 rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm leading-6 text-amber-900">
+								{companyResult.error}
 						</div>
 					) : null}
 
-					{settings ? (
-						<CompanySettingsForm defaultValues={settings} canSave={canSave} />
+						{companyResult.settings ? (
+							<CompanySettingsForm defaultValues={companyResult.settings} canSave={canSave} />
 					) : (
 						<div className="rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3.5 text-sm leading-6 text-rose-800">
 							No se puede mostrar el formulario hasta resolver el problema de
 							configuración.
-						</div>
-					)}
-				</section>
-			</div>
+							</div>
+						)}
+					</section>
+					) : null}
+				</div>
 		</AppShell>
 	);
 }

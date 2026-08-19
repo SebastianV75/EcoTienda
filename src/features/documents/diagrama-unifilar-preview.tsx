@@ -2,6 +2,7 @@ import type { DocumentPreviewSubject } from "./preview-data";
 
 type DiagramaUnifilarPreviewProps = {
 	client: DocumentPreviewSubject;
+	companyName: string;
 };
 
 type PanelField = {
@@ -43,6 +44,7 @@ function PanelSectionCard({ section }: { section: PanelSection }) {
 
 export function DiagramaUnifilarPreview({
 	client,
+	companyName,
 }: DiagramaUnifilarPreviewProps) {
 	const clientSection: PanelSection = {
 		title: "Datos del cliente",
@@ -75,7 +77,7 @@ export function DiagramaUnifilarPreview({
 			<section className="rounded-[30px] border border-emerald-100 bg-white p-6 shadow-[0_22px_55px_rgba(13,79,46,0.08)] sm:p-8">
 				<div className="border-b border-neutral-200 pb-5">
 					<p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--brand-strong)]">
-						EcoTienda
+						{companyName}
 					</p>
 					<h1 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)]">
 						Diagrama unifilar · datos

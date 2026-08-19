@@ -8,6 +8,7 @@ import type { DocumentPreviewSubject } from "./preview-data";
 
 type UbicacionClientePreviewProps = {
 	client: DocumentPreviewSubject;
+	companyName: string;
 	mapApiKey?: string | null;
 };
 
@@ -102,6 +103,7 @@ function SectionCard({
 
 export function UbicacionClientePreview({
 	client,
+	companyName,
 	mapApiKey,
 }: UbicacionClientePreviewProps) {
 	const [mapFailed, setMapFailed] = useState(false);
@@ -138,7 +140,7 @@ export function UbicacionClientePreview({
 					<div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-emerald-100 bg-white print:h-14 print:w-14 print:rounded-xl">
 						<Image
 							src="/ecotienda-logo-temp.png"
-							alt="EcoTienda"
+							alt={companyName}
 							width={64}
 							height={64}
 							className="h-full w-full object-contain"
@@ -147,7 +149,7 @@ export function UbicacionClientePreview({
 					</div>
 					<div className="min-w-0">
 						<p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--brand-strong)] print:text-neutral-700">
-							EcoTienda
+							{companyName}
 						</p>
 						<h1 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-[var(--brand-deep)] print:text-[24px] print:text-black">
 							Ubicación del cliente
@@ -228,8 +230,8 @@ export function UbicacionClientePreview({
 
 							{googleMapsLink ? (
 								<p className="text-sm leading-6 text-[var(--muted)] print:hidden">
-									Si el mapa no carga dentro del sistema, puedes abrir la
-									ubicación directamente en Google Maps.
+									Si el mapa no carga dentro del sistema, puedes abrir la ubicación
+									directamente en Google Maps.
 								</p>
 							) : null}
 						</div>

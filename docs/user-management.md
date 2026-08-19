@@ -66,6 +66,9 @@ entorno, configura en **Authentication > URL Configuration**:
   `https://app.example.com`.
 - **Redirect URLs**: agrega exactamente `${APP_URL}/auth/confirm`. Para desarrollo,
   agrega por separado `http://localhost:3000/auth/confirm` si corresponde.
+- Para restablecimiento de contraseña, agrega también
+  `${APP_URL}/auth/reset-password/callback` y, en desarrollo,
+  `http://localhost:3000/auth/reset-password/callback`.
 - No uses comodines en producción para este flujo.
 
 No necesitas configurar SMTP personalizado ni editar una plantilla para el flujo

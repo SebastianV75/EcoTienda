@@ -7,6 +7,7 @@ import {
 	getVisitaFilename,
 } from "@/features/documents/visita-pdf";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
+import { getCompanySettings } from "@/features/settings/data";
 
 type RouteContext = {
 	params: Promise<{ id: string }>;
@@ -22,13 +23,11 @@ export async function GET(_request: Request, { params }: RouteContext) {
 	const trabajo = await getTrabajoDocumentById(id);
 
 	if (!trabajo) {
-		return NextResponse.json(
-			{ error: "El trabajo no existe." },
-			{ status: 404 },
-		);
+		return NextResponse.json({ error: "El trabajo no existe." }, { status: 404 });
 	}
 
-	const data = buildVisitaPdfData(trabajo);
+	const { settings: company } = await getCompanySettings();
+	const data = buildVisitaPdfData(trabajo, company ?? undefined);
 	if (!data) {
 		return NextResponse.json(
 			{ error: "La visita técnica todavía no está completada." },

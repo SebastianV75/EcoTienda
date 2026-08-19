@@ -4,6 +4,7 @@ import type { DocumentPreviewSubject } from "./preview-data";
 
 type CartaPoderPreviewProps = {
 	client: DocumentPreviewSubject;
+	companyName: string;
 	powerAcceptorName: string;
 	witnessOneName: string;
 	witnessTwoName: string;
@@ -36,6 +37,7 @@ function InlineField({
 
 export function CartaPoderPreview({
 	client,
+	companyName,
 	powerAcceptorName,
 	witnessOneName,
 	witnessTwoName,
@@ -49,14 +51,14 @@ export function CartaPoderPreview({
 			<div className="flex items-start justify-between gap-6 border-b border-neutral-200 pb-6 print:pb-5">
 				<div className="space-y-2">
 					<p className="text-sm font-semibold uppercase tracking-[0.32em]">
-						EcoTienda
+						{companyName}
 					</p>
 					<h1 className="text-4xl font-bold tracking-[0.08em]">CARTA PODER</h1>
 				</div>
 				<div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-emerald-100 bg-white print:h-16 print:w-16 print:rounded-xl print:border-neutral-200">
 					<Image
 						src="/ecotienda-logo-temp.png"
-						alt="EcoTienda"
+						alt={companyName}
 						width={80}
 						height={80}
 						className="h-full w-full object-contain"
@@ -74,10 +76,10 @@ export function CartaPoderPreview({
 				<p>
 					POR LA PRESENTE OTORGO AL SR(A){" "}
 					<InlineField value={powerAcceptor} widthClass="min-w-[260px]" /> PODER
-					AMPLIO, CUMPLIDO Y BASTANTE PARA QUE A MI NOMBRE Y REPRESENTACIÓN,
-					BAJO MI AUTORIZACIÓN PLENA Y CONSCIENTE DEL TRÁMITE A CAMBIO DE
-					MEDIDOR BIDIRECCIONAL ANTE LA COMISIÓN FEDERAL DE ELECTRICIDAD (CFE),
-					DE MI DOMICILIO:{" "}
+					AMPLIO, CUMPLIDO Y BASTANTE PARA QUE A MI NOMBRE Y REPRESENTACIÓN, BAJO MI
+					AUTORIZACIÓN PLENA Y CONSCIENTE DEL TRÁMITE A CAMBIO DE MEDIDOR
+					BIDIRECCIONAL ANTE LA COMISIÓN FEDERAL DE ELECTRICIDAD (CFE), DE MI
+					DOMICILIO:{" "}
 					<InlineField
 						value={formatField(client.address)}
 						widthClass="min-w-[420px]"
@@ -88,31 +90,21 @@ export function CartaPoderPreview({
 						widthClass="min-w-[220px]"
 					/>
 					, CON EL NÚMERO DE SERVICIO (RPU){" "}
-					<InlineField
-						value={formatField(client.rpu)}
-						widthClass="min-w-[220px]"
-					/>
-					, SIENDO MI RFC{" "}
-					<InlineField
-						value={formatField(client.rfc)}
-						widthClass="min-w-[220px]"
-					/>
+					<InlineField value={formatField(client.rpu)} widthClass="min-w-[220px]" />,
+					SIENDO MI RFC{" "}
+					<InlineField value={formatField(client.rfc)} widthClass="min-w-[220px]" />
 				</p>
 			</div>
 
 			<div className="mt-24 grid gap-16 sm:grid-cols-2">
 				<div className="text-center">
 					<div className="mx-auto h-px w-full max-w-[260px] border-t border-black" />
-					<p className="mt-3 text-lg uppercase tracking-[0.04em]">
-						OTORGO EL PODER
-					</p>
+					<p className="mt-3 text-lg uppercase tracking-[0.04em]">OTORGO EL PODER</p>
 					<p className="mt-12 text-lg uppercase">{client.full_name}</p>
 				</div>
 				<div className="text-center">
 					<div className="mx-auto h-px w-full max-w-[260px] border-t border-black" />
-					<p className="mt-3 text-lg uppercase tracking-[0.04em]">
-						ACEPTO EL PODER
-					</p>
+					<p className="mt-3 text-lg uppercase tracking-[0.04em]">ACEPTO EL PODER</p>
 					<p className="mt-12 text-lg uppercase">{powerAcceptor}</p>
 				</div>
 			</div>

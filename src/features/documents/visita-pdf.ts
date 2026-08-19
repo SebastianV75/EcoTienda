@@ -12,6 +12,8 @@ import {
 	type AttributeGroup,
 } from "@/features/trabajos/visita-attribute-labels";
 import type { TrabajoDocumentRecord } from "@/features/trabajos/data";
+import { defaultCompanySettings } from "@/features/settings/defaults";
+import type { CompanySettings } from "@/types/quotation";
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -43,6 +45,10 @@ type PdfImage = {
 };
 
 export type VisitaPdfData = {
+	companyName: string;
+	companyContact: string;
+	companyPhone: string;
+	companyEmail: string;
 	trabajoId: string;
 	clientName: string;
 	phone: string;
@@ -121,9 +127,7 @@ function buildAttributeGroup(
 	attributes: Record<string, unknown> | null | undefined,
 ): PdfGroup | null {
 	const fields = Object.entries(attributes ?? {})
-		.filter(
-			([, value]) => value !== null && value !== undefined && value !== "",
-		)
+		.filter(([, value]) => value !== null && value !== undefined && value !== "")
 		.map(([key, value]) => {
 			const label = getVisitaAttributeLabel(group, key);
 			const image =
@@ -143,6 +147,7 @@ function buildAttributeGroup(
 
 export function buildVisitaPdfData(
 	trabajo: TrabajoDocumentRecord,
+	company: CompanySettings = defaultCompanySettings,
 ): VisitaPdfData | null {
 	const visita = trabajo.visita;
 	if (!visita) return null;
@@ -175,6 +180,10 @@ export function buildVisitaPdfData(
 	];
 
 	return {
+		companyName: company.company_name,
+		companyContact: company.contact_name,
+		companyPhone: company.phone,
+		companyEmail: company.email,
 		trabajoId: trabajo.id,
 		clientName: textValue(visita.contact_name, trabajo.intake_name),
 		phone: textValue(visita.contact_phone, trabajo.intake_phone),
@@ -417,6 +426,14 @@ export async function generateVisitaPdf(data: VisitaPdfData) {
 		y: PAGE_HEIGHT - MARGIN,
 	};
 
+	cursor.page.drawText(data.companyName, {
+		x: MARGIN,
+		y: cursor.y,
+		size: 10,
+		font: boldFont,
+		color: COLORS.muted,
+	});
+	cursor.y -= 16;
 	cursor.page.drawText("Reporte de visita técnica", {
 		x: MARGIN,
 		y: cursor.y,
@@ -425,6 +442,16 @@ export async function generateVisitaPdf(data: VisitaPdfData) {
 		color: COLORS.brand,
 	});
 	cursor.y -= 24;
+	drawText(
+		cursor,
+		font,
+		[data.companyContact, data.companyPhone, data.companyEmail]
+			.filter(Boolean)
+			.join(" · ") || `Trabajo ${data.trabajoId.slice(0, 8)}`,
+		8,
+		COLORS.muted,
+	);
+	cursor.y -= 10;
 	drawText(
 		cursor,
 		font,
@@ -452,9 +479,7 @@ export async function generateVisitaPdf(data: VisitaPdfData) {
 		{ label: "Tipo de cotización", value: data.quotationType },
 	].forEach((field) => drawField(cursor, font, boldFont, field));
 
-	const imageByLabel = new Map(
-		data.images.map((image) => [image.label, image]),
-	);
+	const imageByLabel = new Map(data.images.map((image) => [image.label, image]));
 
 	drawGroupTitle(cursor, boldFont, "Notas y archivos");
 	drawField(cursor, font, boldFont, { label: "Notas", value: data.notes });

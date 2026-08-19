@@ -8,6 +8,7 @@ import { resolveTrabajoPreviewId } from "@/features/documents/preview-routing";
 import { buildTrabajoPreviewSubject } from "@/features/documents/preview-data";
 import { UbicacionClientePreview } from "@/features/documents/ubicacion-cliente-preview";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
+import { getCompanySettings } from "@/features/settings/data";
 
 export default async function UbicacionClientePreviewPage({
 	searchParams,
@@ -15,6 +16,7 @@ export default async function UbicacionClientePreviewPage({
 	searchParams?: Promise<{ trabajoId?: string }>;
 }) {
 	const user = await requireRole(["admin", "administrative"]);
+	const { settings: company } = await getCompanySettings();
 	const params = searchParams ? await searchParams : undefined;
 	const trabajoId = await resolveTrabajoPreviewId(params);
 
@@ -50,10 +52,7 @@ export default async function UbicacionClientePreviewPage({
 		);
 	}
 
-	const previewClient = buildTrabajoPreviewSubject(
-		trabajo,
-		"ubicacion-cliente",
-	);
+	const previewClient = buildTrabajoPreviewSubject(trabajo, "ubicacion-cliente");
 	const mapApiKey = process.env.GOOGLE_MAPS_API_KEY ?? null;
 
 	return (
@@ -80,7 +79,11 @@ export default async function UbicacionClientePreviewPage({
 					<PrintButton />
 				</div>
 
-				<UbicacionClientePreview client={previewClient} mapApiKey={mapApiKey} />
+				<UbicacionClientePreview
+					client={previewClient}
+					companyName={company?.company_name ?? "EcoTienda"}
+					mapApiKey={mapApiKey}
+				/>
 			</div>
 		</AppShell>
 	);

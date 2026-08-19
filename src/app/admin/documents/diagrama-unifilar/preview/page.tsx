@@ -8,6 +8,7 @@ import { resolveTrabajoPreviewId } from "@/features/documents/preview-routing";
 import { buildTrabajoPreviewSubject } from "@/features/documents/preview-data";
 import { PrintButton } from "@/features/documents/print-button";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
+import { getCompanySettings } from "@/features/settings/data";
 
 export default async function DiagramaUnifilarPreviewPage({
 	searchParams,
@@ -15,6 +16,7 @@ export default async function DiagramaUnifilarPreviewPage({
 	searchParams?: Promise<{ trabajoId?: string }>;
 }) {
 	const user = await requireRole(["admin", "administrative"]);
+	const { settings: company } = await getCompanySettings();
 	const params = searchParams ? await searchParams : undefined;
 	const trabajoId = await resolveTrabajoPreviewId(params);
 
@@ -50,10 +52,7 @@ export default async function DiagramaUnifilarPreviewPage({
 		);
 	}
 
-	const previewClient = buildTrabajoPreviewSubject(
-		trabajo,
-		"diagrama-unifilar",
-	);
+	const previewClient = buildTrabajoPreviewSubject(trabajo, "diagrama-unifilar");
 
 	return (
 		<AppShell
@@ -79,7 +78,10 @@ export default async function DiagramaUnifilarPreviewPage({
 					<PrintButton />
 				</div>
 
-				<DiagramaUnifilarPreview client={previewClient} />
+				<DiagramaUnifilarPreview
+					client={previewClient}
+					companyName={company?.company_name ?? "EcoTienda"}
+				/>
 			</div>
 		</AppShell>
 	);

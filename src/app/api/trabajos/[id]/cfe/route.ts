@@ -7,6 +7,7 @@ import {
 	getCfeFilename,
 } from "@/features/documents/cfe-pdf";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
+import { getCompanySettings } from "@/features/settings/data";
 
 type RouteContext = {
 	params: Promise<{ id: string }>;
@@ -28,7 +29,8 @@ export async function GET(_request: Request, { params }: RouteContext) {
 		);
 	}
 
-	const data = buildCfePdfData(trabajo);
+	const { settings: company } = await getCompanySettings();
+	const data = buildCfePdfData(trabajo, company ?? undefined);
 	if (!data.applicantName) {
 		return NextResponse.json(
 			{ error: "El trabajo no tiene nombre de solicitante." },

@@ -89,6 +89,7 @@ const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
 			icon: DocumentText,
 		},
 		{ href: "/admin/visits", label: "Visitas", icon: Location },
+		{ href: "/admin/settings", label: "Configuración", icon: Settings },
 	],
 	technician: [
 		{
@@ -96,6 +97,7 @@ const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
 			label: "Info para cliente",
 			icon: DocumentText,
 		},
+		{ href: "/admin/settings", label: "Configuración", icon: Settings },
 	],
 };
 

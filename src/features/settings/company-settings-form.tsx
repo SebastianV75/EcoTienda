@@ -86,19 +86,19 @@ export function CompanySettingsForm({
 				</div>
 
 				<div className="grid gap-5 md:grid-cols-2">
-					<Field htmlFor="email" label="Correo electrónico">
-						<Input
-							id="email"
-							name="email"
+						<Field htmlFor="company_email" label="Correo electrónico">
+							<Input
+								id="company_email"
+								name="email"
 							type="email"
 							defaultValue={defaultValues.email}
 							placeholder="contacto@ejemplo.com"
 						/>
 					</Field>
 
-					<Field htmlFor="phone" label="Teléfono">
-						<Input
-							id="phone"
+						<Field htmlFor="company_phone" label="Teléfono">
+							<Input
+								id="company_phone"
 							name="phone"
 							defaultValue={defaultValues.phone}
 							placeholder="(656) 123 4567"
