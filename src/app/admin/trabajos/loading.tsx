@@ -53,6 +53,7 @@ export default function TrabajosLoading() {
 	return (
 		<AppShell
 			role="admin"
+			navigationLoading
 			title="Trabajos"
 			description="Seguimiento centralizado de todos los trabajos, desde la agenda hasta la venta."
 		>

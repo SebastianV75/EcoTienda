@@ -5,6 +5,7 @@ export default function AdminLoading() {
 	return (
 		<AppShell
 			role="admin"
+			navigationLoading
 			title="Tablero operativo"
 			description="Cargando el resumen de la operación…"
 		>

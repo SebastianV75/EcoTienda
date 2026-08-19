@@ -29,6 +29,7 @@ export default function TrabajoDetailLoading() {
 	return (
 		<AppShell
 			role="admin"
+			navigationLoading
 			title="Trabajo"
 			description="Vista unificada del trabajo"
 		>

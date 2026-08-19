@@ -111,11 +111,13 @@ function isActive(pathname: string, item: PrimaryItem) {
 type MobileBottomNavigationProps = {
 	role: AppRole;
 	signOutSlot: ReactNode;
+	isLoading?: boolean;
 };
 
 export function MobileBottomNavigation({
 	role,
 	signOutSlot,
+	isLoading = false,
 }: MobileBottomNavigationProps) {
 	const primaryMobileNavigation = primaryMobileNavigationByRole[role];
 	const secondaryMobileNavigation = secondaryMobileNavigationByRole[role];
@@ -128,9 +130,15 @@ export function MobileBottomNavigation({
 
 	return (
 		<>
+			{isLoading ? (
+				<div
+					aria-hidden="true"
+					className="fixed inset-x-0 bottom-0 z-40 h-16 border-t border-[var(--border-soft)] bg-white/95 shadow-[0_-12px_32px_rgba(10,44,21,0.10)] backdrop-blur-md lg:hidden print:hidden"
+				/>
+			) : null}
 			<nav
 				aria-label="Navegación principal"
-				className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-soft)] bg-white/95 shadow-[0_-12px_32px_rgba(10,44,21,0.10)] backdrop-blur-md lg:hidden print:hidden"
+				className={`fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-soft)] bg-white/95 shadow-[0_-12px_32px_rgba(10,44,21,0.10)] backdrop-blur-md lg:hidden print:hidden ${isLoading ? "invisible" : "visible"}`}
 			>
 				<div
 					className="pb-[env(safe-area-inset-bottom)]"
