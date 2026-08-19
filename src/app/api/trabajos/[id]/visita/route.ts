@@ -23,10 +23,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
 	const trabajo = await getTrabajoDocumentById(id);
 
 	if (!trabajo) {
-		return NextResponse.json(
-			{ error: "El trabajo no existe." },
-			{ status: 404 },
-		);
+		return NextResponse.json({ error: "El trabajo no existe." }, { status: 404 });
 	}
 
 	const { settings: company } = await getCompanySettings();

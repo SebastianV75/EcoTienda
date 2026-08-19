@@ -51,17 +51,17 @@ test("construye datos de visita y conserva campos capturados", () => {
 });
 
 test("visita conserva la identidad configurada de la empresa", () => {
-const data = buildVisitaPdfData(buildTrabajoFixture(), {
-company_name: "Soluciones del Norte",
-contact_name: "Laura Configurada",
-phone: "8180000000",
-email: "hola@soluciones.test",
-});
+	const data = buildVisitaPdfData(buildTrabajoFixture(), {
+		company_name: "Soluciones del Norte",
+		contact_name: "Laura Configurada",
+		phone: "8180000000",
+		email: "hola@soluciones.test",
+	});
 
-assert.equal(data.companyName, "Soluciones del Norte");
-assert.equal(data.companyContact, "Laura Configurada");
-assert.equal(data.companyPhone, "8180000000");
-assert.equal(data.companyEmail, "hola@soluciones.test");
+	assert.equal(data.companyName, "Soluciones del Norte");
+	assert.equal(data.companyContact, "Laura Configurada");
+	assert.equal(data.companyPhone, "8180000000");
+	assert.equal(data.companyEmail, "hola@soluciones.test");
 });
 
 test("incrusta imágenes capturadas en el PDF", async () => {
@@ -87,8 +87,7 @@ test("incrusta imágenes capturadas en el PDF", async () => {
 test("genera un PDF legible y pagina textos largos", async () => {
 	const longNotes = Array.from(
 		{ length: 120 },
-		(_, index) =>
-			`Observación técnica ${index + 1} capturada durante la visita.`,
+		(_, index) => `Observación técnica ${index + 1} capturada durante la visita.`,
 	).join(" ");
 	const data = buildVisitaPdfData(
 		buildTrabajoFixture({

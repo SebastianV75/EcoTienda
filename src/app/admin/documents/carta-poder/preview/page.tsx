@@ -29,16 +29,26 @@ export default async function CartaPoderPreviewPage({
 	const { settings: company } = await getCompanySettings();
 	const params = searchParams ? await searchParams : undefined;
 	const trabajoId = await resolveTrabajoPreviewId(params);
-	const powerAcceptorName = params?.powerAcceptorName?.trim() || company?.contact_name || DEFAULT_POWER_ACCEPTOR;
+	const powerAcceptorName =
+		params?.powerAcceptorName?.trim() ||
+		company?.contact_name ||
+		DEFAULT_POWER_ACCEPTOR;
 	const witnessOneName = params?.witnessOneName?.trim() ?? DEFAULT_WITNESS_ONE;
 	const witnessTwoName = params?.witnessTwoName?.trim() ?? DEFAULT_WITNESS_TWO;
 
 	const signatureEditor = (
-		<form method="get" className="rounded-card border border-[var(--border-soft)] bg-white p-4 print:hidden">
-			{trabajoId ? <input type="hidden" name="trabajoId" value={trabajoId} /> : null}
+		<form
+			method="get"
+			className="rounded-card border border-[var(--border-soft)] bg-white p-4 print:hidden"
+		>
+			{trabajoId ? (
+				<input type="hidden" name="trabajoId" value={trabajoId} />
+			) : null}
 			<div className="grid gap-3 md:grid-cols-3">
 				<label className="space-y-2 text-sm text-[var(--muted)]">
-					<span className="block font-medium text-[var(--brand-deep)]">Acepta el poder</span>
+					<span className="block font-medium text-[var(--brand-deep)]">
+						Acepta el poder
+					</span>
 					<input
 						name="powerAcceptorName"
 						defaultValue={powerAcceptorName}
@@ -47,7 +57,9 @@ export default async function CartaPoderPreviewPage({
 					/>
 				</label>
 				<label className="space-y-2 text-sm text-[var(--muted)]">
-					<span className="block font-medium text-[var(--brand-deep)]">Testigo 1</span>
+					<span className="block font-medium text-[var(--brand-deep)]">
+						Testigo 1
+					</span>
 					<input
 						name="witnessOneName"
 						defaultValue={witnessOneName}
@@ -55,7 +67,9 @@ export default async function CartaPoderPreviewPage({
 					/>
 				</label>
 				<label className="space-y-2 text-sm text-[var(--muted)]">
-					<span className="block font-medium text-[var(--brand-deep)]">Testigo 2</span>
+					<span className="block font-medium text-[var(--brand-deep)]">
+						Testigo 2
+					</span>
 					<input
 						name="witnessTwoName"
 						defaultValue={witnessTwoName}

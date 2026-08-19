@@ -1,10 +1,7 @@
 import { hasSupabaseEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { CompanySettings } from "@/types/quotation";
-import {
-	defaultCompanySettings,
-	normalizeCompanySettings,
-} from "./defaults";
+import { defaultCompanySettings, normalizeCompanySettings } from "./defaults";
 
 export { defaultCompanySettings, normalizeCompanySettings } from "./defaults";
 
@@ -27,15 +24,15 @@ export async function getCompanySettings(): Promise<CompanySettingsResult> {
 	if (error) {
 		return {
 			settings: defaultCompanySettings,
-			error: "No se pudieron cargar los datos de la empresa; se usarán valores predeterminados.",
+			error:
+				"No se pudieron cargar los datos de la empresa; se usarán valores predeterminados.",
 		};
 	}
 
 	if (!data || data.length === 0) {
 		return {
 			settings: defaultCompanySettings,
-			error:
-				"Todavía no existe una configuración de empresa en la base de datos.",
+			error: "Todavía no existe una configuración de empresa en la base de datos.",
 		};
 	}
 

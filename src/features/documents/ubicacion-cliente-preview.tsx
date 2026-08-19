@@ -230,8 +230,8 @@ export function UbicacionClientePreview({
 
 							{googleMapsLink ? (
 								<p className="text-sm leading-6 text-[var(--muted)] print:hidden">
-									Si el mapa no carga dentro del sistema, puedes abrir la
-									ubicación directamente en Google Maps.
+									Si el mapa no carga dentro del sistema, puedes abrir la ubicación
+									directamente en Google Maps.
 								</p>
 							) : null}
 						</div>

@@ -23,7 +23,8 @@ export function normalizeCompanySettings(
 	return {
 		...defaultCompanySettings,
 		...candidate,
-		id: typeof candidate.id === "string" ? candidate.id : defaultCompanySettings.id,
+		id:
+			typeof candidate.id === "string" ? candidate.id : defaultCompanySettings.id,
 		payment_terms_days: Number.isFinite(Number(candidate.payment_terms_days))
 			? Number(candidate.payment_terms_days)
 			: defaultCompanySettings.payment_terms_days,

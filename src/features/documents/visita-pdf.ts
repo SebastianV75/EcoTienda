@@ -127,9 +127,7 @@ function buildAttributeGroup(
 	attributes: Record<string, unknown> | null | undefined,
 ): PdfGroup | null {
 	const fields = Object.entries(attributes ?? {})
-		.filter(
-			([, value]) => value !== null && value !== undefined && value !== "",
-		)
+		.filter(([, value]) => value !== null && value !== undefined && value !== "")
 		.map(([key, value]) => {
 			const label = getVisitaAttributeLabel(group, key);
 			const image =
@@ -447,14 +445,20 @@ export async function generateVisitaPdf(data: VisitaPdfData) {
 	drawText(
 		cursor,
 		font,
-		[ data.companyContact, data.companyPhone, data.companyEmail ]
+		[data.companyContact, data.companyPhone, data.companyEmail]
 			.filter(Boolean)
 			.join(" · ") || `Trabajo ${data.trabajoId.slice(0, 8)}`,
 		8,
 		COLORS.muted,
 	);
 	cursor.y -= 10;
-	drawText(cursor, font, `Trabajo ${data.trabajoId.slice(0, 8)}`, 8, COLORS.muted);
+	drawText(
+		cursor,
+		font,
+		`Trabajo ${data.trabajoId.slice(0, 8)}`,
+		8,
+		COLORS.muted,
+	);
 	cursor.y -= 8;
 	cursor.page.drawLine({
 		start: { x: MARGIN, y: cursor.y },
@@ -475,9 +479,7 @@ export async function generateVisitaPdf(data: VisitaPdfData) {
 		{ label: "Tipo de cotización", value: data.quotationType },
 	].forEach((field) => drawField(cursor, font, boldFont, field));
 
-	const imageByLabel = new Map(
-		data.images.map((image) => [image.label, image]),
-	);
+	const imageByLabel = new Map(data.images.map((image) => [image.label, image]));
 
 	drawGroupTitle(cursor, boldFont, "Notas y archivos");
 	drawField(cursor, font, boldFont, { label: "Notas", value: data.notes });

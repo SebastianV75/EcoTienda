@@ -52,10 +52,7 @@ export default async function UbicacionClientePreviewPage({
 		);
 	}
 
-	const previewClient = buildTrabajoPreviewSubject(
-		trabajo,
-		"ubicacion-cliente",
-	);
+	const previewClient = buildTrabajoPreviewSubject(trabajo, "ubicacion-cliente");
 	const mapApiKey = process.env.GOOGLE_MAPS_API_KEY ?? null;
 
 	return (

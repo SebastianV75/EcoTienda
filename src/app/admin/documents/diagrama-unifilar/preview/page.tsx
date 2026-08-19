@@ -52,10 +52,7 @@ export default async function DiagramaUnifilarPreviewPage({
 		);
 	}
 
-	const previewClient = buildTrabajoPreviewSubject(
-		trabajo,
-		"diagrama-unifilar",
-	);
+	const previewClient = buildTrabajoPreviewSubject(trabajo, "diagrama-unifilar");
 
 	return (
 		<AppShell
