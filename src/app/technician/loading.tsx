@@ -5,6 +5,7 @@ export default function TechnicianLoading() {
 	return (
 		<AppShell
 			role="technician"
+			navigationLoading
 			title="Área técnica"
 			description="Cargando tus visitas asignadas…"
 		>

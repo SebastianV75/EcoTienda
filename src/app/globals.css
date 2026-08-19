@@ -67,6 +67,21 @@ body {
   }
 }
 
+@keyframes settings-tab-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-tab-panel {
+  animation: settings-tab-panel-in 180ms var(--ease-out) both;
+}
+
 @keyframes scrim-in {
   from { opacity: 0; }
   to { opacity: 1; }

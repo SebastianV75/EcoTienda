@@ -22,6 +22,7 @@ export default function VisitsLoading() {
 	return (
 		<AppShell
 			role="admin"
+			navigationLoading
 			title="Visitas"
 			description="Seguimiento de visitas desde Agenda. Abrí cada trabajo y dejá listo el siguiente paso."
 		>

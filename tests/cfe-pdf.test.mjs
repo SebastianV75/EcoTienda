@@ -112,6 +112,8 @@ test("CFE usa la identidad configurada de la empresa", () => {
 	});
 
 	assert.equal(data.contactName, "Laura Configurada");
+	assert.equal(data.contactPosition, "Gerente");
+	assert.notEqual(data.contactPosition, "Soluciones del Norte");
 	assert.equal(data.contactStreet, "Nueva");
 	assert.equal(data.contactExteriorNumber, "42");
 	assert.equal(data.contactMunicipality, "Monterrey");

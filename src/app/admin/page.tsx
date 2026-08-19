@@ -53,6 +53,14 @@ export default async function AdminPage() {
 		stageStatsResult.status === "rejected"
 			? "Parte del tablero no cargó. Mostramos lo disponible para no cortar el flujo operativo."
 			: null;
+	const supportLinks = [
+		{ href: "/admin/descargables", label: "Descargables" },
+		{ href: "/admin/quotations", label: "Cotizaciones" },
+		{ href: "/admin/visits", label: "Visitas" },
+		...(user?.role === "admin"
+			? [{ href: "/admin/workers", label: "Trabajadores" }]
+			: []),
+	];
 
 	return (
 		<AppShell
@@ -83,12 +91,7 @@ export default async function AdminPage() {
 						Apoyo
 					</p>
 					<div className="mt-3 flex flex-wrap gap-2">
-						{[
-							{ href: "/admin/workers", label: "Trabajadores" },
-							{ href: "/admin/descargables", label: "Descargables" },
-							{ href: "/admin/quotations", label: "Cotizaciones" },
-							{ href: "/admin/visits", label: "Visitas" },
-						].map((item) => (
+							{supportLinks.map((item) => (
 							<Link
 								key={item.href}
 								href={item.href}

@@ -113,6 +113,7 @@ type AppShellProps = {
 	title: string;
 	description: string;
 	email?: string | null;
+	navigationLoading?: boolean;
 };
 
 function isNavigationActive(pathname: string, href: string) {
@@ -127,6 +128,7 @@ export function AppShell({
 	title,
 	description,
 	email,
+	navigationLoading = false,
 }: AppShellProps) {
 	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 	const pathname = usePathname() ?? "";
@@ -196,9 +198,10 @@ export function AppShell({
 						</div>
 					</div>
 
-					<div
-						className={`flex flex-1 flex-col transition-[padding] duration-300 ease-out ${isSidebarCollapsed ? "px-2 py-4" : "px-4 py-4"}`}
-					>
+						<div
+							className={`flex flex-1 flex-col transition-[padding,opacity] duration-300 ease-out ${isSidebarCollapsed ? "px-2 py-4" : "px-4 py-4"} ${navigationLoading ? "opacity-0" : "opacity-100"}`}
+							aria-hidden={navigationLoading || undefined}
+						>
 						<div className="space-y-5">
 							<div>
 								<p
@@ -322,10 +325,11 @@ export function AppShell({
 				</main>
 			</div>
 
-			<MobileBottomNavigation
-				role={role}
-				signOutSlot={<MobileSignOut email={email} />}
-			/>
+				<MobileBottomNavigation
+					role={role}
+					signOutSlot={<MobileSignOut email={email} />}
+					isLoading={navigationLoading}
+				/>
 		</div>
 	);
 }

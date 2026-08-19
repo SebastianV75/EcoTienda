@@ -5,6 +5,7 @@ export default function AgendaLoading() {
 	return (
 		<AppShell
 			role="admin"
+			navigationLoading
 			title="Agenda"
 			description="Cargando la agenda y los pendientes…"
 		>

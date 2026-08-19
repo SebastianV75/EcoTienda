@@ -131,7 +131,7 @@ export function buildCfePdfData(
 		applicantPhone: client.phone ?? "",
 		applicantEmail: cfeClient.email ?? "",
 		contactName: company.contact_name || company.company_name,
-		contactPosition: company.company_name,
+		contactPosition: "Gerente",
 		contactStreet: companyAddress.street,
 		contactExteriorNumber: companyAddress.exteriorNumber,
 		contactNeighborhood: "",
