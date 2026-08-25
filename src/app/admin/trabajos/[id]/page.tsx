@@ -22,6 +22,7 @@ import { VisitaAttributeImage } from "@/features/trabajos/components/visita-attr
 import { VentaForm } from "@/features/trabajos/venta-form";
 import { ConfirmQuotationButton } from "@/features/trabajos/components/confirm-quotation-button";
 import { DocumentInfoForm } from "@/features/trabajos/document-info-form";
+import { ContractSigningControls } from "@/features/documents/contract-signing-controls";
 
 import { DropdownSelect } from "@/features/trabajos/components/dropdown-select";
 const clientDownloadGroups = [
@@ -704,13 +705,16 @@ export default async function TrabajoDetailPage({
 										</p>
 									</div>
 								</div>
-								<a
-									href={`/api/trabajos/${trabajo.id}/contrato`}
-									className="ui-primary-action w-full justify-center sm:w-auto"
-									download
-								>
-									Descargar contrato
-								</a>
+								<div className="flex flex-wrap gap-2">
+									<a
+										href={`/api/trabajos/${trabajo.id}/contrato`}
+										className="ui-primary-action w-full justify-center sm:w-auto"
+										download
+									>
+										Descargar contrato
+									</a>
+									<ContractSigningControls trabajoId={trabajo.id} />
+								</div>
 							</div>
 						)}
 						{currentStage === "venta" ? (
