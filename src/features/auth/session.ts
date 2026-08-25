@@ -92,8 +92,15 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
 		return null;
 	}
 
-	const role = await resolveUserRole(user);
 	const workerProfile = await getWorkerLinkedRole(user.id);
+	const metadataRole = getUserRole(user);
+	const role =
+		workerProfile.error ||
+		!workerProfile.exists ||
+		!workerProfile.active ||
+		workerProfile.role !== metadataRole
+			? null
+			: workerProfile.role;
 	const email = user.email ?? "";
 	const emailUsername = email.split("@")[0] ?? "";
 

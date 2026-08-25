@@ -17,6 +17,7 @@ export default async function NewQuotationPage({
 	let linkedTrabajo: {
 		id: string;
 		current_stage: string;
+		status: string;
 		visita_completed_at: string | null;
 	} | null = null;
 	let linkedQuotation = null;
@@ -26,7 +27,7 @@ export default async function NewQuotationPage({
 		const [{ data: trabajo }, quotation] = await Promise.all([
 			supabase
 				.from("trabajos")
-				.select("id, current_stage, visita_completed_at")
+				.select("id, current_stage, status, visita_completed_at")
 				.eq("id", linkedTrabajoId)
 				.maybeSingle(),
 			getQuotationByTrabajoId(linkedTrabajoId),
@@ -38,6 +39,7 @@ export default async function NewQuotationPage({
 	const linkedTrabajoCanCreate =
 		!linkedTrabajoId ||
 		(Boolean(linkedTrabajo) &&
+			linkedTrabajo?.status !== "archived" &&
 			linkedTrabajo?.current_stage === "cotizacion" &&
 			Boolean(linkedTrabajo.visita_completed_at) &&
 			!linkedQuotation);

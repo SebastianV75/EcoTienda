@@ -216,7 +216,8 @@ export const getAgendaItemsForMonth = cache(
 				const { data: trabajosData, error: trabajosError } = await supabase
 					.from("trabajos")
 					.select("id")
-					.eq("current_stage", "agenda");
+					.eq("current_stage", "agenda")
+					.neq("status", "archived");
 
 				if (trabajosError) {
 					throw new Error(
@@ -277,9 +278,10 @@ export const getPendingAgendaItems = cache(async () => {
 			const supabase = await createSupabaseServerClient();
 			// Primero obtener los trabajos en etapa agenda
 			const { data: trabajosData, error: trabajosError } = await supabase
-				.from("trabajos")
-				.select("id")
-				.eq("current_stage", "agenda");
+					.from("trabajos")
+					.select("id")
+					.eq("current_stage", "agenda")
+					.neq("status", "archived");
 
 			if (trabajosError) {
 				throw new Error(
@@ -365,7 +367,7 @@ export const getAgendaItemsByType = cache(async (tipo: AgendaItemType) => {
 
 		const { data: linkedWorks, error: linkedWorksError } = await supabase
 			.from("trabajos")
-			.select("id, current_stage")
+			.select("id, current_stage, status")
 			.in("id", linkedWorkIds);
 
 		if (linkedWorksError) {
@@ -375,7 +377,9 @@ export const getAgendaItemsByType = cache(async (tipo: AgendaItemType) => {
 		}
 
 		const linkedWorkStages = new Map(
-			(linkedWorks ?? []).map((work) => [work.id, work.current_stage]),
+			(linkedWorks ?? [])
+				.filter((work) => work.status !== "archived")
+				.map((work) => [work.id, work.current_stage]),
 		);
 		return items.filter((item) =>
 			shouldIncludeLegacyVisit(item, linkedWorkStages),
@@ -390,9 +394,10 @@ export const getAgendaItemsByType = cache(async (tipo: AgendaItemType) => {
 		const supabase = await createSupabaseServerClient();
 		// Primero obtener los trabajos en etapa visita
 		const { data: trabajosData, error: trabajosError } = await supabase
-			.from("trabajos")
-			.select("id")
-			.eq("current_stage", "visita");
+		.from("trabajos")
+		.select("id")
+		.eq("current_stage", "visita")
+		.neq("status", "archived");
 
 		if (trabajosError) {
 			throw new Error(
@@ -429,6 +434,23 @@ export const getAgendaItemsByType = cache(async (tipo: AgendaItemType) => {
 });
 
 export const getAgendaItemById = cache(async (id: string) => {
+	const supabase = await createSupabaseServerClient();
+	const { data: linkedTrabajo, error: linkedTrabajoError } = await supabase
+		.from("trabajos")
+		.select("status")
+		.eq("id", id)
+		.maybeSingle();
+
+	if (linkedTrabajoError) {
+		throw new Error(
+			`No se pudo validar el estado del trabajo de agenda. ${linkedTrabajoError.message}`,
+		);
+	}
+
+	if (linkedTrabajo?.status === "archived") {
+		return null;
+	}
+
 	const [workflowResult, legacyResult] = await Promise.allSettled([
 		(async () => {
 			const supabase = await createSupabaseServerClient();

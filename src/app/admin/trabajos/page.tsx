@@ -42,6 +42,11 @@ export default async function TrabajosPage({
 			email={user.email}
 		>
 			<div className="space-y-4">
+				<div className="flex flex-wrap gap-3">
+					<Link href="/admin/trabajos/archivados" className="ui-secondary-action">
+						Ver trabajos archivados
+					</Link>
+				</div>
 				<TrabajoListFilters initialFilters={filters} workers={workers} />
 
 				<TrabajosRealtimeListener />

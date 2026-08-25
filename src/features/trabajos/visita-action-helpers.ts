@@ -62,8 +62,8 @@ export async function assertVisitActionAccess(
 			.eq("trabajo_id", trabajoId)
 			.maybeSingle(),
 		supabase
-			.from("trabajos")
-			.select("current_stage")
+		.from("trabajos")
+			.select("current_stage, status")
 			.eq("id", trabajoId)
 			.maybeSingle(),
 	]);
@@ -71,7 +71,11 @@ export async function assertVisitActionAccess(
 	if (agendaError || trabajoError) {
 		return "No se pudo validar la asignación de la visita.";
 	}
-	if (!trabajo || !["agenda", "visita"].includes(trabajo.current_stage)) {
+	if (
+		!trabajo ||
+		trabajo.status === "archived" ||
+		!["agenda", "visita"].includes(trabajo.current_stage)
+	) {
 		return "La visita ya fue completada o el trabajo ya avanzó a otra etapa.";
 	}
 	if (!agenda || agenda.assignee_worker_id !== worker.id) {

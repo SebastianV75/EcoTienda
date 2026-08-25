@@ -282,7 +282,7 @@ export function AppShell({
 					</div>
 				</aside>
 
-				<main className="min-w-0 overflow-hidden rounded-[32px] border border-[rgba(13,79,46,0.10)] bg-[rgba(255,255,255,0.86)] shadow-[0_24px_64px_rgba(10,44,21,0.08)] backdrop-blur-sm motion-safe:animate-[mobile-content-in_280ms_ease-out] sm:animate-none lg:rounded-none lg:border-y-0 lg:border-r-0 lg:shadow-none print:rounded-none print:border-0 print:bg-white print:shadow-none print:backdrop-blur-none">
+					<main className="min-w-0 overflow-hidden rounded-[32px] border border-[rgba(13,79,46,0.10)] bg-[rgba(255,255,255,0.94)] shadow-[0_24px_64px_rgba(10,44,21,0.08)] sm:animate-none lg:rounded-none lg:border-y-0 lg:border-r-0 lg:shadow-none print:rounded-none print:border-0 print:bg-white print:shadow-none">
 					<div className="border-b border-[var(--border-soft)] px-4 py-4 sm:hidden print:hidden">
 						<p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
 							EcoTienda interno

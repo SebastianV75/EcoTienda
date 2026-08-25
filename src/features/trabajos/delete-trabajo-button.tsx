@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteTrabajoAction } from "@/features/trabajos/actions";
+import { Trash } from "reicon-react";
 
 type DeleteTrabajoButtonProps = {
 	trabajoId: string;
@@ -36,9 +37,10 @@ export function DeleteTrabajoButton({ trabajoId }: DeleteTrabajoButtonProps) {
 				type="button"
 				onClick={() => setShowConfirm(true)}
 				disabled={isPending}
-				className="rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition duration-200 ease-out hover:bg-red-50 disabled:opacity-50"
+				className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-rose-200/80 bg-rose-50/60 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition-[transform,background-color,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:opacity-50 motion-reduce:transform-none"
 			>
-				{isPending ? "Eliminando..." : "Eliminar trabajo"}
+				<Trash size={18} weight="Outline" className="transition-transform duration-200 group-hover:rotate-6" />
+				<span>{isPending ? "Eliminando" : "Eliminar"}</span>
 			</button>
 
 			{showConfirm && (

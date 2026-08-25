@@ -19,7 +19,7 @@ export default async function QuotationDetailPage({
 
 	const { data: quotation, error: quotationError } = await supabase
 		.from("quotations")
-		.select("*")
+		.select("*, trabajo:trabajos(status)")
 		.eq("id", id)
 		.single();
 
@@ -34,6 +34,26 @@ export default async function QuotationDetailPage({
 				<div className="rounded-[26px] border border-rose-200 bg-rose-50 p-8 text-center">
 					<p className="text-sm text-rose-700">
 						No se pudo cargar la cotización.
+					</p>
+				</div>
+			</AppShell>
+		);
+	}
+
+	const linkedTrabajo = Array.isArray(quotation.trabajo)
+		? quotation.trabajo[0]
+		: quotation.trabajo;
+	if (linkedTrabajo?.status === "archived") {
+		return (
+			<AppShell
+				role={user.role}
+				title="Cotización archivada"
+				description="La cotización pertenece a un trabajo archivado."
+				email={user.email}
+			>
+				<div className="rounded-[26px] border border-amber-200 bg-amber-50 p-8 text-center">
+					<p className="text-sm text-amber-900">
+						Restaura el trabajo desde Trabajos archivados para volver a consultar o descargar esta cotización.
 					</p>
 				</div>
 			</AppShell>

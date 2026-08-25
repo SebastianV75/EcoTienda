@@ -16,6 +16,8 @@ export type ContractPdfData = {
 	companyCity?: string;
 	agreedAmount: number;
 	confirmedOn: string;
+	signaturePng?: Uint8Array;
+	signedAt?: string;
 };
 
 const BLACK = rgb(0, 0, 0);
@@ -163,6 +165,30 @@ export async function generateContractPdf(
 		fontSize: 9,
 		align: "center",
 	});
+	if (data.signaturePng) {
+		const signature = await pdf.embedPng(data.signaturePng);
+		const fourthPage = pages[3];
+		const maxWidth = 190;
+		const maxHeight = 30;
+		const scale = Math.min(maxWidth / signature.width, maxHeight / signature.height);
+		const width = signature.width * scale;
+		const height = signature.height * scale;
+		fourthPage.drawImage(signature, {
+			x: 78 + (maxWidth - width) / 2,
+			y: 445 + (maxHeight - height) / 2,
+			width,
+			height,
+		});
+		const signedAt = data.signedAt ? formatContractDate(data.signedAt.slice(0, 10)) : "";
+		if (signedAt) {
+			drawFittedText(fourthPage, font, `Firma electrónica: ${signedAt}`, {
+				x: 78,
+				y: 390,
+				maxWidth: 190,
+				fontSize: 7,
+			});
+		}
+	}
 
 	return pdf.save();
 }
