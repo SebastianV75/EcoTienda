@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "reicon-react";
 
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
@@ -17,6 +18,7 @@ import { isTrabajoDescargablesReady } from "@/features/trabajos/rules";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
 import { getQuotationByTrabajoId } from "@/features/quotations/data";
 import { DeleteTrabajoButton } from "@/features/trabajos/delete-trabajo-button";
+import { ArchiveTrabajoButton } from "@/features/trabajos/archive-buttons";
 import { TrabajoDetailRealtimeListener } from "@/features/trabajos/components/trabajo-detail-realtime-listener";
 
 import { trabajoStageLabels } from "@/types/trabajo";
@@ -140,8 +142,10 @@ export default async function TrabajoDetailPage({
 	const { id } = await params;
 	const pageParams = searchParams ? await searchParams : undefined;
 
-	const trabajo = await getTrabajoDocumentById(id);
-	const linkedQuotation = await getQuotationByTrabajoId(id);
+	const [trabajo, linkedQuotation] = await Promise.all([
+		getTrabajoDocumentById(id),
+		getQuotationByTrabajoId(id),
+	]);
 
 	if (!trabajo) {
 		notFound();
@@ -266,13 +270,17 @@ export default async function TrabajoDetailPage({
 								</div>
 							</div>
 
-							<div className="flex gap-2">
-								<DeleteTrabajoButton trabajoId={trabajo.id} />
-								<Link
-									href="/admin/trabajos"
-									className="ui-secondary-action shrink-0"
-								>
-									Volver a Trabajos
+								<div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+									<ArchiveTrabajoButton trabajoId={trabajo.id} />
+								{user.role === "admin" ? (
+									<DeleteTrabajoButton trabajoId={trabajo.id} />
+								) : null}
+									<Link
+										href="/admin/trabajos"
+										className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--brand-deep)] shadow-sm transition-[transform,background-color,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--brand-strong)]/30 hover:bg-[var(--surface)] hover:shadow-md active:translate-y-0 active:scale-[0.98] motion-reduce:transform-none"
+					>
+						<ArrowLeft size={18} weight="Outline" className="transition-transform duration-200 group-hover:-translate-x-0.5" />
+						<span>Trabajos</span>
 								</Link>
 							</div>
 							<TrabajoDetailRealtimeListener trabajoId={trabajo.id} />

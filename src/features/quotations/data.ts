@@ -95,7 +95,7 @@ export const getQuotations = cache(async (query?: string) => {
 	let request = supabase
 		.from("quotations")
 		.select(
-			"id, quotation_number, trabajo_id, supplier_name, project, subtotal, total, status, created_at, pdf_url, trabajo:trabajos(current_stage)",
+			"id, quotation_number, trabajo_id, supplier_name, project, subtotal, total, status, created_at, pdf_url, trabajo:trabajos(current_stage, status)",
 		)
 		.order("created_at", { ascending: false });
 
@@ -124,11 +124,17 @@ export const getQuotations = cache(async (query?: string) => {
 			current_stage: linkedTrabajo?.current_stage ?? null,
 		};
 	}) as QuotationListItem[];
-	if (quotations.length === 0) {
-		return quotations;
+	const visibleQuotations = quotations.filter((quotation, index) => {
+		const linkedTrabajo = Array.isArray(data?.[index]?.trabajo)
+			? data?.[index]?.trabajo[0]
+			: data?.[index]?.trabajo;
+		return linkedTrabajo?.status !== "archived";
+	});
+	if (visibleQuotations.length === 0) {
+		return visibleQuotations;
 	}
 
-	const quotationIds = quotations.map((quotation) => quotation.id);
+	const quotationIds = visibleQuotations.map((quotation) => quotation.id);
 	const { data: itemRows, error: itemRowsError } = await supabase
 		.from("quotation_items")
 		.select("quotation_id, amount")
@@ -145,7 +151,7 @@ export const getQuotations = cache(async (query?: string) => {
 		itemsByQuotation.set(item.quotation_id, items);
 	}
 
-	return quotations.map((quotation) => ({
+	return visibleQuotations.map((quotation) => ({
 		...quotation,
 		...calculateQuotationTotals(
 			itemsByQuotation.get(quotation.id) ?? [],
@@ -159,12 +165,19 @@ export const getQuotationById = cache(async (id: string) => {
 
 	const { data: quotation, error: quotationError } = await supabase
 		.from("quotations")
-		.select("*")
+		.select("*, trabajo:trabajos(status)")
 		.eq("id", id)
 		.single();
 
 	if (quotationError || !quotation) {
 		throw new Error("No se pudo cargar la cotización.");
+	}
+
+	const linkedTrabajo = Array.isArray(quotation.trabajo)
+		? quotation.trabajo[0]
+		: quotation.trabajo;
+	if (linkedTrabajo?.status === "archived") {
+		throw new Error("La cotización pertenece a un trabajo archivado.");
 	}
 
 	const { data: items, error: itemsError } = await supabase
@@ -187,6 +200,15 @@ export const getQuotationById = cache(async (id: string) => {
 
 export const getQuotationByTrabajoId = cache(async (trabajoId: string) => {
 	const supabase = await createSupabaseServerClient();
+	const { data: trabajo } = await supabase
+		.from("trabajos")
+		.select("status")
+		.eq("id", trabajoId)
+		.maybeSingle();
+
+	if (trabajo?.status === "archived") {
+		return null;
+	}
 
 	const { data: quotation, error } = await supabase
 		.from("quotations")

@@ -141,8 +141,10 @@ export async function getUnifilarDiagramResolution(
 		return fallbackResolution(rule!);
 	}
 
-	const url = await getSignedAssetUrl(asset.storage_path);
-	const downloadUrl = await getSignedAssetUrl(asset.storage_path, true);
+	const [url, downloadUrl] = await Promise.all([
+		getSignedAssetUrl(asset.storage_path),
+		getSignedAssetUrl(asset.storage_path, true),
+	]);
 	if (!url || !downloadUrl) {
 		return {
 			status: "ready",
