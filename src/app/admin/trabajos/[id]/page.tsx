@@ -28,6 +28,69 @@ import { VentaForm } from "@/features/trabajos/venta-form";
 import { ConfirmQuotationButton } from "@/features/trabajos/components/confirm-quotation-button";
 import { DocumentInfoForm } from "@/features/trabajos/document-info-form";
 
+import { DropdownSelect } from "@/features/trabajos/components/dropdown-select";
+const clientDownloadGroups = [
+	{
+		key: "inversores",
+		title: "Inversores",
+		description: "Fichas técnicas y certificaciones de los inversores.",
+		documents: [
+			{
+				title: "MIC 1000–3300TL-X2",
+				description: "Ficha técnica del inversor MIC 1000–3300TL-X2.",
+				href: "/descargables/inversores/mic-1000-3300tl-x2.pdf",
+			},
+			{
+				title: "NEO 1600–2500M-X2",
+				description: "Ficha técnica del inversor NEO 1600–2500M-X2.",
+				href: "/descargables/inversores/neo-1600-2500m-x2.pdf",
+			},
+			{
+				title: "NEO 1600–2500M-X2 · IEEE 1547 / UL 1741",
+				description: "Certificación IEEE 1547 y UL 1741 para NEO.",
+				href: "/descargables/inversores/neo-1600-2500m-x2-ieee1547-ul1741.pdf",
+			},
+			{
+				title: "UL 1741",
+				description: "Certificación UL 1741 para inversores.",
+				href: "/descargables/inversores/ul1741.pdf",
+			},
+			{
+				title: "MIN 2500–6000 TL-X2",
+				description: "Ficha técnica del inversor MIN 2500–6000 TL-X2.",
+				href: "/descargables/inversores/min-2500-6000-tl-x2.pdf",
+			},
+			{
+				title: "MIN 2500–6000 TL-X2 · UL 1741 / IEEE 1547A",
+				description: "Certificación UL 1741 e IEEE 1547A para MIN.",
+				href: "/descargables/inversores/min-2500-6000tl-x2-ul1741-ieee1547a.pdf",
+			},
+		],
+	},
+	{
+		key: "paneles",
+		title: "Paneles",
+		description: "Certificaciones y ficha técnica de los paneles.",
+		documents: [
+			{
+				title: "IEC 61701 · Salt mist",
+				description: "Certificación de resistencia a niebla salina.",
+				href: "/descargables/paneles/iec61701-salt-mist.pdf",
+			},
+			{
+				title: "IEC 62804 · PID",
+				description: "Certificación de resistencia a degradación PID.",
+				href: "/descargables/paneles/iec628041-pid.pdf",
+			},
+			{
+				title: "LP182199M72NB 620–630",
+				description: "Ficha técnica del panel LP182199M72NB 620–630.",
+				href: "/descargables/paneles/lp182199m72nb-620630.pdf",
+			},
+		],
+	},
+] as const;
+
 function formatDate(dateString: string | null | undefined) {
 	if (!dateString) return "—";
 	// Date-only values represent a calendar day, not UTC midnight.
@@ -743,6 +806,33 @@ export default async function TrabajoDetailPage({
 										</Link>
 									);
 								})}
+								{clientDownloadGroups.map((group) => (
+									<section
+										key={group.key}
+										className="h-full overflow-visible rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] p-4"
+									>
+										<div className="space-y-1">
+											<h3 className="text-base font-semibold text-[var(--brand-deep)]">
+												{group.title}
+											</h3>
+											<p className="text-sm text-[var(--muted)]">
+												{group.description}
+											</p>
+										</div>
+										<div className="mt-4">
+											<DropdownSelect
+												name={`${group.key}_document`}
+												options={group.documents.map((document) => ({
+													label: document.title,
+													href: document.href,
+													download: true,
+												}))}
+												placeholder="Selecciona un archivo"
+												placement="top"
+											/>
+										</div>
+									</section>
+								))}
 							</div>
 
 							{trabajo.descargables_completed_at ? (
