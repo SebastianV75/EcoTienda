@@ -16,6 +16,7 @@ import {
 	Calendar,
 	Clipboard,
 	DocumentText,
+	ArchiveBox,
 	Home,
 	Location,
 	More,
@@ -77,8 +78,9 @@ const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
 			icon: DocumentText,
 		},
 		{ href: "/admin/workers", label: "Trabajadores", icon: Profile },
-		{ href: "/admin/visits", label: "Visitas", icon: Location },
-		{ href: "/admin/settings", label: "Configuración", icon: Settings },
+			{ href: "/admin/visits", label: "Visitas", icon: Location },
+			{ href: "/admin/trabajos/archivados", label: "Archivados", icon: ArchiveBox },
+			{ href: "/admin/settings", label: "Configuración", icon: Settings },
 	],
 	administrative: [
 		{ href: "/admin/sales", label: "Ventas", icon: Clipboard },
@@ -88,8 +90,9 @@ const secondaryMobileNavigationByRole: Record<AppRole, SecondaryItem[]> = {
 			label: "Info para cliente",
 			icon: DocumentText,
 		},
-		{ href: "/admin/visits", label: "Visitas", icon: Location },
-		{ href: "/admin/settings", label: "Configuración", icon: Settings },
+			{ href: "/admin/visits", label: "Visitas", icon: Location },
+			{ href: "/admin/trabajos/archivados", label: "Archivados", icon: ArchiveBox },
+			{ href: "/admin/settings", label: "Configuración", icon: Settings },
 	],
 	technician: [
 		{

@@ -52,6 +52,10 @@ export type Trabajo = {
 	cotizacion_completed_at: string | null;
 	venta_completed_at: string | null;
 	descargables_completed_at: string | null;
+	archived_at: string | null;
+	archived_by: string | null;
+	archive_reason: string | null;
+	archived_previous_status: TrabajoStatus | null;
 	created_at: string;
 	updated_at: string;
 };

@@ -512,7 +512,7 @@ export async function deleteTrabajoAction(
 	trabajoId: string,
 ): Promise<{ error: string | null; success: boolean }> {
 	if (hasSupabaseEnv()) {
-		await requireRole(["admin", "administrative"]);
+		await requireRole(["admin"]);
 	}
 
 	if (!trabajoId) {

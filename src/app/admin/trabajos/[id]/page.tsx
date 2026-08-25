@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "reicon-react";
 
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/features/auth/session";
 import { buildTrabajoPreviewSubject } from "@/features/documents/preview-data";
 import { getDescargablesDocumentReadiness } from "@/features/documents/descargables-readiness";
+import { UnifilarDiagramUploadForm } from "@/features/documents/unifilar-diagram-upload-form";
+import {
+	getUnifilarDiagramResolution,
+	getUnifilarPanelCount,
+} from "@/features/documents/unifilar-diagrams";
 import { composeTrabajoDocumentDefaults } from "@/features/trabajos/defaults";
 import { DescargablesCompletionForm } from "@/features/trabajos/descargables-completion-form";
 import { CotizacionForm } from "@/features/trabajos/cotizacion-form";
@@ -12,6 +18,7 @@ import { isTrabajoDescargablesReady } from "@/features/trabajos/rules";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
 import { getQuotationByTrabajoId } from "@/features/quotations/data";
 import { DeleteTrabajoButton } from "@/features/trabajos/delete-trabajo-button";
+import { ArchiveTrabajoButton } from "@/features/trabajos/archive-buttons";
 import { TrabajoDetailRealtimeListener } from "@/features/trabajos/components/trabajo-detail-realtime-listener";
 
 import { trabajoStageLabels } from "@/types/trabajo";
@@ -127,14 +134,19 @@ function formatMissingList(missing: string[]) {
 
 export default async function TrabajoDetailPage({
 	params,
+	searchParams,
 }: {
 	params: Promise<{ id: string }>;
+	searchParams?: Promise<{ diagramSuccess?: string; diagramError?: string }>;
 }) {
 	const user = await requireRole(["admin", "administrative"]);
 	const { id } = await params;
+	const pageParams = searchParams ? await searchParams : undefined;
 
-	const trabajo = await getTrabajoDocumentById(id);
-	const linkedQuotation = await getQuotationByTrabajoId(id);
+	const [trabajo, linkedQuotation] = await Promise.all([
+		getTrabajoDocumentById(id),
+		getQuotationByTrabajoId(id),
+	]);
 
 	if (!trabajo) {
 		notFound();
@@ -156,21 +168,42 @@ export default async function TrabajoDetailPage({
 	const isCotizacionEditable =
 		currentStage === "cotizacion" && !trabajo.cotizacion?.completed_at;
 	const isDescargablesReady = isTrabajoDescargablesReady(trabajo);
-	const documentReadiness = getDescargablesDocumentReadiness(trabajo);
-	const documentMissingFields = Array.from(
-		new Set(
-			Object.values(documentReadiness).flatMap(
-				(readiness) => readiness.missing,
-			),
-		),
-	);
 	const documentPreviewSubject = buildTrabajoPreviewSubject(
 		trabajo,
 		"diagrama-unifilar",
 	);
+	const documentReadiness = getDescargablesDocumentReadiness(trabajo);
+	const unifilarDiagram = await getUnifilarDiagramResolution(
+		trabajo.id,
+		documentPreviewSubject.panel_count,
+	);
+	const unifilarPanelCount = getUnifilarPanelCount(
+		documentPreviewSubject.panel_count,
+	);
+	const diagramaReadiness =
+		unifilarDiagram.status === "ready" && unifilarDiagram.url
+			? documentReadiness["diagrama-unifilar"]
+			: {
+					ready: false,
+					missing: [
+						...documentReadiness["diagrama-unifilar"].missing,
+						"diagrama unifilar disponible",
+					],
+				};
+	const effectiveDocumentReadiness = {
+			...documentReadiness,
+			"diagrama-unifilar": diagramaReadiness,
+		};
+	const documentMissingFields = Array.from(
+		new Set(
+			Object.values(effectiveDocumentReadiness).flatMap(
+				(readiness) => readiness.missing,
+			),
+		),
+	);
 	const cfePreviewSubject = buildTrabajoPreviewSubject(trabajo, "cfe");
 	const cfeReadiness = trabajo.venta
-		? documentReadiness.cfe
+		? effectiveDocumentReadiness.cfe
 		: { ready: false, missing: ["venta confirmada"] };
 	const descargablesDocuments = [
 		{
@@ -178,7 +211,7 @@ export default async function TrabajoDetailPage({
 			title: "Carta poder",
 			description: "Abre la vista previa con los datos de este trabajo.",
 			href: `/admin/documents/carta-poder/preview?trabajoId=${trabajo.id}`,
-			readiness: documentReadiness["carta-poder"],
+			readiness: effectiveDocumentReadiness["carta-poder"],
 		},
 		{
 			key: "ubicacion-cliente",
@@ -186,7 +219,7 @@ export default async function TrabajoDetailPage({
 			description:
 				"Revisa la ubicación guardada antes de imprimir o compartir.",
 			href: `/admin/documents/ubicacion-cliente/preview?trabajoId=${trabajo.id}`,
-			readiness: documentReadiness["ubicacion-cliente"],
+			readiness: effectiveDocumentReadiness["ubicacion-cliente"],
 		},
 		{
 			key: "diagrama-unifilar",
@@ -194,7 +227,7 @@ export default async function TrabajoDetailPage({
 			description:
 				"Verifica el panel de datos del sistema antes de cerrar la etapa.",
 			href: `/admin/documents/diagrama-unifilar/preview?trabajoId=${trabajo.id}`,
-			readiness: documentReadiness["diagrama-unifilar"],
+			readiness: effectiveDocumentReadiness["diagrama-unifilar"],
 		},
 		{
 			key: "cfe",
@@ -238,13 +271,17 @@ export default async function TrabajoDetailPage({
 								</div>
 							</div>
 
-							<div className="flex gap-2">
-								<DeleteTrabajoButton trabajoId={trabajo.id} />
-								<Link
-									href="/admin/trabajos"
-									className="ui-secondary-action shrink-0"
-								>
-									Volver a Trabajos
+								<div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+									<ArchiveTrabajoButton trabajoId={trabajo.id} />
+								{user.role === "admin" ? (
+									<DeleteTrabajoButton trabajoId={trabajo.id} />
+								) : null}
+									<Link
+										href="/admin/trabajos"
+										className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--brand-deep)] shadow-sm transition-[transform,background-color,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--brand-strong)]/30 hover:bg-[var(--surface)] hover:shadow-md active:translate-y-0 active:scale-[0.98] motion-reduce:transform-none"
+					>
+						<ArrowLeft size={18} weight="Outline" className="transition-transform duration-200 group-hover:-translate-x-0.5" />
+						<span>Trabajos</span>
 								</Link>
 							</div>
 							<TrabajoDetailRealtimeListener trabajoId={trabajo.id} />
@@ -735,6 +772,14 @@ export default async function TrabajoDetailPage({
 						isCurrentStage={currentStage === "descargables"}
 					>
 						<div className="space-y-4">
+							{unifilarPanelCount !== null && unifilarPanelCount > 4 ? (
+								<UnifilarDiagramUploadForm
+									trabajoId={trabajo.id}
+									resolution={unifilarDiagram}
+									success={pageParams?.diagramSuccess}
+									error={pageParams?.diagramError}
+								/>
+							) : null}
 							<div className="grid gap-3 md:grid-cols-3">
 								{descargablesDocuments.map((document) => {
 									const isReady = document.readiness.ready;

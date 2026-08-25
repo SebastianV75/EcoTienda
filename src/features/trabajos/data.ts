@@ -28,6 +28,26 @@ export type TrabajoDocumentSource = Trabajo &
 		document_overrides: TrabajoDocumentOverride[];
 	};
 
+export type TrabajoArchiveEvent = {
+	id: string;
+	trabajo_id: string;
+	action: "archived" | "restored";
+	actor_user_id: string | null;
+	reason: string | null;
+	previous_status: string | null;
+	created_at: string;
+};
+
+export type ArchivedTrabajoListItem = {
+	id: string;
+	intake_name: string;
+	current_stage: TrabajoStage;
+	archived_previous_status: string | null;
+	archived_at: string | null;
+	archive_reason: string | null;
+	created_at: string;
+};
+
 export type TrabajoDocumentSelectionItem = {
 	id: string;
 	current_stage: TrabajoStage;
@@ -262,6 +282,10 @@ venta_completed_at,
 descargables_completed_at,
 created_at,
 updated_at,
+archived_at,
+archived_by,
+archive_reason,
+archived_previous_status,
 agenda:trabajo_agenda_stage (
 	trabajo_id,
 	appointment_at,
@@ -455,13 +479,14 @@ export const getTrabajosForList = cache(
 		let request = supabase
 			.from("trabajos")
 			.select(trabajoListSelect)
+			.neq("status", "archived")
 			.order("created_at", { ascending: false });
 
 		if (filters.stage) {
 			request = request.eq("current_stage", filters.stage);
 		}
 
-		if (filters.status) {
+		if (filters.status && filters.status !== "archived") {
 			request = request.eq("status", filters.status);
 		}
 
@@ -559,6 +584,7 @@ export const getTrabajoVisitaById = cache(async (id: string) => {
 		.from("trabajos")
 		.select(trabajoVisitaSelect)
 		.eq("id", id)
+		.neq("status", "archived")
 		.maybeSingle();
 
 	if (error) {
@@ -646,25 +672,76 @@ function normalizeActiveTrabajoDashboardItem(
 	};
 }
 
-export const getTrabajoDocumentById = cache(async (id: string) => {
+export const getTrabajoDocumentById = cache(
+	async (id: string, includeArchived = false) => {
+		const supabase = await createSupabaseServerClient();
+		let request = supabase
+			.from("trabajos")
+			.select(trabajoDocumentSelect)
+			.eq("id", id);
+
+		if (!includeArchived) {
+			request = request.neq("status", "archived");
+		}
+
+		const { data, error } = await request.maybeSingle();
+
+		if (error) {
+			throw new Error(
+				`No se pudo cargar el trabajo para documentos. ${error.message}`,
+			);
+		}
+
+		if (!data) {
+			return null;
+		}
+
+		return normalizeTrabajoDocumentRow(data as unknown as TrabajoDocumentRow);
+	},
+);
+
+export const getArchivedTrabajoDocumentById = cache(async (id: string) =>
+	getTrabajoDocumentById(id, true),
+);
+
+export const getArchivedTrabajos = cache(
+	async (): Promise<ArchivedTrabajoListItem[]> => {
+		const supabase = await createSupabaseServerClient();
+		const { data, error } = await supabase
+			.from("trabajos")
+			.select(
+				"id, intake_name, current_stage, status, archived_previous_status, archived_at, archive_reason, created_at",
+			)
+			.eq("status", "archived")
+			.order("archived_at", { ascending: false });
+
+		if (error) {
+			throw new Error(
+				`No se pudieron cargar los trabajos archivados. ${error.message}`,
+			);
+		}
+
+		return (data ?? []) as ArchivedTrabajoListItem[];
+	},
+);
+
+export const getTrabajoArchiveEvents = cache(async (trabajoId: string) => {
 	const supabase = await createSupabaseServerClient();
 	const { data, error } = await supabase
-		.from("trabajos")
-		.select(trabajoDocumentSelect)
-		.eq("id", id)
-		.maybeSingle();
+		.from("trabajo_archive_events")
+		.select(
+			"id, trabajo_id, action, actor_user_id, reason, previous_status, created_at",
+		)
+		.eq("trabajo_id", trabajoId)
+		.order("created_at", { ascending: false });
 
 	if (error) {
 		throw new Error(
-			`No se pudo cargar el trabajo para documentos. ${error.message}`,
+			`No se pudo cargar el historial de archivado. ${error.message}`,
 		);
 	}
 
-	if (!data) {
-		return null;
-	}
-
-	return normalizeTrabajoDocumentRow(data as unknown as TrabajoDocumentRow);
+	return (data ?? []) as TrabajoArchiveEvent[];
 });
 
 export const getTrabajosForDocumentSelection = cache(async () => {
@@ -674,6 +751,7 @@ export const getTrabajosForDocumentSelection = cache(async () => {
 		.select(
 			"id, current_stage, status, intake_name, intake_phone, intake_address_text",
 		)
+		.neq("status", "archived")
 		.order("updated_at", { ascending: false });
 
 	if (error) {
@@ -699,27 +777,35 @@ export const getTrabajoDashboardSummary = cache(
 			ventaResult,
 			descargablesResult,
 		] = await Promise.all([
-			supabase.from("trabajos").select("id", { count: "exact", head: true }),
 			supabase
 				.from("trabajos")
 				.select("id", { count: "exact", head: true })
-				.eq("current_stage", "agenda"),
-			supabase
-				.from("trabajos")
-				.select("id", { count: "exact", head: true })
-				.eq("current_stage", "visita"),
-			supabase
-				.from("trabajos")
-				.select("id", { count: "exact", head: true })
-				.eq("current_stage", "cotizacion"),
-			supabase
-				.from("trabajos")
-				.select("id", { count: "exact", head: true })
-				.eq("current_stage", "venta"),
-			supabase
-				.from("trabajos")
-				.select("id", { count: "exact", head: true })
-				.eq("current_stage", "descargables"),
+				.neq("status", "archived"),
+				supabase
+					.from("trabajos")
+					.select("id", { count: "exact", head: true })
+					.eq("current_stage", "agenda")
+					.neq("status", "archived"),
+				supabase
+					.from("trabajos")
+					.select("id", { count: "exact", head: true })
+					.eq("current_stage", "visita")
+					.neq("status", "archived"),
+				supabase
+					.from("trabajos")
+					.select("id", { count: "exact", head: true })
+					.eq("current_stage", "cotizacion")
+					.neq("status", "archived"),
+				supabase
+					.from("trabajos")
+					.select("id", { count: "exact", head: true })
+					.eq("current_stage", "venta")
+					.neq("status", "archived"),
+				supabase
+					.from("trabajos")
+					.select("id", { count: "exact", head: true })
+					.eq("current_stage", "descargables")
+					.neq("status", "archived"),
 		]);
 
 		for (const result of [

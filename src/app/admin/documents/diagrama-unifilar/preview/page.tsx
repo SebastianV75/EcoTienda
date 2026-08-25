@@ -9,6 +9,7 @@ import { buildTrabajoPreviewSubject } from "@/features/documents/preview-data";
 import { PrintButton } from "@/features/documents/print-button";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
 import { getCompanySettings } from "@/features/settings/data";
+import { getUnifilarDiagramResolution } from "@/features/documents/unifilar-diagrams";
 
 export default async function DiagramaUnifilarPreviewPage({
 	searchParams,
@@ -53,6 +54,10 @@ export default async function DiagramaUnifilarPreviewPage({
 	}
 
 	const previewClient = buildTrabajoPreviewSubject(trabajo, "diagrama-unifilar");
+	const diagram = await getUnifilarDiagramResolution(
+		trabajo.id,
+		previewClient.panel_count,
+	);
 
 	return (
 		<AppShell
@@ -75,13 +80,31 @@ export default async function DiagramaUnifilarPreviewPage({
 					>
 						Volver a descargables
 					</Link>
-					<PrintButton />
-				</div>
+						<PrintButton />
+					</div>
 
-				<DiagramaUnifilarPreview
-					client={previewClient}
-					companyName={company?.company_name ?? "EcoTienda"}
-				/>
+					{diagram.url && diagram.downloadUrl ? (
+						<div className="flex flex-wrap items-center gap-3 print:hidden">
+							<a
+								href={diagram.downloadUrl}
+								download={diagram.originalFilename ?? "diagrama-unifilar.png"}
+								className="ui-secondary-action"
+							>
+								Descargar PNG original
+							</a>
+							<p className="text-sm text-[var(--muted)]">{diagram.message}</p>
+						</div>
+					) : (
+						<div className="rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 print:hidden">
+							{diagram.message} Regresa al trabajo para cargarlo manualmente.
+						</div>
+					)}
+
+					<DiagramaUnifilarPreview
+						client={previewClient}
+						companyName={company?.company_name ?? "EcoTienda"}
+						diagramUrl={diagram.url}
+					/>
 			</div>
 		</AppShell>
 	);

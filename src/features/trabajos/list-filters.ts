@@ -1,5 +1,6 @@
 import type { TrabajoListFilters } from "./data";
-import type { TrabajoStage, TrabajoStatus } from "@/types/trabajo";
+import type { TrabajoStage } from "@/types/trabajo";
+import { restorableTrabajoStatuses } from "./archive-rules";
 
 const trabajoStages = [
 	"agenda",
@@ -8,13 +9,6 @@ const trabajoStages = [
 	"venta",
 	"descargables",
 ] as const satisfies readonly TrabajoStage[];
-
-const trabajoStatuses = [
-	"open",
-	"won",
-	"lost",
-	"archived",
-] as const satisfies readonly TrabajoStatus[];
 
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -77,8 +71,10 @@ export function parseTrabajoListFilters(
 	const stage = trabajoStages.includes(rawStage as TrabajoStage)
 		? (rawStage as TrabajoStage)
 		: undefined;
-	const status = trabajoStatuses.includes(rawStatus as TrabajoStatus)
-		? (rawStatus as TrabajoStatus)
+	const status = restorableTrabajoStatuses.includes(
+		rawStatus as (typeof restorableTrabajoStatuses)[number],
+	)
+		? (rawStatus as (typeof restorableTrabajoStatuses)[number])
 		: undefined;
 
 	return {

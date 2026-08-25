@@ -46,6 +46,7 @@ export const getSales = cache(
 			intake_phone
 		`)
 			.eq("current_stage", "venta")
+			.neq("status", "archived")
 			.order("created_at", { ascending: false });
 
 		const trabajos = (trabajosData || []) as SaleTrabajoRow[];

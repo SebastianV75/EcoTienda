@@ -29,13 +29,23 @@ export async function GET(
 
 	const { data: quotation, error } = await supabase
 		.from("quotations")
-		.select("pdf_url, quotation_number")
+		.select("pdf_url, quotation_number, trabajo:trabajos(status)")
 		.eq("id", id)
 		.single();
 
 	if (error || !quotation) {
 		return NextResponse.json(
 			{ error: "Cotización no encontrada." },
+			{ status: 404 },
+		);
+	}
+
+	const linkedTrabajo = Array.isArray(quotation.trabajo)
+		? quotation.trabajo[0]
+		: quotation.trabajo;
+	if (linkedTrabajo?.status === "archived") {
+		return NextResponse.json(
+			{ error: "La cotización pertenece a un trabajo archivado." },
 			{ status: 404 },
 		);
 	}
