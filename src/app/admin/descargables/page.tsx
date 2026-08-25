@@ -20,7 +20,7 @@ export default async function DescargablesPage() {
 			<div className="space-y-3">
 				{/* Header compacto */}
 				<section className="rounded-panel border border-[var(--border-soft)] bg-white p-4 shadow-panel sm:p-5">
-					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+						<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div className="min-w-0 flex-1">
 							<h1 className="text-xl font-semibold tracking-display text-[var(--brand-deep)] sm:text-2xl">
 								Trabajos finalizados
@@ -33,6 +33,14 @@ export default async function DescargablesPage() {
 									trabajos listos para descargar
 								</span>
 							</div>
+							{user.role === "admin" ? (
+								<Link
+									href="/admin/settings/diagramas-unifilar"
+									className="ui-secondary-action shrink-0"
+								>
+									Administrar diagramas
+								</Link>
+							) : null}
 						</div>
 					</div>
 				</section>
