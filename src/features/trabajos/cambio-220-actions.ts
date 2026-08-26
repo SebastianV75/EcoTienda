@@ -80,21 +80,11 @@ export async function saveCambio220Action(
 		completed_at: new Date().toISOString(),
 	};
 
-	const { error: visitaError } = await supabase
-		.from("trabajo_visita_stage")
-		.upsert(payload, { onConflict: "trabajo_id" });
-
-	if (visitaError) {
-		return {
-			error: "No se pudo guardar la visita de cambio a 220.",
-			success: null,
-		};
-	}
-
 	const workflowError = await completeVisitWorkflow(
 		supabase,
 		trabajoId,
 		payload.completed_at,
+		payload,
 		user,
 	);
 

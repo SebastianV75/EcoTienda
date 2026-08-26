@@ -29,7 +29,7 @@ export default async function SignInPage({
 			description="Accede al espacio operativo de EcoTienda para continuar con documentos, cotizaciones y seguimiento técnico."
 			primaryCta={
 				<Link
-					href="/"
+					href="/?landing=1"
 					className="inline-flex items-center justify-center rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2.5 text-sm font-medium text-[var(--brand-deep)] transition duration-200 ease-out hover:border-[var(--brand-strong)] hover:text-[var(--brand-strong)]"
 				>
 					Volver al inicio

@@ -125,25 +125,18 @@ export async function saveVisitaAmpliarAction(
 		roof_attributes: roofAttributes,
 		notes: existingText(existingVisita, "notes", notes),
 		utility_bill_asset_id:
-			utilityBill || existingVisita?.utility_bill_asset_id || null,
+			utilityBill ||
+			(typeof existingVisita?.utility_bill_asset_id === "string"
+				? existingVisita.utility_bill_asset_id
+				: null),
 		completed_at: new Date().toISOString(),
 	};
-
-	const { error: visitaError } = await supabase
-		.from("trabajo_visita_stage")
-		.upsert(payload, { onConflict: "trabajo_id" });
-
-	if (visitaError) {
-		return {
-			error: "No se pudo guardar la visita de ampliar sistema.",
-			success: null,
-		};
-	}
 
 	const workflowError = await completeVisitWorkflow(
 		supabase,
 		trabajoId,
 		payload.completed_at,
+		payload,
 		user,
 	);
 

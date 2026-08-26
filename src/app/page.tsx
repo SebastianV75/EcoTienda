@@ -72,7 +72,7 @@ export default function HomePage() {
 			<section className="relative mx-auto flex min-h-[calc(100vh-32px)] w-full max-w-[1440px] flex-col border border-[rgba(13,79,46,0.14)] bg-[rgba(255,253,247,0.74)] px-5 py-5 shadow-[0_28px_90px_rgba(10,44,21,0.09)] backdrop-blur-[2px] motion-safe:animate-[home-reveal_700ms_var(--ease-out)_both] sm:min-h-[calc(100vh-48px)] sm:px-8 sm:py-7 lg:px-12 lg:py-8">
 				<header className="flex items-center justify-between gap-6 border-b border-[rgba(13,79,46,0.12)] pb-5 sm:pb-6">
 					<Link
-						href="/"
+						href="/?landing=1"
 						className="group flex items-center gap-3"
 						aria-label="EcoTienda, inicio"
 					>

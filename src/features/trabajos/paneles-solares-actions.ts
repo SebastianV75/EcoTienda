@@ -104,21 +104,11 @@ export async function savePanelesSolaresAction(
 		completed_at: new Date().toISOString(),
 	};
 
-	const { error: visitaError } = await supabase
-		.from("trabajo_visita_stage")
-		.upsert(payload, { onConflict: "trabajo_id" });
-
-	if (visitaError) {
-		return {
-			error: "No se pudo guardar la visita de paneles solares.",
-			success: null,
-		};
-	}
-
 	const workflowError = await completeVisitWorkflow(
 		supabase,
 		trabajoId,
 		payload.completed_at,
+		payload,
 		user,
 	);
 

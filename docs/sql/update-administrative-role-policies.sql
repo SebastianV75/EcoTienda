@@ -12,6 +12,8 @@ drop policy if exists "technician can update assigned visita stage" on public.tr
 drop policy if exists "Authenticated users can delete quotations" on public.quotations;
 
 -- Agenda bridge: technicians can read; admin and administrative manage records.
+-- Technical visit completion uses public.complete_technical_visit so technicians
+-- do not receive broad UPDATE access to arbitrary agenda bridge columns.
 drop policy if exists "staff can read agenda items" on public.agenda_items;
 create policy "staff can read agenda items" on public.agenda_items for select
 to authenticated
