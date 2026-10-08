@@ -4,6 +4,7 @@ import { requireRole } from "@/features/auth/session";
 import { getWorkerByAuthUserId } from "@/features/workers/data";
 
 import { getTrabajoVisitaById } from "./data";
+import { canAccessAssignedVisit } from "./visit-contact";
 
 export async function loadAuthorizedVisitWork(trabajoId: string) {
 	const user = await requireRole(["admin", "administrative", "technician"]);
@@ -16,11 +17,9 @@ export async function loadAuthorizedVisitWork(trabajoId: string) {
 	if (user.role === "technician") {
 		const worker = await getWorkerByAuthUserId(user.id);
 
-		if (!worker || !worker.active || worker.role !== "technician") {
-			redirect("/unauthorized");
-		}
-
-		if (work.agenda?.assignee_worker_id !== worker.id) {
+		if (
+			!canAccessAssignedVisit(user.role, worker, work.agenda?.assignee_worker_id)
+		) {
 			redirect("/unauthorized");
 		}
 

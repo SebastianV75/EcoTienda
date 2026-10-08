@@ -211,20 +211,37 @@ export function DocumentInfoForm({
 					</div>
 				</div>
 
-				<CfeContactFields defaults={cfeDefaults} />
+					<CfeContactFields defaults={cfeDefaults} />
+					<div className="space-y-3">
+						<h4 className="text-sm font-semibold text-[var(--brand-deep)]">Fechas de la solicitud CFE</h4>
+						<div className="grid gap-3 md:grid-cols-2">
+							<label className="space-y-1.5 text-sm font-medium text-[var(--brand-deep)]">
+								<span>Fecha de solicitud</span>
+								<Input name="application_date" type="date" defaultValue={cfeDefaults.application_date ?? ""} required className={fieldClassName} />
+							</label>
+							<label className="space-y-1.5 text-sm font-medium text-[var(--brand-deep)]">
+								<span>Fecha estimada de operación normal</span>
+								<Input name="operation_date" type="date" defaultValue={cfeDefaults.operation_date ?? ""} className={fieldClassName} />
+							</label>
+						</div>
+						<p className="text-sm leading-6 text-amber-900/80">Captura la fecha prevista de entrada en operación de la instalación. Es necesaria para descargar CFE; puedes guardar los demás documentos mientras la confirmas.</p>
+					</div>
 
 				<div className="space-y-3">
-					<h4 className="text-sm font-semibold text-[var(--brand-deep)]">
-						Ubicación y equipo
-					</h4>
+						<h4 className="text-sm font-semibold text-[var(--brand-deep)]">
+							Ubicación y equipo
+						</h4>
+						<p className="text-sm leading-6 text-amber-900/80">Usa la latitud y longitud del sitio de instalación (WGS84). La solicitud CFE las convierte a UTM X/Y en metros e indica zona y hemisferio.</p>
 					<div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
 						<label className="space-y-1.5 text-sm font-medium text-[var(--brand-deep)]">
 							<span>Latitud</span>
 							<Input
-								name="latitude"
-								type="number"
+									name="latitude"
+									type="number"
+									min={-80}
+									max={84}
 								step="any"
-								defaultValue={defaults.latitude ?? ""}
+									defaultValue={cfeDefaults.latitude ?? defaults.latitude ?? ""}
 								required
 								className={fieldClassName}
 							/>
@@ -232,10 +249,12 @@ export function DocumentInfoForm({
 						<label className="space-y-1.5 text-sm font-medium text-[var(--brand-deep)]">
 							<span>Longitud</span>
 							<Input
-								name="longitude"
-								type="number"
+									name="longitude"
+									type="number"
+									min={-180}
+									max={180}
 								step="any"
-								defaultValue={defaults.longitude ?? ""}
+									defaultValue={cfeDefaults.longitude ?? defaults.longitude ?? ""}
 								required
 								className={fieldClassName}
 							/>

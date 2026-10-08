@@ -780,6 +780,14 @@ export default async function TrabajoDetailPage({
 									error={pageParams?.diagramError}
 								/>
 							) : null}
+							{currentStage === "descargables" ? (
+								<DocumentInfoForm
+									trabajoId={trabajo.id}
+									defaults={documentPreviewSubject}
+									cfeDefaults={cfePreviewSubject}
+									missing={documentMissingFields}
+									/>
+							) : null}
 							<div className="grid gap-3 md:grid-cols-3">
 								{descargablesDocuments.map((document) => {
 									const isReady = document.readiness.ready;

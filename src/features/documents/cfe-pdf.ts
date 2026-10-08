@@ -11,6 +11,7 @@ import { getCfeTemplateBytes } from "./cfe-template";
 import type { TrabajoDocumentSource } from "@/features/trabajos/data";
 import { defaultCompanySettings } from "@/features/settings/defaults";
 import type { CompanySettings } from "@/types/quotation";
+import { isValidCfeDate, toUtmCoordinates, type UtmCoordinates } from "./cfe-fields";
 
 export type CfePdfData = {
 	applicationDate: string | null;
@@ -36,6 +37,7 @@ export type CfePdfData = {
 	voltage: string;
 	rpu: string;
 	operationDate: string | null;
+	coordinates: UtmCoordinates | null;
 	installedCapacity: string;
 	capacityToIncrease: string;
 	monthlyGeneration: string;
@@ -90,7 +92,7 @@ function normalizeVoltage(value: string): string {
 }
 
 function formatDate(value: string | null): string {
-	if (!value) return "";
+	if (!isValidCfeDate(value)) return "";
 	const date = new Date(`${value}T12:00:00Z`);
 	if (Number.isNaN(date.getTime())) return "";
 
@@ -120,7 +122,7 @@ export function buildCfePdfData(
 	);
 
 	return {
-		applicationDate: null,
+		applicationDate: cfeClient.application_date ?? null,
 		applicantName: client.full_name,
 		applicantStreet: applicantAddress.street,
 		applicantExteriorNumber: applicantAddress.exteriorNumber,
@@ -142,7 +144,8 @@ export function buildCfePdfData(
 		contactEmail: company.email,
 		voltage,
 		rpu: client.rpu ?? "",
-		operationDate: null,
+		operationDate: cfeClient.operation_date ?? null,
+		coordinates: toUtmCoordinates(cfeClient.latitude, cfeClient.longitude),
 		installedCapacity: client.installed_capacity ?? "",
 		capacityToIncrease: "",
 		monthlyGeneration: client.estimated_monthly_generation ?? "",
@@ -211,6 +214,8 @@ function drawMark(page: PDFPage, font: PDFFont, x: number, y: number) {
 }
 
 export async function generateCfePdf(data: CfePdfData): Promise<Uint8Array> {
+	const missing = getMissingCfeFields(data);
+	if (missing.length) throw new Error(`Completa ${missing.join(", ")} en Información para descargables antes de descargar CFE.`);
 	const pdf = await PDFDocument.load(getCfeTemplateBytes());
 	const font = await pdf.embedFont(StandardFonts.Helvetica);
 	const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -354,16 +359,26 @@ export async function generateCfePdf(data: CfePdfData): Promise<Uint8Array> {
 		width: 181,
 	});
 	drawValue(page, font, data.primaryFuel, { x: 216.75, y: 375.84, width: 181 });
+	if (data.coordinates) {
+		drawValue(page, font, data.coordinates.easting.toFixed(2), { x: 31.5, y: 351, width: 273 });
+		drawValue(page, font, data.coordinates.northing.toFixed(2), { x: 309, y: 351, width: 267 });
+		drawValue(page, font, `UTM zona ${data.coordinates.zone} / hemisferio ${data.coordinates.hemisphere === "N" ? "norte" : "sur"} / WGS84 / metros`, { x: 31.5, y: 340, width: 273, size: 7 });
+	}
 
 	// La firma permanece vacía; solo se repite la identificación del solicitante.
 	drawValue(page, font, data.applicantName, { x: 33, y: 204.09, width: 265 });
-	drawValue(page, font, formatDate(data.applicationDate), {
-		x: 33,
-		y: 162.09,
-		width: 265,
-	});
+	// La fecha de firma se llena al firmar; no se deduce de la solicitud.
 
 	return pdf.save();
+}
+
+export function getMissingCfeFields(data: CfePdfData): string[] {
+	const missing: string[] = [];
+	if (!data.applicantName.trim()) missing.push("nombre del solicitante");
+	if (!isValidCfeDate(data.applicationDate)) missing.push("fecha de solicitud válida");
+	if (!isValidCfeDate(data.operationDate)) missing.push("fecha estimada de operación normal válida");
+	if (!data.coordinates) missing.push("coordenadas válidas del sitio de instalación");
+	return missing;
 }
 
 export function getCfeFilename(clientName: string): string {

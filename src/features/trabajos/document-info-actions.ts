@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/features/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isValidCfeDate, toUtmCoordinates } from "@/features/documents/cfe-fields";
 
 export type DocumentInfoActionState = {
 	error: string | null;
@@ -28,6 +29,8 @@ type DocumentFieldValues = {
 	postal_code: string;
 	municipality: string;
 	state: string;
+	application_date: string;
+	operation_date: string;
 };
 
 const documentFieldsByTemplate = {
@@ -55,7 +58,7 @@ const documentFieldsByTemplate = {
 		"installed_capacity",
 		"estimated_monthly_generation",
 	],
-	cfe: ["email", "postal_code", "municipality", "state"],
+	cfe: ["email", "postal_code", "municipality", "state", "application_date", "operation_date", "latitude", "longitude"],
 } as const satisfies Record<string, readonly (keyof DocumentFieldValues)[]>;
 
 function getString(formData: FormData, key: string) {
@@ -63,7 +66,8 @@ function getString(formData: FormData, key: string) {
 }
 
 function getNumber(formData: FormData, key: string) {
-	const value = Number(formData.get(key)?.toString() ?? "");
+	const raw = getString(formData, key);
+	const value = raw ? Number(raw) : Number.NaN;
 	return Number.isFinite(value) ? value : Number.NaN;
 }
 
@@ -95,6 +99,8 @@ export async function saveTrabajoDocumentInfoAction(
 		postal_code: getString(formData, "postal_code"),
 		municipality: getString(formData, "municipality"),
 		state: getString(formData, "state"),
+		application_date: getString(formData, "application_date"),
+		operation_date: getString(formData, "operation_date"),
 	};
 
 	const missing: string[] = [];
@@ -127,10 +133,12 @@ export async function saveTrabajoDocumentInfoAction(
 		if (!values[field]) missing.push(label);
 	}
 
-	if (!Number.isFinite(values.latitude) || !Number.isFinite(values.longitude)) {
-		missing.push("coordenadas válidas");
-	} else if (values.latitude === 0 && values.longitude === 0) {
-		missing.push("coordenadas válidas");
+	if (!toUtmCoordinates(values.latitude, values.longitude)) {
+		missing.push("coordenadas válidas (latitud de -80 a 84 y longitud de -180 a 180)");
+	}
+	if (!isValidCfeDate(values.application_date)) missing.push("fecha de solicitud válida");
+	if (values.operation_date && !isValidCfeDate(values.operation_date)) {
+		missing.push("fecha estimada de operación normal válida");
 	}
 
 	if (missing.length > 0) {
@@ -158,10 +166,10 @@ export async function saveTrabajoDocumentInfoAction(
 		};
 	}
 
-	if (trabajo.current_stage !== "venta") {
+	if (trabajo.current_stage !== "venta" && trabajo.current_stage !== "descargables") {
 		return {
 			error:
-				"La información de descargables solo se captura en la etapa Venta.",
+				"La información de descargables solo se captura en Venta o Descargables.",
 			success: null,
 		};
 	}

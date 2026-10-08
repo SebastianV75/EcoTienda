@@ -5,7 +5,9 @@ import {
 	buildCfePdfData,
 	generateCfePdf,
 	getCfeFilename,
+	getMissingCfeFields,
 } from "@/features/documents/cfe-pdf";
+import { getDescargablesDocumentReadiness } from "@/features/documents/descargables-readiness";
 import { getTrabajoDocumentById } from "@/features/trabajos/data";
 import { getCompanySettings } from "@/features/settings/data";
 
@@ -31,9 +33,10 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
 	const { settings: company } = await getCompanySettings();
 	const data = buildCfePdfData(trabajo, company ?? undefined);
-	if (!data.applicantName) {
+	const missing = [...new Set([...getMissingCfeFields(data), ...getDescargablesDocumentReadiness(trabajo).cfe.missing])];
+	if (missing.length) {
 		return NextResponse.json(
-			{ error: "El trabajo no tiene nombre de solicitante." },
+			{ error: `Completa ${missing.join(", ")} en Información para descargables antes de descargar CFE.` },
 			{ status: 422 },
 		);
 	}

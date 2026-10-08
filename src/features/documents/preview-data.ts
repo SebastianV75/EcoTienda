@@ -2,6 +2,7 @@ import { composeTrabajoDocumentDefaults } from "@/features/trabajos/defaults";
 import type { TrabajoDocumentSource } from "@/features/trabajos/data";
 
 import type { DocumentTemplateSlug } from "./trabajo-preview-selector";
+import { getCfeApplicationDate } from "./cfe-fields";
 
 export type DocumentPreviewSubject = {
 	full_name: string;
@@ -21,6 +22,8 @@ export type DocumentPreviewSubject = {
 	inverter: string | null;
 	installed_capacity: string | null;
 	estimated_monthly_generation: string | null;
+	application_date?: string | null;
+	operation_date?: string | null;
 };
 
 const numericPreviewFields = new Set<keyof DocumentPreviewSubject>([
@@ -104,6 +107,9 @@ export function buildTrabajoPreviewSubject(
 	template: DocumentTemplateSlug,
 ): DocumentPreviewSubject {
 	const defaults = composeTrabajoDocumentDefaults(trabajo);
+	const location = template === "cfe"
+		? buildTrabajoPreviewSubject(trabajo, "ubicacion-cliente")
+		: null;
 	const subject: DocumentPreviewSubject = {
 		full_name: defaults.client_name,
 		phone: defaults.client_phone,
@@ -115,13 +121,15 @@ export function buildTrabajoPreviewSubject(
 		state: null,
 		rfc: defaults.quotation.rfc,
 		rpu: defaults.quotation.rpu,
-		latitude: defaults.latitude,
-		longitude: defaults.longitude,
+		latitude: location ? location.latitude : defaults.latitude,
+		longitude: location ? location.longitude : defaults.longitude,
 		panel_count: null,
 		panel_power: null,
 		inverter: null,
 		installed_capacity: null,
 		estimated_monthly_generation: null,
+		application_date: template === "cfe" ? getCfeApplicationDate() : null,
+		operation_date: null,
 	};
 
 	const templateOverrides = trabajo.document_overrides.filter(

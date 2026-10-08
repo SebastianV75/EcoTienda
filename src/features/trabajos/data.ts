@@ -14,6 +14,7 @@ import type {
 	TrabajoVisitaStage,
 } from "@/types/trabajo";
 import { trabajoStageLabels } from "@/types/trabajo";
+import { getVisitContact, type VisitContact } from "./visit-contact";
 
 export type TrabajoStageSnapshots = {
 	agenda: TrabajoAgendaStage | null;
@@ -119,6 +120,8 @@ export type TrabajoListItem = {
 	agenda_work_type: string | null;
 	assigned_worker_name: string | null;
 	appointment_at: string | null;
+	visit_contact: VisitContact;
+	assignee_worker_id: string | null;
 };
 
 export const trabajoStageOrder = [
@@ -252,13 +255,22 @@ id,
 current_stage,
 status,
 intake_name,
+intake_phone,
 intake_address_text,
+intake_latitude,
+intake_longitude,
 work_type,
 created_at,
 agenda:trabajo_agenda_stage (
 	work_type,
 	appointment_at,
+	assignee_worker_id,
 	assignee_name,
+	contact_name,
+	contact_phone,
+	address_text,
+	latitude,
+	longitude,
 	assignee_worker:workers (
 		full_name
 	)
@@ -427,7 +439,15 @@ function normalizeTrabajoVisitaRow(row: TrabajoVisitaRow): TrabajoVisitaRecord {
 
 type TrabajoListAgendaRow = Pick<
 	TrabajoAgendaStage,
-	"work_type" | "appointment_at" | "assignee_name"
+	| "work_type"
+	| "appointment_at"
+	| "assignee_name"
+	| "assignee_worker_id"
+	| "contact_name"
+	| "contact_phone"
+	| "address_text"
+	| "latitude"
+	| "longitude"
 > & {
 	assignee_worker:
 		| Pick<WorkerSummary, "full_name">
@@ -440,7 +460,10 @@ type TrabajoListRow = {
 	current_stage: TrabajoStage;
 	status: TrabajoStatus;
 	intake_name: string;
+	intake_phone: string;
 	intake_address_text: string;
+	intake_latitude: number | null;
+	intake_longitude: number | null;
 	work_type: string | null;
 	created_at: string;
 	agenda: TrabajoListAgendaRow | TrabajoListAgendaRow[] | null;
@@ -466,6 +489,8 @@ function normalizeTrabajoListRow(row: TrabajoListRow): TrabajoListItem {
 		assigned_worker_name:
 			agendaWorker?.full_name ?? agenda?.assignee_name?.trim() ?? null,
 		appointment_at: agenda?.appointment_at ?? null,
+		visit_contact: getVisitContact({ ...row, agenda }),
+		assignee_worker_id: agenda?.assignee_worker_id ?? null,
 	};
 }
 
@@ -474,7 +499,13 @@ function escapePostgRESTPattern(value: string): string {
 }
 
 export const getTrabajosForList = cache(
-	async (filters: TrabajoListFilters = {}): Promise<TrabajoListItem[]> => {
+	async (
+		filters: TrabajoListFilters = {},
+		options: { strictAssignee?: boolean } = {},
+	): Promise<TrabajoListItem[]> => {
+		if (options.strictAssignee && !filters.assignee_worker_id) {
+			return [];
+		}
 		const supabase = await createSupabaseServerClient();
 		let request = supabase
 			.from("trabajos")
@@ -520,11 +551,13 @@ export const getTrabajosForList = cache(
 		}
 
 		if (filters.assignee_worker_id) {
-			const { data: workerRow, error: workerError } = await supabase
-				.from("workers")
-				.select("full_name")
-				.eq("id", filters.assignee_worker_id)
-				.maybeSingle();
+			const { data: workerRow, error: workerError } = options.strictAssignee
+				? { data: null, error: null }
+				: await supabase
+						.from("workers")
+						.select("full_name")
+						.eq("id", filters.assignee_worker_id)
+						.maybeSingle();
 
 			if (workerError) {
 				throw new Error(
@@ -572,9 +605,16 @@ export const getTrabajosForList = cache(
 			throw new Error(`No se pudieron cargar los trabajos. ${error.message}`);
 		}
 
-		return ((data ?? []) as unknown as TrabajoListRow[]).map(
+		const items = ((data ?? []) as unknown as TrabajoListRow[]).map(
 			normalizeTrabajoListRow,
 		);
+		// Defense in depth: do not return contact details after reassignment or
+		// from a legacy name match to a different technician with the same name.
+		return options.strictAssignee
+			? items.filter(
+					(item) => item.assignee_worker_id === filters.assignee_worker_id,
+				)
+			: items;
 	},
 );
 

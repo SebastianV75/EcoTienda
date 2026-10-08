@@ -5,6 +5,7 @@ import {
 } from "./preview-data";
 
 import type { TrabajoDocumentSource } from "@/features/trabajos/data";
+import { isValidCfeDate, toUtmCoordinates } from "./cfe-fields";
 
 export type DocumentReadiness = {
 	ready: boolean;
@@ -123,6 +124,9 @@ const documentRequirements = {
 		},
 	],
 	cfe: [
+		{ label: "fecha de solicitud válida", test: (subject) => isValidCfeDate(subject.application_date) },
+		{ label: "fecha estimada de operación normal", test: (subject) => isValidCfeDate(subject.operation_date) },
+		{ label: "coordenadas válidas del sitio de instalación", test: (subject) => toUtmCoordinates(subject.latitude, subject.longitude) !== null },
 		{
 			label: "correo electrónico",
 			test: (subject) => hasReadableValue(subject.email),

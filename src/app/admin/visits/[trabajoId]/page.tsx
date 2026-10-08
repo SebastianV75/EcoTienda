@@ -6,6 +6,8 @@ import { AgendaItemDetail } from "@/features/agenda/agenda-item-detail";
 import { getAgendaItemById } from "@/features/agenda/data";
 import { VisitWorkerAssignmentForm } from "@/features/trabajos/components/visit-worker-assignment-form";
 import { loadAuthorizedVisitWork } from "@/features/trabajos/visit-access";
+import { VisitContactDetails } from "@/features/trabajos/components/visit-contact-details";
+import { getVisitContact } from "@/features/trabajos/visit-contact";
 import { getActiveWorkers } from "@/features/workers/data";
 
 const formRoutes = [
@@ -92,7 +94,8 @@ export default async function WorkVisitHubPage({
 		);
 	}
 
-	const visitTitle = work.agenda?.contact_name || work.intake_name;
+	const contact = getVisitContact(work);
+	const visitTitle = contact.name || "Visita técnica";
 
 	return (
 		<AppShell
@@ -142,6 +145,10 @@ export default async function WorkVisitHubPage({
 								Volver al listado
 							</Link>
 						)}
+					</div>
+
+					<div className="mt-4">
+						<VisitContactDetails contact={contact} />
 					</div>
 
 					{work.visita ? (
