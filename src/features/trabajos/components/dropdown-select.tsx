@@ -41,11 +41,14 @@ export function DropdownSelect({
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
+	// Cerrar también limpia la posición, para no usar la anterior al volver a abrir.
+	function closeDropdown() {
+		setIsOpen(false);
+		setDropdownPos(null);
+	}
+
 	useEffect(() => {
-		if (!isOpen || typeof document === "undefined") {
-			setDropdownPos(null);
-			return;
-		}
+		if (!isOpen || typeof document === "undefined") return;
 
 		function updatePosition() {
 			if (!buttonRef.current) return;
@@ -91,13 +94,13 @@ export function DropdownSelect({
 				dropdownRef.current &&
 				!dropdownRef.current.contains(target)
 			) {
-				setIsOpen(false);
+				closeDropdown();
 			}
 		}
 
 		function handleKeyDown(event: KeyboardEvent) {
 			if (event.key === "Escape") {
-				setIsOpen(false);
+				closeDropdown();
 				buttonRef.current?.focus();
 			}
 		}
@@ -116,7 +119,7 @@ export function DropdownSelect({
 				<button
 					ref={buttonRef}
 					type="button"
-					onClick={() => setIsOpen((open) => !open)}
+					onClick={() => (isOpen ? closeDropdown() : setIsOpen(true))}
 					aria-expanded={isOpen}
 					aria-haspopup="listbox"
 					className="w-full rounded-[18px] border border-[var(--border-soft)] bg-white px-4 py-3 text-left text-sm transition duration-200 hover:border-[var(--brand)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
@@ -157,7 +160,7 @@ export function DropdownSelect({
 									aria-selected={label === selected}
 									onClick={() => {
 										setSelected(label);
-										setIsOpen(false);
+										closeDropdown();
 									}}
 									className="w-full px-4 py-3 text-left text-sm transition duration-200 hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500 first:rounded-t-[18px] last:rounded-b-[18px]"
 								>
@@ -172,7 +175,7 @@ export function DropdownSelect({
 									download={option.download}
 									onClick={() => {
 										setSelected(defaultValue);
-										setIsOpen(false);
+										closeDropdown();
 									}}
 									className="block w-full px-4 py-3 text-left text-sm transition duration-200 hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500 first:rounded-t-[18px] last:rounded-b-[18px]"
 								>
