@@ -110,7 +110,6 @@ export type FollowUpProject = {
 };
 
 export const getFollowUpProjects = cache(async (): Promise<FollowUpProject[]> => {
-	const supabase = await createSupabaseServerClient();
 	const projects = await getActiveProjects();
 
 	const candidates = projects.filter(
@@ -119,16 +118,6 @@ export const getFollowUpProjects = cache(async (): Promise<FollowUpProject[]> =>
 
 	if (candidates.length === 0) {
 		return [];
-	}
-
-	const { data: notDoneVisits, error } = await supabase
-		.from("agenda_items")
-		.select("id")
-		.eq("tipo", "visita_tecnica")
-		.eq("estado", "no_realizada");
-
-	if (error) {
-		throw new Error(`No se pudieron cargar las visitas no realizadas. ${error.message}`);
 	}
 
 	const followUpBoundary = Date.now() - FOLLOW_UP_AFTER_DAYS * DAY_MS;

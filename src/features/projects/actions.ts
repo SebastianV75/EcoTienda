@@ -22,7 +22,7 @@ function isProjectStage(value: string): value is ProjectStage {
 
 export async function createProjectAction(
 	_previousState: ProjectActionState,
-	formData: FormData,
+	_formData: FormData,
 ): Promise<ProjectActionState> {
 	if (hasSupabaseEnv()) {
 		await requireRole(["admin", "administrative"]);
