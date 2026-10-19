@@ -57,6 +57,10 @@ export function validateSignerName(value: unknown, expected: string) {
   return value.trim();
 }
 
+export function isSigningRequestOpen(request: { status: string; expires_at: string }, now = Date.now()) {
+  return request.status === "pending" && new Date(request.expires_at).getTime() > now;
+}
+
 export function signingExpiry() {
   return new Date(Date.now() + SIGNING_TTL_DAYS * 86400000).toISOString();
 }

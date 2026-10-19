@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { deflateSync } from "node:zlib";
-import { createSigningToken, hashSigningToken, validateSignatureDataUrl, validateSignerName } from "../src/features/documents/contract-signing.ts";
+import { createSigningToken, hashSigningToken, isSigningRequestOpen, validateSignatureDataUrl, validateSignerName } from "../src/features/documents/contract-signing.ts";
 
 function png(rgba) {
   const width = 3; const height = 3; const header = Buffer.alloc(13); header.writeUInt32BE(width, 0); header.writeUInt32BE(height, 4); header[8] = 8; header[9] = 6;
@@ -20,3 +20,11 @@ test("signature input rejects malformed, transparent and truncated PNG", () => {
   assert.throws(() => validateSignatureDataUrl(`data:image/png;base64,${valid.subarray(0, 40).toString("base64")}`));
 });
 test("signer must match immutable contract name", () => { assert.equal(validateSignerName(" Ana Pérez ", "ana pérez"), "Ana Pérez"); assert.throws(() => validateSignerName("Otra Persona", "Ana Pérez")); });
+
+test("un enlace de firma solo está abierto si está pendiente y no ha vencido", () => {
+  const now = Date.parse("2026-10-19T12:00:00Z");
+  assert.equal(isSigningRequestOpen({ status: "pending", expires_at: "2026-10-20T12:00:00Z" }, now), true);
+  assert.equal(isSigningRequestOpen({ status: "pending", expires_at: "2026-10-19T12:00:00Z" }, now), false);
+  assert.equal(isSigningRequestOpen({ status: "signed", expires_at: "2026-10-20T12:00:00Z" }, now), false);
+  assert.equal(isSigningRequestOpen({ status: "revoked", expires_at: "2026-10-20T12:00:00Z" }, now), false);
+});
