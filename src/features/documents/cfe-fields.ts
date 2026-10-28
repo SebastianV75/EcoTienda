@@ -16,6 +16,20 @@ export function isValidCfeDate(value: unknown): value is string {
 	return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+export type CfeCoordinates = {
+	latitude: number;
+	longitude: number;
+};
+
+/** Latitud/longitud WGS84 en grados decimales, con los mismos rangos válidos que UTM. */
+export function toCfeCoordinates(
+	latitude: number | null,
+	longitude: number | null,
+): CfeCoordinates | null {
+	if (latitude === null || longitude === null || !toUtmCoordinates(latitude, longitude)) return null;
+	return { latitude, longitude };
+}
+
 export type UtmCoordinates = {
 	easting: number;
 	northing: number;

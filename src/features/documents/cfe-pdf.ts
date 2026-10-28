@@ -11,7 +11,7 @@ import { getCfeTemplateBytes } from "./cfe-template";
 import type { TrabajoDocumentSource } from "@/features/trabajos/data";
 import { defaultCompanySettings } from "@/features/settings/defaults";
 import type { CompanySettings } from "@/types/quotation";
-import { isValidCfeDate, toUtmCoordinates, type UtmCoordinates } from "./cfe-fields";
+import { isValidCfeDate, toCfeCoordinates, type CfeCoordinates } from "./cfe-fields";
 
 export type CfePdfData = {
 	applicationDate: string | null;
@@ -37,7 +37,7 @@ export type CfePdfData = {
 	voltage: string;
 	rpu: string;
 	operationDate: string | null;
-	coordinates: UtmCoordinates | null;
+	coordinates: CfeCoordinates | null;
 	installedCapacity: string;
 	capacityToIncrease: string;
 	monthlyGeneration: string;
@@ -145,7 +145,7 @@ export function buildCfePdfData(
 		voltage,
 		rpu: client.rpu ?? "",
 		operationDate: cfeClient.operation_date ?? null,
-		coordinates: toUtmCoordinates(cfeClient.latitude, cfeClient.longitude),
+		coordinates: toCfeCoordinates(cfeClient.latitude, cfeClient.longitude),
 		installedCapacity: client.installed_capacity ?? "",
 		capacityToIncrease: "",
 		monthlyGeneration: client.estimated_monthly_generation ?? "",
@@ -360,9 +360,15 @@ export async function generateCfePdf(data: CfePdfData): Promise<Uint8Array> {
 	});
 	drawValue(page, font, data.primaryFuel, { x: 216.75, y: 375.84, width: 181 });
 	if (data.coordinates) {
-		drawValue(page, font, data.coordinates.easting.toFixed(2), { x: 31.5, y: 351, width: 273 });
-		drawValue(page, font, data.coordinates.northing.toFixed(2), { x: 309, y: 351, width: 267 });
-		drawValue(page, font, `UTM zona ${data.coordinates.zone} / hemisferio ${data.coordinates.hemisphere === "N" ? "norte" : "sur"} / WGS84 / metros`, { x: 31.5, y: 340, width: 273, size: 7 });
+		// La plantilla plana rotula estas columnas como X/Y (UTM); se cubren y se rotulan como latitud/longitud.
+		for (const [label, centerX] of [["Latitud", 167.7], ["Longitud", 444.7]] as const) {
+			page.drawRectangle({ x: centerX - 30, y: 360, width: 60, height: 8.5, color: rgb(1, 1, 1) });
+			const labelWidth = boldFont.widthOfTextAtSize(label, 7);
+			page.drawText(label, { x: centerX - labelWidth / 2, y: 362.3, size: 7, font: boldFont, color: BLACK });
+		}
+		drawValue(page, font, data.coordinates.latitude.toFixed(9), { x: 31.5, y: 351, width: 273 });
+		drawValue(page, font, data.coordinates.longitude.toFixed(9), { x: 309, y: 351, width: 267 });
+		drawValue(page, font, "Grados decimales / WGS84", { x: 31.5, y: 340, width: 273, size: 7 });
 	}
 
 	// La firma permanece vacía; solo se repite la identificación del solicitante.

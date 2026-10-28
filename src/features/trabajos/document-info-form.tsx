@@ -231,7 +231,7 @@ export function DocumentInfoForm({
 						<h4 className="text-sm font-semibold text-[var(--brand-deep)]">
 							Ubicación y equipo
 						</h4>
-						<p className="text-sm leading-6 text-amber-900/80">Usa la latitud y longitud del sitio de instalación (WGS84). La solicitud CFE las convierte a UTM X/Y en metros e indica zona y hemisferio.</p>
+						<p className="text-sm leading-6 text-amber-900/80">Usa la latitud y longitud del sitio de instalación (WGS84). La solicitud CFE las imprime tal cual, en grados decimales con 9 decimales.</p>
 					<div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
 						<label className="space-y-1.5 text-sm font-medium text-[var(--brand-deep)]">
 							<span>Latitud</span>

@@ -157,8 +157,8 @@ test("CFE respeta fechas capturadas y coordenadas reales del sitio", () => {
 	const data = buildCfePdfData(buildTrabajoFixture());
 	assert.equal(data.applicationDate, "2026-10-08");
 	assert.equal(data.operationDate, "2026-11-15");
-	assert.equal(data.coordinates.zone, 13);
-	assert.equal(data.coordinates.hemisphere, "N");
+	assert.deepEqual(Object.keys(data.coordinates), ["latitude", "longitude"]);
+	assert.ok(data.coordinates.latitude > 25 && data.coordinates.longitude < -100);
 	assert.deepEqual(getMissingCfeFields(data), []);
 	assert.equal(getDescargablesDocumentReadiness(buildTrabajoFixture()).cfe.ready, true);
 });
@@ -168,7 +168,7 @@ test("CFE usa correcciones de ubicación guardadas antes de introducir sus campo
 	trabajo.document_overrides = trabajo.document_overrides.filter(row => !["latitude", "longitude"].includes(row.field_key));
 	trabajo.document_overrides.push(...Object.entries({latitude: 31.6904, longitude: -106.4245}).map(([field_key, field_value]) => ({template_key:"ubicacion-cliente", export_instance_key:"preview", field_key, field_value})));
 	assert.equal(buildTrabajoPreviewSubject(trabajo,"cfe").latitude,31.6904);
-	assert.equal(buildCfePdfData(trabajo).coordinates.zone,13);
+	assert.deepEqual(buildCfePdfData(trabajo).coordinates, {latitude: 31.6904, longitude: -106.4245});
 });
 
 test("CFE no inventa operación para legacy y evita producir PDF incompleto", async () => {
